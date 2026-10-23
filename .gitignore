@@ -79,7 +79,6 @@ screenshots/
 
 # === Documentation & Generated Files ===
 # Build documentation
-*.md
 *.rst
 *.txt
 
