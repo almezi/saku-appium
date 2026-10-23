@@ -1,0 +1,98 @@
+/* Saku design tokens. Paste into your global stylesheet, or import first. */
+
+:root {
+  /* Surfaces */
+  --color-bg: #0e0e12;
+  --color-surface: #17171d;
+  --color-surface-raised: #1c1c26;
+  --color-border: #26262e;
+  --color-border-strong: #33334a;
+
+  /* Text */
+  --color-text: #f2f2f5;
+  --color-text-secondary: #d6d6de;
+  --color-text-muted: #9a9aa8;
+  --color-text-placeholder: #8a8a98;
+  --color-text-disabled: #4a4a56;
+
+  /* Brand and actions */
+  --color-primary: #5b4bd6;
+  --color-primary-text: #ffffff;
+  --color-accent-text: #a99cff;
+  --color-accent-surface: #241f45;
+
+  /* Income (green) */
+  --color-income: #6ee7a0;
+  --color-income-surface: #121a16;
+  --color-income-surface-strong: #15231c;
+  --color-income-border: #3a7d5c;
+  --color-income-selected: #1b2e25;
+
+  /* Expense (pink-red). Decision: one expense color everywhere. See README. */
+  --color-expense: #f0708a;
+  --color-expense-surface: #2e1a21;
+  --color-expense-border: #6b2c3a;
+  --color-expense-button: #b8405a;
+
+  /* Warning (budget almost used up) */
+  --color-warning: #f6c453;
+
+  /* Danger (delete actions) */
+  --color-danger: #b3373f;
+  --color-danger-text: #ffb3b3;
+  --color-danger-surface: #2a1518;
+  --color-danger-border: #5a2a31;
+
+  /* Overlays */
+  --color-scrim: rgba(5, 5, 8, 0.7);
+
+  /* Category palette (user can pick these for custom categories) */
+  --color-cat-pink: #f0708a;
+  --color-cat-orange: #fb923c;
+  --color-cat-yellow: #f6c453;
+  --color-cat-teal: #5fd3e6;
+  --color-cat-blue: #7c8cff;
+  --color-cat-purple: #c4a3ff;
+  --color-cat-grey: #9a9aa8;
+  --color-cat-brown: #c9a25a;
+
+  /* Typography */
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 22px;
+  --text-amount-lg: 34px;
+  --text-amount-md: 24px;
+  --text-amount-sm: 15px;
+
+  /* Spacing (4 px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 14px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-7: 24px;
+  --space-8: 28px;
+
+  /* Radius */
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 18px;
+  --radius-sheet: 24px;
+  --radius-nav: 22px;
+
+  /* Sizes */
+  --touch-min: 44px;
+  --input-height: 48px;
+  --button-height: 52px;
+  --nav-height: 64px;
+  --screen-padding-x: 20px;
+}

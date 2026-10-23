@@ -1,0 +1,13 @@
+{
+  "mcp": {
+    "servers": {
+      "appium-mcp": {
+        "type": "local",
+        "command": ["npx", "-y", "appium-mcp@latest"],
+        "env": {
+          "ANDROID_HOME": "/Users/auliameiazizi/Library/Android/sdk"
+        }
+      }
+    }
+  }
+}

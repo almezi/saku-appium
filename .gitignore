@@ -1,0 +1,189 @@
+# Simple Money Tracker - .gitignore
+# This file specifies intentionally untracked files that Git should ignore
+# Learn more about Git ignores: https://git-scm.com/docs/gitignore
+
+# === Android Build Artifacts ===
+# Android Studio generated files
+directory/android/
+directory/app/build/
+build/
+
+# Generated APK/AAR files
+*.apk
+*.aar
+*.apks
+*.aab
+
+# Kotlin compiler caches
+**.kotlin/
+**.kotlinc/
+
+# Generated Java/Kotlin sources
+**/src/main/java_generated/
+**/src/main/kotlin_generated/
+
+# Local Gradle caches
+.gradle/
+
+# Environment files
+local.properties
+
+# === IDE & Development Environment ===
+# Android Studio
+*.iml
+*.iws
+*.ipr
+.idea/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# VS Code
+.vscode/
+
+# IntelliJ IDEA Community Edition
+*.iws
+*.iml
+*.ipr
+
+# NetBeans
+.nb
+nbbuild/
+
+# Xcode (if applicable)
+*.xcworkspace
+*.xcodeproj
+*.xcuserdata
+
+# === Flutter/React Native/Mobile cross-platform artifacts ===
+# Flutter
+flutter_*.log
+*.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# === Testing & Automation Artifacts ===
+# Appium test results
+/test-results/
+screenshots/
+.*-report.html
+
+# Test execution logs
+*.log
+
+# Temporary test files
+*temp*
+*test_temp*
+
+# === Documentation & Generated Files ===
+# Build documentation
+*.md
+*.rst
+*.txt
+
+# Generated documentation
+/docs/generated/
+docs/source-of-truth/
+
+# === System & Temporary Files ===
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+evolves.js
+
+# Other system files
+Thumbs.db
+
+# === Network & Security ===
+# HTTPS certificates
+certs/
+
+# SSH keys
+*.pem
+*.key
+
+# === Data Files ===
+# Application data
+app-data/
+data/
+*.sqlite
+*.db
+*.json.backup
+
+# === Version Control ===
+# Git-specific
+.git/
+.gitmodules
+.gitignore.local
+
+# === Environment Variables ===
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# === macOS ===
+*.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# === Windows ===
+Thumbs.db
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+
+# === Java ===
+*.class
+target/
+
+# === Go ===
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# === Node.js ===
+node_modules/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Other ===
+# Editors
+*~.
+*~
+
+# Log files
+*.log
+
+# Temporary files
+*temp*
+*tmp*
+
+# Backup files
+*~
+
+# End of .gitignore
