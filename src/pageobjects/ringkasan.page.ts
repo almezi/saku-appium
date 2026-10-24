@@ -1,7 +1,7 @@
 import { byTag, scrollToTag } from '../helpers/locators'
+import { extractChildTexts, readAmount } from '../helpers/elements'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
-import { readAmount } from './daftar.page'
 import type { Element } from 'webdriverio'
 
 /** Non-empty text attributes of the subtree under the node with `resourceId`. */
@@ -90,28 +90,12 @@ export class RingkasanPage extends BasePage {
 
   /** Rendered texts of the "Pemasukan vs pengeluaran" comparison card. */
   async comparisonTexts(): Promise<string[]> {
-    const children = await byTag(tags.ringkasan.comparison).$$(
-      'android=new UiSelector().className("android.widget.TextView")',
-    )
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(byTag(tags.ringkasan.comparison))
   }
 
   /** Child texts of the empty state (title, hint, action label). */
   async emptyStateTexts(): Promise<string[]> {
-    const children = await byTag(tags.ringkasan.emptyState).$$(
-      'android=new UiSelector().className("android.widget.TextView")',
-    )
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(byTag(tags.ringkasan.emptyState))
   }
 
   /**

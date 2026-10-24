@@ -1,29 +1,8 @@
 import { byTag, scrollToTagMatches } from '../helpers/locators'
 import { tags } from '../config/tags'
-import { parseAmountText } from '../helpers/money'
+import { readAmount } from '../helpers/elements'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
-
-/** Amount-bearing tagged nodes are containers; the value renders in a child TextView. */
-export async function readAmount(el: ChainablePromiseElement): Promise<number> {
-  const texts: string[] = []
-  const own = (await el.getText()).trim()
-  if (own) texts.push(own)
-  const desc = await el.getAttribute('content-desc').catch(() => '')
-  if (desc && desc.trim()) texts.push(desc.trim())
-  const children = await el.$$(`android=new UiSelector().className("android.widget.TextView")`)
-  for (const child of children) {
-    const t = (await child.getText()).trim()
-    if (t) texts.push(t)
-  }
-  // The value node renders after the label ("MASUK" -> "Rp 250.000"), so the
-  // last digit-bearing text wins.
-  const withDigits = texts.filter((t) => /\d/.test(t))
-  if (withDigits.length === 0) {
-    throw new Error(`No amount text found on element (tried node, content-desc, children)`)
-  }
-  return parseAmountText(withDigits[withDigits.length - 1])
-}
 
 export class DaftarPage extends BasePage {
   constructor() {
