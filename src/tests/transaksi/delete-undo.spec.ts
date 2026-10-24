@@ -60,9 +60,10 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1)', () 
   it('TC-DEL-02 deleting without undo makes the deletion permanent', async () => {
     await openDeleteSheet()
     await confirmDelete()
-    // Toast expiry (5s) makes the deletion permanent; wait it out with
-    // margin for slow recomposition.
-    await byTag(tags.component.toast).waitForDisplayed({ reverse: true, timeout: 15_000 })
+    // Toast expiry (5s) makes the deletion permanent. Wait past it with a
+    // plain pause: the toast node can linger composed after expiry, so a
+    // disappearance wait is unreliable (flaked across runs).
+    await driver.pause(6_000)
     // With no transactions left the list swaps to its empty state and the
     // summary cards leave the hierarchy entirely (verified live).
     await byTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
@@ -81,10 +82,10 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1)',
   async function confirmPermanentDelete(): Promise<void> {
     await byTag(tags.daftar.deleteSheet).waitForDisplayed()
     await byTag(tags.component.sheetConfirm).click()
-    // Let the undo toast expire so the deletion becomes permanent (5 s
-    // lifetime + poll margin for slow recomposition).
+    // Wait past the 5 s undo window with a plain pause: the toast node can
+    // linger composed after expiry, so a disappearance wait is unreliable.
     await byTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 })
-    await byTag(tags.component.toast).waitForDisplayed({ reverse: true, timeout: 15_000 })
+    await driver.pause(6_000)
   }
 
   before(async () => {
@@ -153,7 +154,9 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1)',
     await daftar.tapDelete(categories.income.other)
     await byTag(tags.daftar.deleteSheet).waitForDisplayed()
     await byTag(tags.component.sheetConfirm).click()
-    await byTag(tags.component.toast).waitForDisplayed({ reverse: true, timeout: 12_000 })
+    // Second undo window (5 s) — pause past it; the following assertions
+    // prove both deletions stuck.
+    await driver.pause(6_500)
     const bonusRows = await $$(
       `android=new UiSelector().resourceIdMatches("daftar_item_.*_delete_${categories.income.bonusThr}")`,
     )

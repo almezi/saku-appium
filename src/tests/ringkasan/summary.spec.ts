@@ -94,6 +94,10 @@ describe('TC-SUM — Ringkasan summary math (Phase 1)', () => {
   })
 
   it('TC-SUM-08 expense breakdown percentages sum to 100', async () => {
+    // The expense card is the last section — scroll it into composition
+    // first (its rows stale out from under a bare scrollIntoView).
+    await ringkasan.open()
+    await ringkasan.scrollToBottom()
     expect(percentOf(await ringkasan.breakdownItemTexts(categories.expense.dailyFood))).toBe(100)
   })
 
