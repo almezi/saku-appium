@@ -4,7 +4,7 @@ import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
 import { DaftarPage } from '../../pageobjects/daftar.page'
 import { RingkasanPage } from '../../pageobjects/ringkasan.page'
-import { formatNegativeRp } from '../../helpers/money'
+import { formatNegativeRp, formatRp } from '../../helpers/money'
 
 const INCOME = 200_000
 const EXPENSE = 75_000
@@ -30,10 +30,11 @@ describe('TC-EXP — add expense (Phase 1)', () => {
     })
   })
 
-  it('TC-EXP-01 expense saves and appears in the list with the U+2212 minus', async () => {
+  it('TC-EXP-01 expense saves and appears in the list', async () => {
     await daftar.open()
-    // Rows render the amount, not the note.
-    const row = await daftar.findRowText(formatNegativeRp(EXPENSE))
+    // Rows render the unsigned amount (sign comes from the type label and
+    // the day-total/net color), so assert on the plain formatted value.
+    const row = await daftar.findRowText(formatRp(EXPENSE))
     expect(await row.isDisplayed()).toBe(true)
   })
 

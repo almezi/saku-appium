@@ -94,9 +94,10 @@ export class TambahPage extends BasePage {
     await sheet.waitForDisplayed({ timeout: 10_000 })
 
     const item = byTag(itemTag)
+    const sheetId = await sheet.elementId
     for (let scroll = 0; scroll < 8 && !(await item.isExisting().catch(() => false)); scroll++) {
       await driver.execute('mobile: scrollGesture', {
-        elementId: sheet.elementId,
+        elementId: sheetId,
         direction: 'down',
         percent: 45,
       })

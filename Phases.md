@@ -4,10 +4,88 @@ This file breaks test execution into logical phases, matching the Appium MCP wor
 
 ## Phase 1: Core Flows
 
-- **Tambah Transaksi**: Add income/expense with all fields (amount, category, account, date, note)
-- **Transaksi List**: Verify transaction appears in list with correct formatting
-- **Ringkasan**: Validate summary cards update correctly
-- **Edit/Delete**: Modify and remove transactions with undo verification
+### Phase 1.A — Smoke & Navigation (TC-NAV)
+- TC-NAV-01: App launches, `tambah_screen` visible
+- TC-NAV-02: Tambah tab → `tambah_screen` present
+- TC-NAV-03: Transaksi tab → `daftar_screen` present
+- TC-NAV-04: Ringkasan tab → `ringkasan_screen` present
+- TC-NAV-05: Round-trip all tabs, no crash
+- TC-NAV-06: Back button on each tab, no crash
+- TC-NAV-07: Selected tab state persists on re-tap
+- TC-NAV-08: 20 rapid tab switches, no ANR
+
+### Phase 1.B — Add Income (TC-INC)
+- TC-INC-01: Income + amount + category → save enabled → save succeeds
+- TC-INC-02: Saved income appears in Transaksi same day
+- TC-INC-03: `daftar_summary_masuk` increments
+- TC-INC-04: Ringkasan income card + balance update
+- TC-INC-05: Income with note → note persisted (verify on edit reopen)
+- TC-INC-06: Income on non-default account recorded correctly
+- TC-INC-07: Multiple incomes same day → day total = sum
+- TC-INC-08: Form resets after save (amount 0, category placeholder, note empty)
+- TC-INC-09: Save returns to Tambah / confirmation shown
+
+### Phase 1.C — Add Expense (TC-EXP)
+- TC-EXP-01: Expense + amount + category → save succeeds
+- TC-EXP-02: Expense appears in list, day total shows `−Rp`
+- TC-EXP-03: `daftar_summary_keluar` increments
+- TC-EXP-04: Ringkasan balance decrements
+- TC-EXP-05: Expense breakdown category shows 100% for single item
+- TC-EXP-06: Expense on default account Tunai
+- TC-EXP-07: Mixed income+expense same day → day total = net
+- TC-EXP-08: Expense > balance → balance negative `−Rp`
+
+### Phase 1.D — Transaction List (TC-LIST)
+- TC-LIST-01: Empty month → empty state / zero summaries
+- TC-LIST-02: Day header shows weekday + date + net total
+- TC-LIST-03: Items grouped under correct day header
+- TC-LIST-04: Items sorted newest first
+- TC-LIST-05: Row shows category, type label, formatted amount
+- TC-LIST-06: Income row no minus; day total `−Rp` for expenses
+- TC-LIST-07: Long category name truncates/wraps, no overlap
+- TC-LIST-08: Scroll 100+ items, no crash
+- TC-LIST-09: `daftar_summary_masuk` = sum income in month
+- TC-LIST-10: `daftar_summary_keluar` = sum expense in month
+- TC-LIST-11: Pull-to-refresh → data still correct
+
+### Phase 1.E — Summary / Ringkasan (TC-SUM)
+- TC-SUM-01: `ringkasan_balance_value` = income − expense (verified `−Rp 21.758`)
+- TC-SUM-02: Income card == `daftar_summary_masuk`
+- TC-SUM-03: Expense card == `daftar_summary_keluar`
+- TC-SUM-04: Savings rate formula (verified `−671,1%`)
+- TC-SUM-05: Savings rate = 0% when income 0 (no divide-by-zero)
+- TC-SUM-06: Comparison amounts match cards
+- TC-SUM-07: Income breakdown percentages sum 100%
+- TC-SUM-08: Expense breakdown percentages sum 100%
+- TC-SUM-09: Breakdown bar width proportional
+- TC-SUM-10: Empty month → all zeros, no NaN/Infinity
+- TC-SUM-11: Large values format with separators, no clipping
+- TC-SUM-12: Negative balance renders `−Rp` not `Rp -`
+- TC-SUM-13: Scroll to bottom → all sections render
+
+### Phase 1.F — Edit Transaction (TC-EDIT)
+- TC-EDIT-01: Tap `Ubah` → form opens prefilled
+- TC-EDIT-02: Change amount → save → row updates
+- TC-EDIT-03: Change category → breakdown recalculates
+- TC-EDIT-04: Change type income→expense → summaries swap
+- TC-EDIT-05: Change date → item moves to new month
+- TC-EDIT-06: Edit note only → amount/category intact
+- TC-EDIT-07: Cancel edit → no data change
+- TC-EDIT-08: Edit to invalid state (amount 0) → save blocked
+
+### Phase 1.G — Delete Transaction (TC-DEL)
+- TC-DEL-01: Tap `Hapus` → confirmation dialog
+- TC-DEL-02: Confirm → row removed, summaries decrease
+- TC-DEL-03: Cancel → row remains
+- TC-DEL-04: Delete last item of month → empty state
+- TC-DEL-05: Delete updates Ringkasan balance/cards
+- TC-DEL-06: Delete removes stale breakdown entry
+- TC-DEL-07: Rapid delete two items → both removed
+
+### Phase 1.H — Undo Delete (TC-UNDO)
+- TC-UNDO-01: Delete transaction → toast with "Urungkan" action appears
+- TC-UNDO-02: Tap "Urungkan" before timeout → transaction restored, summary & list updated
+- TC-UNDO-03: Let toast expire without tap → deletion becomes permanent
 
 ---
 

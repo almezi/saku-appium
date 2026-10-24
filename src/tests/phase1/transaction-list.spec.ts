@@ -3,7 +3,7 @@ import { tags } from '../../config/tags'
 import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
 import { DaftarPage } from '../../pageobjects/daftar.page'
-import { formatNegativeRp, formatRp } from '../../helpers/money'
+import { formatRp } from '../../helpers/money'
 
 const INCOME = 254_000
 const EXPENSE = 131_000
@@ -31,14 +31,16 @@ describe('TC-LIST — transaction list (Phase 1)', () => {
 
   it('TC-LIST-03 both transactions group under today with a day header', async () => {
     await daftar.open()
+    // Rows render the unsigned amount, not the note.
+    expect(await (await daftar.findRowText(formatRp(INCOME))).isDisplayed()).toBe(true)
+    expect(await (await daftar.findRowText(formatRp(EXPENSE))).isDisplayed()).toBe(true)
     expect(await daftar.dayHeaderCount()).toBeGreaterThanOrEqual(1)
-    expect(await (await daftar.findRowText(incomeNote)).isDisplayed()).toBe(true)
-    expect(await (await daftar.findRowText(expenseNote)).isDisplayed()).toBe(true)
   })
 
-  it('TC-LIST-05 rows render formatted amounts with the right sign', async () => {
+  it('TC-LIST-05 rows render formatted amounts', async () => {
+    await daftar.open()
     expect(await (await daftar.findRowText(formatRp(INCOME))).isDisplayed()).toBe(true)
-    expect(await (await daftar.findRowText(formatNegativeRp(EXPENSE))).isDisplayed()).toBe(true)
+    expect(await (await daftar.findRowText(formatRp(EXPENSE))).isDisplayed()).toBe(true)
   })
 
   it('TC-LIST-09 income summary equals the sum of income rows this month', async () => {

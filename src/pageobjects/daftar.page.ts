@@ -89,8 +89,12 @@ export class DaftarPage extends BasePage {
    */
   private async tapRowAction(tagPattern: string): Promise<void> {
     for (let attempt = 0; attempt < 2; attempt++) {
-      const el = scrollToTagMatches(tagPattern)
-      if (await el.click().catch(() => false)) return
+      try {
+        await scrollToTagMatches(tagPattern).click()
+        return
+      } catch {
+        // stale element — re-query and retry
+      }
     }
     throw new Error(`Row action ${tagPattern} could not be clicked`)
   }
