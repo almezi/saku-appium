@@ -2,7 +2,7 @@ import { byTag, scrollToTagMatches } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { parseAmountText } from '../helpers/money'
 import { BasePage } from './base.page'
-import type { ChainablePromiseElement, ChainablePromiseArray } from '../types'
+import type { ChainablePromiseElement } from '../types'
 
 /** Amount-bearing tagged nodes are containers; the value renders in a child TextView. */
 export async function readAmount(el: ChainablePromiseElement): Promise<number> {

@@ -1,4 +1,4 @@
-import { byTag, allByTag } from '../../helpers/locators'
+import { byTag } from '../../helpers/locators'
 import { tags } from '../../config/tags'
 import { categories } from '../../config/categories'
 import { TambahPage } from '../../pageobjects/tambah.page'

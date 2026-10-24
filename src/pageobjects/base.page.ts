@@ -1,6 +1,6 @@
 import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
-import type { ChainablePromiseElement, ChainablePromiseArray } from '../types'
+import type { ChainablePromiseElement } from '../types'
 
 export class BasePage {
   constructor(protected readonly screenTag: string) {}

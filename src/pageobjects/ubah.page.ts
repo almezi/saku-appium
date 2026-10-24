@@ -2,7 +2,7 @@ import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
 import { DaftarPage } from './daftar.page'
-import type { ChainablePromiseElement, ChainablePromiseArray } from '../types'
+import type { ChainablePromiseElement } from '../types'
 
 /**
  * Ubah transaksi (edit). Shares its form fields with Tambah — the form
