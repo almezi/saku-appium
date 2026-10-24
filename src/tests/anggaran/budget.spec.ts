@@ -7,7 +7,7 @@ import { formatRp } from '../../helpers/money'
 
 /**
  * TC-BUD — Anggaran / budget limits and status indicators (Phase 2).
- * Cases picked from Phase 2.A in Phases.md / test-cases-simple-money-tracker.md.
+ * Cases picked from Phase 2.A in progress.md / test-cases-simple-money-tracker.md.
  *
  * Budget rows expose no raw-status tag, so status labels ("Aman", "Lewat
  * batas") and the "Rp X dari Rp Y" / "Sisa Rp Z" strings are asserted on the

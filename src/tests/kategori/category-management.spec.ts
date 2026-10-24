@@ -7,7 +7,7 @@ import { KategoriPage } from '../../pageobjects/kategori.page'
 
 /**
  * TC-KAT — Kelola kategori: defaults, search, rename, hide (Phase 2).
- * Cases picked from Phase 2.B in Phases.md / test-cases-simple-money-tracker.md.
+ * Cases picked from Phase 2.B in progress.md / test-cases-simple-money-tracker.md.
  *
  * The "Ubah kategori" dialog has no test tags (Compose dialog), so dialog
  * interactions use the documented text-locator fallback inside KategoriPage.

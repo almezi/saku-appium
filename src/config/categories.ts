@@ -1,5 +1,5 @@
 /**
- * Stable category and account IDs (CATEGORIES.md / AccountSeed.kt).
+ * Stable category and account IDs (TESTABILITY.md / AccountSeed.kt).
  * Tests reference categories and accounts by ID, never by display name.
  */
 export const categories = {

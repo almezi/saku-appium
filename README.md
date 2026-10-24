@@ -48,7 +48,7 @@ src/tests/kategori/    Kelola kategori flows: TC-KAT
 
 ## Generated test cases
 
-**File**: `test-cases-simple-money-tracker.md`
+**Files**: `test-cases-simple-money-tracker.md` (cases), `TESTING.md` (data, execution, results)
 - 140+ test cases across 22 areas
 - Covers all screens: Tambah (Add), Transaksi (List), Ringkasan (Summary), Kelola Kategori, and Anggaran (Budget)
 - Includes navigation, form validation, data persistence, accessibility, performance, and edge cases

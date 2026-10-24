@@ -1,7 +1,7 @@
 # UI_SPEC
 
 What the app does. Nothing about tests, tags or bugs lives here.
-Companion files: CATEGORIES.md (category list), TESTABILITY.md (tags and debug hooks; the app-building AI must also read it).
+Companion files: TESTABILITY.md (Categories section) (category list), TESTABILITY.md (tags and debug hooks; the app-building AI must also read it).
 
 ## 1. Purpose and scope
 
@@ -11,7 +11,7 @@ A small, local-only personal money tracker (Indonesian UI). One wallet, IDR only
 
 - **Amount:** whole rupiah only, min 1, max 999.999.999.999 (12 digits). Digits only, dot thousands separators added as the user types.
 - **Dates:** no future dates. Uses the device timezone, formatted in Asia/Jakarta. Time comes from an injectable clock, never the system clock directly.
-- **Categories:** the seeded list plus user-created ones (see CATEGORIES.md). Changing the transaction type clears a category that does not belong to the new type. Switching type keeps the amount and the note.
+- **Categories:** the seeded list plus user-created ones (see TESTABILITY.md (Categories section)). Changing the transaction type clears a category that does not belong to the new type. Switching type keeps the amount and the note.
 - **Accounts:** a single wallet. Every transaction records which account it moved through (seeded: Tunai, BCA, GoPay). There are no transfers between accounts.
 - **Totals:** categories flagged `countsInTotals = false` (Transfer Masuk, Investasi as expense, Tabungan) are excluded from all totals.
 - **Sorting:** list is sorted by date descending, then by created time descending.
@@ -25,14 +25,14 @@ A small, local-only personal money tracker (Indonesian UI). One wallet, IDR only
 Transaction
 - `id` (unique)
 - `type`: `pemasukan` or `pengeluaran`
-- `categoryId` (stable ID from CATEGORIES.md)
+- `categoryId` (stable ID from TESTABILITY.md (Categories section))
 - `accountId` (stable ID, defaults to Tunai)
 - `amount`: whole rupiah, Long
 - `dateEpochMillis`: instant at midnight in Asia/Jakarta
 - `note`: optional text, max 60 characters
 - `createdAt`: instant, from the injectable clock
 
-Category: see CATEGORIES.md.
+Category: see TESTABILITY.md (Categories section).
 
 Account: `id`, `name`, `sortOrder`.
 

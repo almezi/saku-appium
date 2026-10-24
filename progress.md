@@ -1,6 +1,6 @@
 # Progress.md — Test Execution Checklist
 
-Track completion of every test task from `Phases.md`. Check `[x]` when a test case passes. Each agent should update only the sub-phases they own.
+Track completion of every test task from `progress.md`. Check `[x]` when a test case passes. Each agent should update only the sub-phases they own.
 
 ## Quick Summary
 

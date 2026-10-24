@@ -84,5 +84,5 @@ Copy the template from `BUG_FOUND.template.md` and fill every field:
 ┕ root /            # Test infrastructure files
 │   ├── README.md
 │   ├── test-cases-simple-money-tracker.md
-│   └── test-execution-plan.md
+│   └── TESTING.md
 ```

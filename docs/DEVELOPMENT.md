@@ -578,3 +578,673 @@ work:
 - [03-codebase-setup.md](03-codebase-setup.md) — getting the project building
 - [06-functional-spec.md](06-functional-spec.md) — the business rules behind this architecture
 - [08-design-system.md](08-design-system.md) — tokens and components
+---
+
+# 2. Tech Stack & Dependency Manifest
+
+Purpose: record exactly what the project is built from, at which versions, and
+why each piece is there — so a future setup or upgrade does not have to
+rediscover it.
+
+Verified against branch `feature/improve-design-2.0`, HEAD `8c7dc3a`.
+Sources: `gradle/libs.versions.toml`, `app/build.gradle.kts`,
+`settings.gradle.kts`, `gradle/wrapper/gradle-wrapper.properties`,
+`.idea/misc.xml`, `local.properties`.
+
+---
+
+## 2.1 Language and framework
+
+| Item | Value | Source |
+|---|---|---|
+| Language | Kotlin | `app/src/**` |
+| UI framework | Jetpack Compose (Material 3) | `buildFeatures.compose = true` |
+| Language plugin | `org.jetbrains.kotlin.plugin.compose` | `libs.versions.toml` |
+| Architecture | MVVM + StateFlow | `AGENTS.md`, implemented in `data/` + `ui/` |
+| DI | Manual constructor injection | `data/AppContainer.kt` |
+| Persistence | Room (AndroidX) + SQLite | `data/AppDatabase.kt` |
+| Date/time | kotlinx-datetime | `SakuFormat.kt` |
+| Navigation | Jetpack Navigation Compose | `navigation/NavGraph.kt` |
+| Async | Kotlin Coroutines + Flow | throughout |
+| Annotation processing | KSP | `libs.versions.toml` |
+| Dependency management | Gradle version catalog | `gradle/libs.versions.toml` |
+
+### A note on Kotlin Multiplatform
+
+`AGENTS.md` lists "Kotlin Multiplatform + Compose Multiplatform (official
+template)" as the stack, and the multiplatform playground template left
+`android.disallowKotlinSourceSets=false` in `gradle.properties`.
+
+**The codebase is currently Android-only.** The plugins applied are
+`com.android.application`, `org.jetbrains.kotlin.plugin.compose`, and
+`com.google.devtools.ksp` — there is no `kotlin-multiplatform` plugin, no
+`iosMain`/`commonMain` source set, and no `compose.ui` KMP artifacts. Sources
+live in `app/src/main/java`, the traditional Android layout. Room is the
+AndroidX Room, not Room KMP.
+
+Treat "iOS comes later" as the stated intent, and read the multiplatform
+mentions as inherited from the template. Verify against `app/build.gradle.kts`
+before planning any cross-platform work.
+
+---
+
+## 2.2 Toolchain versions
+
+| Component | Version | Notes |
+|---|---|---|
+| Gradle | **9.7.1** | `gradle/wrapper/gradle-wrapper.properties`, `-bin` distribution |
+| Android Gradle Plugin | **9.4.1** | `libs.plugins.android.application` |
+| Kotlin | **2.4.20** | via `libs.plugins.kotlin.compose` |
+| KSP | **2.3.12** | `libs.plugins.ksp` |
+| Gradle plugin portal toolchains | `foojay-resolver-convention` **1.0.0** | `settings.gradle.kts`, auto-provisions JDKs |
+| JVM bytecode target | **Java 17** | `sourceCompatibility` / `targetCompatibility` |
+| Project JDK in the IDE | **JDK 25** (`jbr-25`, `languageLevel="JDK_25"`) | `.idea/misc.xml`. Different from the 17 bytecode target — that is normal and fine |
+
+### Repositories
+
+`settings.gradle.kts` sets `RepositoriesMode.FAIL_ON_PROJECT_REPOS`, so all
+repositories are declared centrally and no module may add its own.
+
+| Repository | Scope |
+|---|---|
+| `google()` | `com.android.*`, `com.google.*`, `androidx.*` (plugin management is filtered by `includeGroupByRegex`) |
+| `mavenCentral()` | everything else |
+| `gradlePluginPortal()` | plugin resolution |
+
+### Gradle properties
+
+| Property | Value | Effect |
+|---|---|---|
+| `org.gradle.jvmargs` | `-Xmx2048m -Dfile.encoding=UTF-8` | Daemon heap. Raise to 4096m if builds are slow; Kotlin + KSP + Room compilation is the usual cause |
+| `org.gradle.configuration-cache` | `true` | Config cache on. If a plugin misbehaves, this is the first flag to check |
+| `kotlin.code.style` | `official` | IntelliJ Kotlin style |
+| `android.disallowKotlinSourceSets` | `false` | Left over from the KMP template |
+
+---
+
+## 2.3 OS version support
+
+| | Value |
+|---|---|
+| **minSdk** | **24** (Android 7.0 Nougat) |
+| **targetSdk** | **37** |
+| **compileSdk** | **37** |
+| Supported ABIs | all (no native code, no NDK, no ABI filters) |
+| Android Studio SDK platform installed | `android-37.0` |
+| Build tools installed | `36.0.0`, `37.0.0` |
+
+### Android only
+
+There is **no iOS target**, no deployment target, and no Xcode requirement.
+`TESTABILITY.md` "Verified on" lists iOS as an open Stage 0 question
+("do Compose test tags surface as accessibility IDs?"). Until a multiplatform
+plugin is added, iOS is not a supported platform — do not promise it.
+
+### Permissions
+
+**None.** `AndroidManifest.xml` declares no `<uses-permission>` at all, in
+particular no `INTERNET`. The app is offline by construction.
+
+---
+
+## 2.4 Dependency manifest
+
+### Version catalog
+
+Declared in `gradle/libs.versions.toml`:
+
+```toml
+[versions]
+agp = "9.4.1"
+kotlin = "2.4.20"
+coreKtx = "1.10.1"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+appcompat = "1.6.1"
+material = "1.10.0"
+room = "2.8.4"
+composeBom = "2024.02.00"
+datetime = "0.6.0"
+lifecycle = "2.9.0"
+animatedVectorDrawable = "28.0.0"
+```
+
+⚠️ `animatedVectorDrawable` (`com.android.support:animated-vector-drawable:28.0.0`)
+is declared but **never referenced** in `app/build.gradle.kts`. It is also an
+Android Support Library artifact — superseded by AndroidX. Safe to delete from
+the catalog.
+
+### Runtime dependencies
+
+| Dependency | Version | Purpose | Used where |
+|---|---|---|---|
+| `androidx.core:core-ktx` | 1.10.1 | Kotlin extensions for the Android framework | general |
+| `androidx.appcompat:appcompat` | 1.6.1 | AppCompat resources; backs `Theme.MaterialComponents.DayNight.NoActionBar` in `themes.xml` | `res/values/themes.xml` |
+| `com.google.android.material:material` | 1.10.0 | Material Components theme attributes (`colorPrimary`, `android:statusBarColor`, …) | `themes.xml`, launcher/system-bar theming |
+| `androidx.compose.ui:ui` | via BOM | Compose core primitives, `testTag`, graphics | every `@Composable` |
+| `androidx.compose.material3:material3` | via BOM | Material 3 components (`Text`, `Icon`, `MaterialTheme`) | every `@Composable` |
+| `androidx.compose.material:material-icons-extended` | via BOM | `Icons.Default.Add`, `Summarize`, `CalendarMonth`, `AutoMirrored.Filled.List` | `NavGraph.kt`, `TransactionForm.kt` |
+| `androidx.compose.ui:ui-tooling-preview` | via BOM | `@Preview` support | design system previews |
+| `androidx.activity:activity-compose:1.9.0` | **1.9.0, pinned inline** | `setContent`, `rememberLauncherForActivityResult` / `ActivityResultContracts.OpenDocument` | `MainActivity.kt`, `CadanganScreen.kt` |
+| `androidx.navigation:navigation-compose:2.7.7` | **2.7.7, pinned inline** | `NavHost`, `NavController`, route arguments | `navigation/NavGraph.kt`, `MainActivity.kt` |
+| `androidx.room:room-runtime` | 2.8.4 | Room database, `@Entity`, `@Dao`, `withTransaction` | `data/` |
+| `androidx.room:room-ktx` | 2.8.4 | Coroutine/Flow support for Room | `data/` |
+| `org.jetbrains.kotlinx:kotlinx-datetime` | 0.6.0 | `LocalDate`, `Instant`, `TimeZone`, `atStartOfDayIn`, `plus(month)` | `SakuFormat.kt`, `BackupRepository.kt` |
+| `androidx.lifecycle:lifecycle-viewmodel-compose` | 2.9.0 | `ViewModel`, `viewModelScope`, `viewModel(factory = …)` | every `*ViewModel.kt`, every screen |
+| `androidx.compose.ui:ui-tooling` | via BOM | **debug only** — preview inspector, layout bounds | `debugImplementation` |
+
+### Build-time plugins
+
+| Plugin | Version | Role |
+|---|---|---|
+| `com.android.application` | 9.4.1 | Android build |
+| `org.jetbrains.kotlin.plugin.compose` | 2.4.20 | Compose compiler plugin (required by Kotlin 2.x) |
+| `com.google.devtools.ksp` | 2.3.12 | Runs the Room annotation processor |
+
+### Test dependencies
+
+| Dependency | Version | Scope | Purpose |
+|---|---|---|---|
+| `junit:junit` | 4.13.2 | `testImplementation` | JVM unit tests |
+| `androidx.test.ext:junit` | 1.1.5 | `androidTestImplementation` | AndroidJUnit4 runner |
+| `androidx.test.espresso:espresso-core` | 3.5.1 | `androidTestImplementation` | View assertions in instrumented tests |
+
+Instrumentation runner: `androidx.test.runner.AndroidJUnitRunner`.
+
+### Platform APIs used directly (no library)
+
+| API | Where | Note |
+|---|---|---|
+| `android.app.DatePickerDialog` | `ui/transaction/TransactionForm.kt` | Platform date picker, not Material 3 `DatePicker` |
+| `android.content.Context.getSharedPreferences("saku_backup", MODE_PRIVATE)` | `CadanganViewModel` | Stores `last_backup_millis` |
+| `android.net.Uri` + `ContentResolver.openInputStream` | `BackupRepository.readText` | SAF import read |
+| `org.json.JSONObject` / `JSONArray` | `BackupRepository` | JSON backup serialization — the platform parser, not Moshi/Gson |
+| `android.os.SystemClock.elapsedRealtime()` | `MainActivity` | Loading-screen animation timing only |
+| `java.text.SimpleDateFormat` / `DecimalFormat` | `BackupRepository`, `SakuFormat` | CSV date column, percent formatting |
+| `java.util.Calendar` / `TimeZone` | `BackupRepository` | Asia/Jakarta for CSV dates |
+| Compose text measurement | `ui/components/SakuFields.kt` | Amount field auto-sizes the font as digits accumulate |
+
+---
+
+## 2.5 Build configuration
+
+```kotlin
+android {
+    namespace = "id.almezi.simplemoneytracker_kt"
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = "id.almezi.simplemoneytracker_kt"
+        minSdk = 24
+        targetSdk = 37
+        versionCode = 1
+        versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release { optimization { enable = false } }   // R8/resource shrinking disabled
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    buildFeatures { compose = true }
+}
+```
+
+Three things to be aware of:
+
+1. **`optimization.enable = false`** in release. No R8 minification, no resource
+   shrinking. That is why the release APK is ~14 MB. It also means no
+   `keepRules` are required — `app/src/main/keepRules/rules.keep` contains only
+   the template comments.
+2. **No `signingConfigs` block at all.** Release builds are produced
+   **unsigned** (manual local builds; no CI).
+3. **`buildConfig` is not enabled.** `BuildConfig` is not generated, so
+   `BuildConfig.DEBUG` cannot currently gate debug-only hooks. Turn it on if
+   you implement the seed/fake-clock intents (see
+   [01 §1.10](01-architecture-blueprint.md)).
+
+---
+
+## 2.6 Bundled assets
+
+### Fonts (`app/src/main/res/font/`, from `third_party/fonts/`)
+
+| File | Family | Weights | Usage |
+|---|---|---|---|
+| `dm_sans_regular.ttf` | DM Sans | Normal | body text |
+| `dm_sans_medium.ttf` | DM Sans | Medium | — |
+| `dm_sans_semibold.ttf` | DM Sans | SemiBold | buttons, chips, body emphasis |
+| `dm_sans_bold.ttf` | DM Sans | Bold | screen titles, primary buttons |
+| `dm_mono_regular.ttf` | DM Mono | Normal | — |
+| `dm_mono_medium.ttf` | DM Mono | Medium | **every amount and every month label** |
+
+Fonts are bundled as raw TTFs, not downloadable fonts — no Google Fonts
+dependency, no runtime fetch, no certificate arrays.
+
+DM Sans and DM Mono are licensed under the **SIL Open Font License 1.1**.
+
+### Launcher icon
+
+Adaptive icon with three layers: `ic_launcher_background.xml`,
+`ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml`, plus
+`mipmap-anydpi-v26/ic_launcher{,_round}.xml`. Generated by the Python scripts
+`third_party/gen_launcher_bitmap.py` and `third_party/gen_launcher_icon.py`.
+
+### Other resources
+
+- `res/values/strings.xml` — 224+ entries, Indonesian, plus `days_short`,
+  `months_short`, `months_long` string arrays
+- `res/values/colors.xml` — `saku_violet`, `saku_bg`, `white`, `black` for the XML theme
+- `res/values/themes.xml` — `Theme.SimpleMoneyTrackerKT`, one theme for day and night (dark-only app)
+- `res/xml/backup_rules.xml`, `res/xml/data_extraction_rules.xml` — referenced by the manifest for `allowBackup="true"`
+
+---
+
+## 2.7 Runtime footprint
+
+| Item | Value |
+|---|---|
+| Database file | `simplemoneytracker.db` in the app's private database dir |
+| `android:allowBackup` | `true` — system cloud backup / device transfer is allowed |
+| SharedPreferences file | `saku_backup` (single `Long`) |
+| Export files | `saku-cadangan.csv`, `saku-cadangan.json` in `getExternalFilesDir(null)` |
+| Debug build APK | produced by `installDebug`, signed with the debug keystore |
+| Release APK | `release/SimpleMoneyTrackerKT-v1.0.apk`, 14.67 MB, **unsigned**, SHA-256 `fd7080e690a9b99212a85019e761d5793f0ef6226bba83bc3f16bb9e03e59b54`, built 2026-10-11 |
+
+---
+
+## 2.8 Upgrade guidance
+
+| Change | Notes |
+|---|---|
+| Bump a library | Edit `gradle/libs.versions.toml`. Do not inline a version in `app/build.gradle.kts` — `activity-compose` and `navigation-compose` are currently pinned inline and should be moved into the catalog when touched |
+| AGP / Gradle | AGP 9.4.1 with Gradle 9.7.1. Change both together and check AGP's compatibility matrix |
+| Kotlin | The Compose plugin version tracks the Kotlin version. Bump Kotlin ⇒ bump `kotlin-compose` |
+| KSP | Must match the Kotlin version. KSP 2.3.12 goes with Kotlin 2.4.20 |
+| Room | Bumping past 2.8.4 changes KMP support and the `withTransaction` imports. Check `deleteCustomCategoryAtomically` after |
+| minSdk | Raising above 24 reduces the install base. Nothing in the code depends on 24 specifically, but verify `DatePickerDialog` behavior |
+| Adding an iOS target | Larger than a version bump — it needs `kotlin-multiplatform`, KMP Compose artifacts, `commonMain` restructuring, and a decision about Room KMP vs SQLDelight. `AGENTS.md` already names both options |
+| Adding a dependency | Check it does not need a new permission. The app currently has zero permissions and that is worth preserving |
+
+---
+
+## See also
+
+- [01-architecture-blueprint.md](01-architecture-blueprint.md) — what each layer does
+- [03-codebase-setup.md](03-codebase-setup.md) — installing and verifying this toolchain
+- [08-design-system.md](08-design-system.md) — the design tokens derived from `improve/tokens.css`
+---
+
+# 3. Codebase Structure & Developer Setup Guide
+
+Purpose: get a new developer from a clean machine to a running app, and give
+them a map of the repository.
+
+Verified against branch `feature/improve-design-2.0`, HEAD `8c7dc3a`.
+
+---
+
+## 3.1 Repository
+
+| | |
+|---|---|
+| **Remote** | `https://github.com/almezi/SimpleMoneyTracker-KT.git` |
+| **Default branch** | `main` (`origin/HEAD → origin/main`) |
+| **Visibility / hosting** | GitHub |
+| **License** | No LICENSE file in the repository. Treat as private / all rights reserved until one is added |
+
+```bash
+git clone https://github.com/almezi/SimpleMoneyTracker-KT.git
+cd SimpleMoneyTracker-KT
+```
+
+---
+
+## 3.2 Branching strategy
+
+Observed branches:
+
+| Branch | Tip commit | Role |
+|---|---|---|
+| `main` | `da913d6` | Base line. Well behind — does **not** contain the Saku redesign |
+| `develop` | `a09e1f3` | Intermediate line, also behind the feature branch |
+| `feature/improve-design-2.0` | `8c7dc3a` | **The shipped work.** 29 commits ahead of `main`, 0 behind |
+
+The intended model, as implied by the branch names and by `AGENTS.md`:
+
+```
+main        ← stable, shippable
+  │
+  └── develop          ← integration
+        │
+        └── feature/<scope>   ← one branch per piece of work
+```
+
+Current divergence: `main..feature/improve-design-2.0` = 29 commits,
+`feature/improve-design-2.0..main` = 0. The feature branch is a strict
+fast-forward of `main`.
+
+There are **no git tags** in the repository, so there is no released-version
+marker on any commit. The shipped `v1.0` exists only as the APK file in
+`release/`.
+
+### A branch rule from `AGENTS.md`
+
+> Do not introduce bugs. Any bug work is done separately by hand on another branch.
+
+So: do not fix a defect on a feature branch. Switch branches and do it there.
+
+---
+
+## 3.3 Toolchain requirements
+
+| Requirement | Version | Notes |
+|---|---|---|
+| **JDK** | **17+** for compiling; **25** in the project IDE | Bytecode target is 17. `.idea/misc.xml` pins `jbr-25` (`languageLevel="JDK_25"`). JDK 25 works |
+| **Android SDK Platform** | **API 37** | `compileSdk`/`targetSdk` = 37; platform `android-37.0` must be installed |
+| **Build Tools** | 36.0.0 or 37.0.0 | Either is present locally |
+| **Android Studio** | Current with AGP 9.4.1 support | Use the bundled JBR so the IDE and Gradle agree on the JDK |
+| **Gradle** | 9.7.1 | Supplied by the wrapper — **do not install it separately** |
+| **Git** | any recent version | |
+| **adb** | from `platform-tools` | for `installDebug` targeting and `pm clear` |
+| **Python 3** | optional | only for re-running the launcher-icon generators in `third_party/` |
+
+On macOS the SDK path used by this project is:
+
+```
+/Users/auliameiazizi/Library/Android/sdk
+```
+
+### Install the SDK bits
+
+```
+Settings → Languages & Frameworks → Android SDK
+  → SDK Platforms  → check "Android 37.0"
+  → SDK Tools       → check "Android SDK Build-Tools 37", "Android SDK Platform-Tools"
+```
+
+---
+
+## 3.4 Environment configuration
+
+**There is no `.env` file, and there are no base URLs.**
+
+The app has no backend, no environment switching, and no configuration beyond
+`local.properties`. The only environment-specific file is the auto-generated
+`local.properties`, which is git-ignored:
+
+```properties
+# local.properties  — created by Android Studio, DO NOT COMMIT
+sdk.dir=/Users/<you>/Library/Android/sdk
+```
+
+Hand-written at the repo root:
+
+| File | Committed? | Purpose |
+|---|---|---|
+| `local.properties` | **No** — in `.gitignore` twice | SDK location. Machine-specific |
+| `gradle.properties` | Yes | Daemon heap, configuration cache, Kotlin style |
+| `settings.gradle.kts` | Yes | Repositories, module list |
+| `gradle/libs.versions.toml` | Yes | All dependency versions |
+| `gradle/wrapper/gradle-wrapper.properties` | Yes | Gradle 9.7.1 |
+
+### Secrets
+
+There are none to configure. No API keys, no tokens, no signing properties,
+no credentials file.
+
+If you add a signing config later, read credentials from
+`local.properties` (already git-ignored) or the environment — never commit a
+`.jks` or a password.
+
+---
+
+## 3.5 First build
+
+```bash
+# 1. Verify Gradle picks up the right JDK
+./gradlew --version
+
+# 2. Compile everything
+./gradlew assembleDebug
+
+# 3. Unit tests
+./gradlew testDebugUnitTest
+```
+
+If `./gradlew --version` reports the wrong JVM, set `JAVA_HOME`:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+# or, to match the IDE:
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+```
+
+Common first-build problems:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `Failed to find target with hash string 'android-37'` | Platform 37 not installed | Install via SDK Manager |
+| `Unsupported class file major version` | JDK too old for AGP 9 | Use JDK 17 or newer |
+| Out of memory during compilation | Default heap is 2 GB | `org.gradle.jvmargs=-Xmx4096m` in `gradle.properties` |
+| `google()` cannot resolve `androidx.*` | Network/proxy, or repos filtered by `settings.gradle.kts` | Check connectivity; the `includeGroupByRegex` filters only apply to **plugin** resolution, not `dependencyResolutionManagement` |
+| Room schema errors after editing an entity | KSP ran against a stale model | `./gradlew clean` then rebuild |
+
+---
+
+## 3.6 Build, test and run commands
+
+```bash
+# Build
+./gradlew build                          # assemble + unit tests, all variants
+./gradlew assembleDebug                  # debug APK
+./gradlew assembleRelease                # release APK (UNSIGNED — see below)
+./gradlew clean
+
+# Install and run
+./gradlew installDebug                   # build + install on the connected device/emulator
+adb shell am start -n id.almezi.simplemoneytracker_kt/.MainActivity
+
+# Tests
+./gradlew test                           # JVM unit tests
+./gradlew testDebugUnitTest              # JVM unit tests, debug variant only
+./gradlew connectedAndroidTest           # instrumented tests (needs a device)
+
+# Static checks
+./gradlew lint                           # Android Lint
+./gradlew lintDebug
+
+# Devices
+adb devices
+adb shell pm clear id.almezi.simplemoneytracker_kt    # reset app data
+adb shell am force-stop id.almezi.simplemoneytracker_kt
+
+# Dependency reports
+./gradlew :app:dependencies --configuration debugRuntimeClasspath
+```
+
+### Release build note
+
+```bash
+./gradlew clean assembleRelease
+cp app/build/outputs/apk/release/app-release-unsigned.apk release/SimpleMoneyTrackerKT-v1.0.apk
+shasum -a 256 release/SimpleMoneyTrackerKT-v1.0.apk
+```
+
+The APK is unsigned because `app/build.gradle.kts` declares no
+`signingConfigs`. Android will refuse to install it. For local testing use
+`./gradlew installDebug`, which is signed with the standard debug keystore
+(`~/.android/debug.keystore`, auto-generated by the SDK).
+
+---
+
+## 3.7 Project layout
+
+```
+SimpleMoneyTracker-KT/
+├── AGENTS.md                    Standing rules for AI coding tools
+├── UI_SPEC.md                   What the app does. Authoritative for scope
+├── CATEGORIES.md                Category IDs, columns, countsInTotals rules
+├── TESTABILITY.md               Test-tag contract, debug hooks, seed sets
+├── README.md                    Build commands, key files, APK download
+│
+├── build.gradle.kts             Plugin aliases, apply false
+├── settings.gradle.kts          Repositories, toolchain resolver, :app
+├── gradle.properties            Heap, configuration cache, Kotlin style
+├── gradle/libs.versions.toml    All dependency + plugin versions
+├── gradlew, gradlew.bat         Wrapper (Gradle 9.7.1)
+├── local.properties             SDK path — git-ignored
+│
+├── app/
+│   ├── build.gradle.kts         android { }, dependencies { }
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml      No permissions. One launcher activity
+│       │   ├── keepRules/rules.keep     Template only; R8 is disabled anyway
+│       │   ├── java/id/almezi/simplemoneytracker_kt/
+│       │   │   ├── MainActivity.kt               Theme, nav controller, bottom bar
+│       │   │   ├── SimpleMoneyTrackerApp.kt     Application: container + seeding
+│       │   │   ├── TestTags.kt                   THE test-tag registry
+│       │   │   ├── navigation/NavGraph.kt       Routes, NavHost, bottom nav items
+│       │   │   ├── data/                         See below
+│       │   │   └── ui/                           See below
+│       │   └── res/
+│       │       ├── font/                  6 DM Sans / DM Mono TTFs
+│       │       ├── values/                strings.xml, colors.xml, themes.xml
+│       │       ├── drawable/              launcher layers
+│       │       ├── mipmap-anydpi-v26/     adaptive icon
+│       │       └── xml/                   backup_rules, data_extraction_rules
+│       ├── test/                   JVM unit tests
+│       │   └── java/id/almezi/simplemoneytracker_kt/
+│       │       ├── ExampleUnitTest.kt
+│       │       ├── ui/CategoryFilterTest.kt
+│       │       └── ui/designsystem/SakuFormatTest.kt
+│       └── androidTest/            instrumented tests (placeholder only)
+│
+├── improve/                      Design package (input to the redesign)
+│   ├── 00-README.md                   How to use the package
+│   ├── 01-design-system.md           Components, colors, type, motion
+│   ├── 02-screens-and-rules.md       Every screen, state, business rule
+│   └── tokens.css                    Design tokens as CSS variables
+│
+├── third_party/
+│   ├── fonts/                        DM Sans, DM Mono sources
+│   ├── gen_launcher_bitmap.py        Regenerates launcher PNG layers
+│   └── gen_launcher_icon.py          Regenerates the adaptive icon
+│
+├── release/
+│   └── SimpleMoneyTrackerKT-v1.0.apk Unsigned release artifact
+│
+└── docs/                          THIS documentation set
+```
+
+### `data/` — persistence and domain-facing logic
+
+| File | Responsibility |
+|---|---|
+| `Transaction.kt` | `@Entity` for the `transactions` table |
+| `Category.kt` | `@Entity` for the `categories` table |
+| `Account.kt` | `@Entity` for the `accounts` table |
+| `Budget.kt` | `@Entity` for the `budgets` table |
+| `AppDatabase.kt` | Room DB v3, both migrations, `deleteCustomCategoryAtomically` |
+| `TransactionDao.kt` | Transaction queries incl. the `SUM` aggregates for Ringkasan/Anggaran |
+| `CategoryDao.kt` | Category queries, hide/rename/insert-ignore |
+| `AccountDao.kt` | Account queries |
+| `BudgetDao.kt` | Budget queries, `REPLACE` upsert |
+| `TransactionRepository.kt` | Thin pass-through + `withTransaction` for bulk insert |
+| `CategoryRepository.kt` | CRUD, usage counts, duplicate-name check, atomic delete |
+| `BudgetRepository.kt` | Upsert that preserves `createdAt` and refreshes `updatedAt` |
+| `BackupRepository.kt` | CSV + JSON build, parse, file write, SAF read |
+| `Clock.kt` | The one-method time interface |
+| `AppContainer.kt` | Manual DI root + `RealClock` |
+| `CategorySeed.kt` | 36 categories |
+| `AccountSeed.kt` | 3 accounts, `DEFAULT_ACCOUNT_ID = "acc_tunai"` |
+
+### `ui/` — presentation
+
+| Path | Contents |
+|---|---|
+| `ui/designsystem/` | `SakuColor`, `SakuType`, `SakuDimens`, `SakuFormat`, `SakuTheme`, `SakuBudget`, `SakuTokenPreview` |
+| `ui/components/` | 32 public composables — buttons, fields, chips, sheets, toasts, navigation, empty states |
+| `ui/tambah/` | `TambahScreen`, `TambahViewModel` |
+| `ui/daftar/` | `DaftarScreen`, `DaftarViewModel` |
+| `ui/ringkasan/` | `RingkasanScreen`, `RingkasanViewModel` |
+| `ui/ubah/` | `UbahTransaksiScreen`, `UbahTransaksiViewModel` |
+| `ui/transaction/` | `TransactionForm.kt` — the shared form used by Tambah **and** Ubah |
+| `ui/anggaran/` | `AnggaranScreen`, `AnggaranFormScreen` + ViewModels |
+| `ui/kategori/` | `KelolaKategoriScreen`, `TambahKategoriScreen` + ViewModels |
+| `ui/cadangan/` | `CadanganScreen`, `CadanganViewModel` |
+| `ui/CategoryUiMapper.kt` | Category ID → string resource, picker search filtering |
+
+---
+
+## 3.8 Naming conventions
+
+| Layer | Pattern | Example |
+|---|---|---|
+| Screen composable | `<Feature>Screen` | `TambahScreen`, `DaftarScreen` |
+| ViewModel | `<Feature>ViewModel` | `RingkasanViewModel` |
+| State | `<Feature>UiState` | `TambahUiState` |
+| One-shot event | sealed interface `<Feature>Event` | `TambahEvent.Saved` |
+| Repository | `<Entity>Repository` | `BudgetRepository` |
+| DAO | `<Entity>Dao` | `TransactionDao` |
+| Entity | Singular model name | `Transaction`, `Category` |
+| Design token | `Saku<Kind>` | `SakuColors`, `SakuSpace`, `SakuRadius` |
+| Shared component | `Saku<Component>` | `SakuPickerSheet`, `SakuToastHost` |
+| Route object | `Screen.<Name>` inside `sealed class Screen` | `Screen.Daftar` |
+| Test tag constant | `<SCREEN>_<ELEMENT>` | `DAFTAR_EMPTY_STATE` |
+
+Storage values for transaction type are the Indonesian strings
+`"pemasukan"` and `"pengeluaran"` (`TransactionType.storageValue`). They are
+persisted, referenced in SQL, and compared as raw strings in several DAO
+queries. Changing them requires a data migration.
+
+---
+
+## 3.9 Conventions to follow
+
+From `AGENTS.md` and enforced throughout the codebase:
+
+1. **Strings in `strings.xml`,** Indonesian first. No hard-coded UI text.
+2. **Never call the system clock directly.** Inject `Clock`. The one call site
+   is `RealClock` in `AppContainer.kt`.
+3. **Test tags only from `TestTags.kt`,** format `<screen>_<type>_<name>`.
+   Never invent, rename or remove one.
+4. **Manual DI.** Constructor parameters and `ViewModelProvider.Factory`.
+5. **Features must exist in `UI_SPEC.md`.** If it is not in the spec, it does
+   not go in the app.
+6. **Do not add** settings screens, category editing beyond what exists,
+   multi-wallet or multi-currency.
+7. **Kotlin official style,** managed by the version catalog.
+8. **Do not introduce bugs** as part of feature work.
+
+---
+
+## 3.10 Onboarding checklist
+
+- [ ] Clone the repo, switch to the branch that has the work you need
+      (`git branch -a`)
+- [ ] Install Android SDK Platform 37 and Build-Tools 37
+- [ ] Confirm `./gradlew --version` reports JDK 17 or newer
+- [ ] `./gradlew assembleDebug` succeeds
+- [ ] `./gradlew testDebugUnitTest` passes
+- [ ] `./gradlew installDebug` runs on a device or emulator
+- [ ] Read `UI_SPEC.md`, `CATEGORIES.md`, `TESTABILITY.md` (required by `AGENTS.md`)
+- [ ] Read `docs/01-architecture-blueprint.md`
+- [ ] Learn the design system before touching UI — `docs/08-design-system.md`
+- [ ] Note that categories are referenced **by ID** in tests, never by name
+
+---
+
+## See also
+
+- [01-architecture-blueprint.md](01-architecture-blueprint.md) — layer responsibilities
+- [02-tech-stack-dependencies.md](02-tech-stack-dependencies.md) — versions in detail
+---
+
