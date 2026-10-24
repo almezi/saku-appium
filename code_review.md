@@ -156,37 +156,42 @@ return byTag(tags.ringkasan.balanceValue).getText()
 
 ### Priority 0 (P0) — Immediate Fixes
 
-- [ ] **Step 1:** Extract `extractChildTexts` helper to eliminate 3x duplicated loop
+- [x] **Step 1:** Extract `extractChildTexts` helper to eliminate 3x duplicated loop
   - **Location:** Add private method in `RingkasanPage` or move to `helpers/locators.ts` as a shared utility
   - **Files affected:** `ringkasan.page.ts` (3 method bodies change)
   - **Effort:** 15 min
   - **Risk reduction:** Catches logic drift at one edit point
+  - ✅ **Done 2026-10-25:** helper lives in `src/helpers/elements.ts` (element-reading helpers rather than `locators.ts`, which stays find/scroll-only); `comparisonTexts()` and `emptyStateTexts()` now call it. Only 2 loops remained — `breakdownItemTexts` was already rewritten to page-source parsing (commit cafa16c), so the third copy no longer existed to consolidate.
 
-- [ ] **Step 2:** Move `readAmount` from `daftar.page.ts` to `helpers/` to decouple page objects
+- [x] **Step 2:** Move `readAmount` from `daftar.page.ts` to `helpers/` to decouple page objects
   - **Location:** `src/helpers/elements.ts` (new file) or `src/helpers/money.ts` (existing)
   - **Files affected:** `src/pageobjects/daftar.page.ts`, `src/pageobjects/ringkasan.page.ts`, any other importer
   - **Effort:** 20 min
   - **Risk reduction:** Enables independent refactoring of either page
+  - ✅ **Done 2026-10-25:** moved to `src/helpers/elements.ts` (kept `money.ts` free of WDIO element dependencies); the `ringkasan.page.ts → daftar.page.ts` import is gone — `ringkasan` now imports `readAmount` from the helper, and `readAmount` itself reuses `extractChildTexts` for its child enumeration. Verified with `tsc --noEmit`; Appium suite not re-run (behavior-preserving refactor).
 
 ### Priority 1 (P1) — Medium-Hanging Fruit
 
-- [ ] **Step 3:** Add unit tests for `parseAmountText` and bar-ratio extraction logic
+- [x] **Step 3:** Add unit tests for `parseAmountText` and bar-ratio extraction logic
   - **Location:** `src/helpers/__tests__/money.test.ts` (new)
   - **Files affected:** New test file; imports `src/helpers/money.ts`
   - **Effort:** 30 min
   - **Risk reduction:** Fast feedback on regex/ratio changes without booting emulator
+  - ✅ **Done 2026-10-25:** `src/helpers/__tests__/money.test.ts` (formatting + parsing, incl. comma decimals, U+2212/ASCII minus, last-run selection) and `src/helpers/__tests__/elements.test.ts` (bar-ratio math). The ratio logic was extracted into a pure `barFillRatio(containerWidth, fillWidth)` in `helpers/elements.ts` to make it unit-testable — `breakdownBarRatio` now consumes it, and a non-positive container width throws into the existing retry loop. Runner is Node's built-in `node:test` via the ts-node hook (no new dependencies); run with the new `npm run test:unit` script. 10 pass, 1 skipped — the mixed-sign `parseAmountText` case is skip-marked as the R9 (P2) latent-bug documentation. WDIO spec glob (`src/tests/**/*.spec.ts`) does not pick up `*.test.ts`.
 
-- [ ] **Step 4:** Replace `as unknown as Element[]` cast with proper type
+- [x] **Step 4:** Replace `as unknown as Element[]` cast with proper type
   - **Location:** `ringkasan.page.ts` line 99
   - **Files affected:** `ringkasan.page.ts` only
   - **Effort:** 10 min
   - **Risk reduction:** Removes hidden type assumption
+  - ✅ **Done 2026-10-25:** cast removed entirely — plus the `import type { Element } from 'webdriverio'` (finding #6 resolved for this file too). Correction to the original fix suggestion: in the installed WDIO v9 types, `await` on a `ChainablePromiseArray` does **not** yield `Element[]` (its `length` is typed `Promise<number>`, which is what the double-cast was hiding) — the type-honest idiom is spreading the awaited chainable into a real array: `const viewList = [...(await item.$$(selector))]`. Verified with `tsc --noEmit`.
 
-- [ ] **Step 5:** Add retry/wait in `switchMonth` between click and label read
+- [x] **Step 5:** Add retry/wait in `switchMonth` between click and label read
   - **Location:** `ringkasan.page.ts` lines 112-120
   - **Files affected:** `ringkasan.page.ts` only
   - **Effort:** 15 min
   - **Risk reduction:** Reduces flaky month-switch failures
+  - ✅ **Done 2026-10-25 (ringkasan only):** `driver.pause(300)` settle wait added between click and label read, and the `.catch(() => before)` masking is gone — a failed label read now surfaces as a real error instead of masquerading as "unchanged" and triggering a double-step re-click. `daftar.page.ts`'s identical copy is untouched; the full both-files hardening (assert the *target* label) remains open as Part C P1 / R1.
 
 ### Priority 2 (P2) — Lower Priority
 
@@ -317,6 +322,8 @@ config/tags ← everything
 
 A single `childTexts(el)` + verified `typeIntoTaggedField(el, text)` in `helpers/` would erase most of this.
 
+*Update 2026-10-25:* `extractChildTexts` now lives in `src/helpers/elements.ts`; the ringkasan copies (`comparisonTexts`/`emptyStateTexts`) and `readAmount`'s child enumeration route through it. The daftar page-object copies and the spec copy remain — full consolidation is still P1.
+
 **Assertion quality: the strongest axis.** ~82 `it` blocks with exact-value assertions (`summaryIncome() === AMOUNT` via parsed numbers, `balanceText() === formatRp(...)`), math validation (percentages sum to 100, ratios `toBeCloseTo`), and state-negative checks (`isExisting()` false after delete). No assertion-free tests beyond the bare-wait style in TC-NAV-03..05.
 
 ### A.6 Flakiness Risk Assessment
@@ -398,9 +405,9 @@ A single `childTexts(el)` + verified `typeIntoTaggedField(el, text)` in `helpers
 
 ### P1 — Quality debt with compounding interest
 
-- [ ] **Harden `switchMonth`** against the double-step race in BOTH `daftar.page.ts:76-84` and `ringkasan.page.ts` (R1 + prior review #5): settle-wait before reading the label; assert the *target* label, not merely "changed"; stop masking read errors via `.catch(() => before)`
-- [ ] **Consolidate helpers** (R2/R3 + duplication table): one verified-retrying `typeIntoTaggedField` and one `childTexts(el)` in `helpers/`, deleting 3 typing copies and 7 text-loop copies
-- [ ] **Move `readAmount` out of `daftar.page.ts`** into `helpers/` (prior review Step 2 — still open; blocks clean helper consolidation)
+- [ ] **Harden `switchMonth`** against the double-step race in BOTH `daftar.page.ts:76-84` and `ringkasan.page.ts` (R1 + prior review #5): settle-wait before reading the label; assert the *target* label, not merely "changed"; stop masking read errors via `.catch(() => before)` — *partially done 2026-10-25: `ringkasan.page.ts` has the settle wait and no longer masks read errors (ringkasan review P1 Step 5); `daftar.page.ts`'s copy and the target-label assertion remain*
+- [ ] **Consolidate helpers** (R2/R3 + duplication table): one verified-retrying `typeIntoTaggedField` and one `childTexts(el)` in `helpers/`, deleting 3 typing copies and 7 text-loop copies — *partially done 2026-10-25: `extractChildTexts` exists in `helpers/elements.ts` and the ringkasan copies use it; the daftar/spec copies and the `typeIntoTaggedField` consolidation remain*
+- [x] **Move `readAmount` out of `daftar.page.ts`** into `helpers/` (prior review Step 2 — done 2026-10-25, see ringkasan review P0 Step 2)
 - [ ] **Wrap `daftar.rowTexts` in the `tapRowAction` retry pattern** (R7) and replace 10+ raw `$$` selectors in specs with locator helpers
 
 ### P2 — Hygiene
@@ -415,7 +422,7 @@ A single `childTexts(el)` + verified `typeIntoTaggedField(el, text)` in `helpers
 ### P3 — Track / deferred
 
 - [ ] Dependency re-audit each release; document shell-quote/sharp deferrals with a review date (B.3) — **never** `npm audit fix --force`
-- [ ] Unit tests for `parseAmountText` + extraction helpers (prior review Step 3)
+- [x] Unit tests for `parseAmountText` + extraction helpers (prior review Step 3 — done 2026-10-25, see ringkasan review P1 Step 3; run with `npm run test:unit`)
 - [ ] Optional/nit items O3–O6, N1–N4 at author discretion
 
 ### Verdict

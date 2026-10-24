@@ -39,3 +39,16 @@ export async function readAmount(el: ChainablePromiseElement): Promise<number> {
   }
   return parseAmountText(withDigits[withDigits.length - 1])
 }
+
+/**
+ * Bar-fill share of a row's progress bar from the rendered widths: fill /
+ * container. A non-positive container width means the row never composed or
+ * the layout changed — throw so the caller's retry re-queries instead of
+ * computing a bogus ratio.
+ */
+export function barFillRatio(containerWidth: number, fillWidth: number): number {
+  if (containerWidth <= 0) {
+    throw new Error(`Bar container width must be positive, got ${containerWidth}`)
+  }
+  return fillWidth / containerWidth
+}

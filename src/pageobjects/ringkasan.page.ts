@@ -1,8 +1,7 @@
 import { byTag, scrollToTag } from '../helpers/locators'
-import { extractChildTexts, readAmount } from '../helpers/elements'
+import { barFillRatio, extractChildTexts, readAmount } from '../helpers/elements'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
-import type { Element } from 'webdriverio'
 
 /** Non-empty text attributes of the subtree under the node with `resourceId`. */
 function childTextsFromSource(xml: string, resourceId: string): string[] {
@@ -107,12 +106,15 @@ export class RingkasanPage extends BasePage {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const item = await scrollToTag(tags.ringkasan.categoryItem(categoryId))
-        const views = await item.$$('android=new UiSelector().className("android.view.View")')
-        const viewList = (await views) as unknown as Element[]
+        // WDIO v9 types the `$$` chainable's `length` as Promise<number>;
+        // spread the awaited result into a real array before indexing.
+        const viewList = [
+          ...(await item.$$('android=new UiSelector().className("android.view.View")')),
+        ]
         if (viewList.length < 2) continue
         const container = await viewList[viewList.length - 2].getSize()
         const fill = await viewList[viewList.length - 1].getSize()
-        if (container.width > 0) return fill.width / container.width
+        return barFillRatio(container.width, fill.width)
       } catch {
         // stale element — re-scroll and retry
       }
@@ -166,7 +168,12 @@ export class RingkasanPage extends BasePage {
     const before = await this.monthLabel()
     for (let attempt = 0; attempt < 3; attempt++) {
       await byTag(arrow).click()
-      const after = await this.monthLabel().catch(() => before)
+      // Recomposition is not instantaneous: a label read immediately after
+      // the click returns the old value, and re-clicking on it steps two
+      // months. Settle first, then let a failed read surface instead of
+      // masking it as "unchanged".
+      await driver.pause(300)
+      const after = await this.monthLabel()
       if (after !== before) return
     }
     throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
