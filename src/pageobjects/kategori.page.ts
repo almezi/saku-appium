@@ -1,4 +1,4 @@
-import { byTag, allByTagMatches } from '../helpers/locators'
+import { byTag, allByTagMatches, scrollToTag } from '../helpers/locators'
 import { BasePage } from './base.page'
 import { typeIntoTaggedField } from '../helpers/input'
 import type { ChainablePromiseElement } from 'webdriverio'
@@ -24,6 +24,11 @@ export const kategoriTags = {
   rowDelete: (categoryId: string) => `kategori_row_delete_${categoryId}`,
   addButton: 'kategori_add_button',
   deleteSheet: 'kategori_delete_sheet',
+  // Rename dialog (verified live): tagged field and buttons, no text
+  // fallbacks needed despite being a Compose dialog.
+  formName: 'kategori_form_name',
+  formSave: 'kategori_form_save',
+  formCancel: 'kategori_form_cancel',
 } as const
 
 /**
@@ -76,27 +81,29 @@ export class KategoriPage extends BasePage {
 
   /** Opens the "Ubah kategori" dialog for `categoryId`. */
   async openEditDialog(categoryId: string): Promise<void> {
+    // The expense list holds 27 rows; scroll the row into view before
+    // clicking or it may not be composed at all.
+    await scrollToTag(kategoriTags.row(categoryId))
     await byTag(kategoriTags.rowEdit(categoryId)).click()
-    await $('android=new UiSelector().textContains("Ubah kategori")').waitForDisplayed({
-      timeout: 10_000,
-    })
+    await byTag(kategoriTags.formName).waitForDisplayed({ timeout: 10_000 })
   }
 
   /**
-   * Renames the category in the open dialog. The dialog field exposes the
-   * "1–20 karakter" placeholder as text (no test tag), so it is located by
-   * that documented placeholder.
+   * Renames the category in the open dialog. The keyboard resize shifts
+   * the dialog buttons, so the save click waits for the tagged button
+   * rather than trusting a text lookup mid-animation.
    */
   async renameInDialog(newName: string): Promise<void> {
-    const input = $('android=new UiSelector().textContains("karakter")')
-    await input.waitForDisplayed({ timeout: 10_000 })
-    await typeIntoTaggedField(input, newName)
-    await $('android=new UiSelector().text("Ubah")').click()
+    await typeIntoTaggedField(byTag(kategoriTags.formName), newName)
+    const save = byTag(kategoriTags.formSave)
+    await save.waitForDisplayed({ timeout: 5_000 })
+    await save.click()
+    await save.waitForDisplayed({ reverse: true, timeout: 5_000 })
   }
 
-  /** Cancels the open edit dialog via "Batal" (no change). */
+  /** Cancels the open edit dialog (no change). */
   async cancelDialog(): Promise<void> {
-    await $('android=new UiSelector().text("Batal")').click()
+    await byTag(kategoriTags.formCancel).click()
   }
 
   /** Hides (or, when hidden, shows) the category via the eye toggle. */

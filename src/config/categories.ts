@@ -21,7 +21,9 @@ export const categories = {
     dailyGroceries: 'exp_daily_groceries',
     transportFuel: 'exp_transport_fuel',
     transportPublic: 'exp_transport_public',
-    other: 'exp_other',
+    // Verified on the live kategori screen: expense "other" categories are
+    // namespaced per group; a bare `exp_other` does not exist.
+    dailyOther: 'exp_daily_other',
   },
 } as const
 

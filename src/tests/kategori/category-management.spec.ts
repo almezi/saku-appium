@@ -57,7 +57,7 @@ describe('TC-KAT — category management (Phase 2)', () => {
       categories.expense.dailyFood,
       categories.expense.dailyGroceries,
       categories.expense.transportFuel,
-      categories.expense.other,
+      categories.expense.dailyOther,
     ]) {
       expect(await kategori.row(id).isDisplayed()).toBe(true)
     }

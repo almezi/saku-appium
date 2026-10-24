@@ -10,6 +10,8 @@ export interface TransactionFormInput {
   categoryId: string
   note?: string
   accountId?: string
+  /** Explicit transaction date; the form keeps the last-used date across saves. */
+  date?: Date
 }
 
 /**
@@ -114,6 +116,36 @@ export class TambahPage extends BasePage {
     await byTag(tags.tambah.sheetAccount).waitForDisplayed({ reverse: true })
   }
 
+  /**
+   * Picks a date in the Material date picker. Day cells carry no tags —
+   * verified live, each renders its full English long date ("Friday,
+   * October 23, 2026"; today's cell prefixes "Today, "), so textContains on
+   * the long date matches either form. OK confirms via tambah_date_picker_ok.
+   */
+  async selectDate(date: Date): Promise<void> {
+    const label = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(date)
+    await byTag(tags.tambah.selectDate).click()
+    await byTag(tags.tambah.datePicker).waitForDisplayed({ timeout: 10_000 })
+    const cell = $(`android=new UiSelector().textContains("${label}")`)
+    // The wanted month is already open for near-today dates; step back a
+    // month at most (covers yesterday on the 1st) via the picker's prev arrow.
+    for (let attempt = 0; attempt < 2 && !(await cell.isExisting()); attempt++) {
+      const prev = $(
+        `android=new UiSelector().descriptionContains("previous month")`,
+      )
+      await prev.click()
+    }
+    await cell.waitForDisplayed({ timeout: 5_000 })
+    await cell.click()
+    await byTag(tags.tambah.datePickerOk).click()
+    await byTag(tags.tambah.datePicker).waitForDisplayed({ reverse: true })
+  }
+
   async fillForm(input: TransactionFormInput): Promise<void> {
     if (input.type) await this.selectType(input.type)
     await this.fillAmount(input.amount)
@@ -121,6 +153,7 @@ export class TambahPage extends BasePage {
     if (input.accountId && input.accountId !== accounts.tunai) {
       await this.selectAccount(input.accountId)
     }
+    if (input.date) await this.selectDate(input.date)
     if (input.note) await this.fillNote(input.note)
   }
 

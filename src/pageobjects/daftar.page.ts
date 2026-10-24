@@ -43,6 +43,19 @@ export class DaftarPage extends BasePage {
     return byTag(tags.daftar.emptyState)
   }
 
+  /** Child texts of the empty state (title, hint, actions). */
+  async emptyStateTexts(): Promise<string[]> {
+    const children = await this.emptyState.$$(
+      'android=new UiSelector().className("android.widget.TextView")',
+    )
+    const texts: string[] = []
+    for (const child of children) {
+      const text = ((await child.getText()) || '').trim()
+      if (text) texts.push(text)
+    }
+    return texts
+  }
+
   async summaryIncome(): Promise<number> {
     return readAmount(byTag(tags.daftar.summaryMasuk))
   }
@@ -114,6 +127,27 @@ export class DaftarPage extends BasePage {
     return scrollToTagMatches('daftar_item_.*')
   }
 
+  /**
+   * Child texts of the transaction row whose rendered text contains
+   * `snippet` — category, type label, amount. findRowText resolves the
+   * matching TEXT node, so the row container is reached via the nearest
+   * daftar_item ancestor (XPath); a scroll-to-top first keeps top rows
+   * composed even when a previous test scrolled the list.
+   */
+  async rowTexts(snippet: string): Promise<string[]> {
+    await scrollToTagMatches('daftar_item_.*')
+    const row = await $(
+      `//android.widget.TextView[contains(@text, "${snippet}")]/ancestor::*[starts-with(@resource-id, "daftar_item_")][1]`,
+    )
+    const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
+    const texts: string[] = []
+    for (const child of children) {
+      const text = ((await child.getText()) || '').trim()
+      if (text) texts.push(text)
+    }
+    return texts
+  }
+
   async dayHeaderCount(): Promise<number> {
     const headers = await $$(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`)
     return headers.length
@@ -128,5 +162,43 @@ export class DaftarPage extends BasePage {
     return readAmount(
       $(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`),
     )
+  }
+
+  /**
+   * Rendered texts of the first (newest) day header in order — weekday
+   * ("SABTU"), date ("24 Okt 2026") and net total ("Rp …" / "−Rp …").
+   */
+  async firstDayHeaderTexts(): Promise<string[]> {
+    const header = $(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`)
+    const children = await header.$$('android=new UiSelector().className("android.widget.TextView")')
+    const texts: string[] = []
+    for (const child of children) {
+      const text = ((await child.getText()) || '').trim()
+      if (text) texts.push(text)
+    }
+    return texts
+  }
+
+  /**
+   * Amount text of each composed transaction row, in list (DOM) order.
+   * Rows are LazyColumn items, so this covers the composed window only —
+   * enough for order assertions near the top of the list.
+   */
+  async rowAmountTextsInOrder(): Promise<string[]> {
+    const rows = await $$('android=new UiSelector().resourceIdMatches("daftar_item_\\d+$")')
+    const amounts: string[] = []
+    for (const row of rows) {
+      const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
+      for (const child of children) {
+        const text = ((await child.getText()) || '').trim()
+        // Row amounts are the only digit-bearing text ("Rp 60.000", never
+        // the type label or category name).
+        if (/[\d]/.test(text) && text.startsWith('Rp')) {
+          amounts.push(text)
+          break
+        }
+      }
+    }
+    return amounts
   }
 }

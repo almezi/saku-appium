@@ -66,6 +66,7 @@ Copy the template from `BUG_FOUND.template.md` and fill every field:
 - **Do not delete** `BUG_FOUND.md` files — they are the record of known issues.
 - **Reference the bug ID** when discussing test failures in team messages.
 - **Check existing `BUG_FOUND.md` files** before starting a sub-phase to avoid duplicating known issues.
+- **Test failure retry limit** — if a test case fails more than twice (3 consecutive failed attempts), skip that test case, mark it with `~[BUG]~` in `progress.md`, create a `BUG_FOUND.md` entry, and continue with the remaining backbone tests. All skipped / repeatedly failing test cases are investigated only after all backbone tests in the current phase are completed.
 
 ## Directory Layout
 

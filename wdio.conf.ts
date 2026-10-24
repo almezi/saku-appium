@@ -79,7 +79,11 @@ export const config: TestrunnerConfig = {
 
   mochaOpts: {
     ui: 'bdd',
-    timeout: 120_000,
+    // Long enough for UI-heavy tests (e.g. seeding 100 transactions, ~10 min).
+    // WDIO's mocha wrapper does not forward `this` into hooks/tests, so
+    // per-test this.timeout() cannot be relied on; true hangs are still
+    // bounded by appium:newCommandTimeout (240 s without a driver command).
+    timeout: 1_200_000,
   },
 
   /**
