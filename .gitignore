@@ -167,6 +167,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# === WebdriverIO automation artifacts ===
+reports/
+dist/
+
 # === Docker ===
 docker-compose.override.yml
 

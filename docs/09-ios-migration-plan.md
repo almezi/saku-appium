@@ -1122,7 +1122,7 @@ fun categoryDisplayName(category: Category): String =
     category.customName ?: stringResource(getCategoryString(category.id))
 ```
 
-Keep the `when (id)` mapping — it is the ID→name contract from `CATEGORIES.md`
+Keep the `when (id)` mapping — it is the ID→name contract from `TESTABILITY.md (Categories section)`
 and must not drift.
 
 ### 6.5 OPEN (not fixed upstream): Compose resource accessors do not resolve for Android

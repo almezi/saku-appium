@@ -332,3 +332,25 @@ Locate by text/content-desc only:
 ---
 
 Total: ~140 test cases across 25 areas. Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
+
+---
+
+## Failure Log (appended by agents per AGENTS.md)
+
+### 2026-10-24 — 1.H Undo Delete (ZCode / GLM-5.3)
+- Run 1 (4/5 failed): every wait on `component_sheet_bottom` timed out although the sheet was open. Live page-source inspection: the delete sheet root is tagged `daftar_delete_sheet` in the v2.2 APK — the shared `component_sheet_bottom` root listed in TESTABILITY.md does not exist (contract drift). Fix: `tags.daftar.deleteSheet` added; spec waits updated; TESTABILITY.md corrected.
+- Run 2 (1 failed, TC-DEL-02): after deleting the only transaction the list swaps to the empty state and `daftar_summary_masuk` leaves the hierarchy, so `summaryIncome() === 0` threw NoSuchElement. Fix: assert the empty state (`daftar_empty_state`) + zero `daftar_item_*` rows instead.
+- Run 3: 5/5 passing (TC-DEL-01/03, TC-UNDO-01/02, TC-DEL-02 ≙ TC-UNDO-03). Toast undo window is 5 s (UI_SPEC.md).
+
+### 2026-10-24 — 1.F Edit Transaction (ZCode / GLM-5.3)
+- Run 1 (4/8 failed): (a) TC-EDIT-01 — `ubah_header` node's own text is empty (Compose container pattern); header title lives in a child TextView → added `UbahPage.headerLabel()`. (b) TC-EDIT-06/07/08 — row-action taps (`daftar_item_*_edit_*`) stopped registering from the previous-month view after the date move + date-picker usage; verified the exact UiScrollable selector and click work via MCP, so it is a WDIO window/timing quirk, not app logic → reordered the spec so TC-EDIT-05 (date move) runs last and every row tap happens from the current-month view, and hardened `tapRowAction` to 3 attempts with 500 ms backoff.
+- Live findings recorded in tags.ts: edit-screen type toggle is `component_toggle_segmented_0/1` (not `tambah_toggle_type_*`); categories render inline in the edit pager with `mark_<id>` selection markers; amount field prefills as formatted "Rp 123.000"; empty amount shows "Rp 0" placeholder and disables save.
+- Run 2: 8/8 passing.
+
+### 2026-10-24 — 1.G Delete Transaction (ZCode / GLM-5.3)
+- Run 1: TC-DEL-04–07 added as a second describe (own seeds, runs after the undo describe which ends on Daftar — its before-hook must tap `component_nav_bottom_tambah` explicitly). Run 2: TC-DEL-07 called `tapDelete` while the app was still on the Tambah form after `createTransaction` (save never navigates) → added `daftar.open()` after seeding. Run 2 also hit a degraded-emulator stale-element storm (6m47s); the emulator was restarted headless. Runs 2–3: waiting for the toast node to disappear (`waitForDisplayed reverse`) is unreliable — the Compose toast can linger composed after its 5 s expiry → replaced with a plain `driver.pause(6_000)`; the following state assertions prove permanence. Run 4: 9/9 passing.
+- Verified live via MCP: the delete sheet opens cleanly over a pending undo toast (TC-DEL-07 rapid deletes safe); deleting the last item swaps the list to `daftar_empty_state` with the summary cards gone.
+
+### 2026-10-24 — 1.E Summary / Ringkasan (ZCode / GLM-5.3)
+- Runs 1–4: TC-SUM-08 (expense breakdown row read) failed 4× — the row composes only after the LazyColumn scrolls, and `mobile: scrollGesture` direction "down" is a SILENT NO-OP on this Compose list (verified live via curl on a real session: "up" scrolls, "down" returns false even mid-list; UiScrollable scrollIntoView also cannot scroll it — all earlier scroll usage happened to target already-visible rows). Fix: scrolling via raw W3C touch swipes (`performActions`, proven working through the same call path MCP uses) and breakdown-row texts read from atomic `getPageSource()` dumps instead of element handles (handles stale between find and read). Run 5: 13/13 passing.
+- Verified live: savings value renders "—" (with hint "Tambah pemasukan…") when income is 0, not "0,0%"; income breakdown card hidden at income 0; empty month hides balance/savings/comparison/breakdown/buttons entirely and shows `ringkasan_empty_state` + `ringkasan_empty_action`; breakdown bars are untagged View pairs (container + fill), fill width / container width = category share (80% → 712 px of 890 px).

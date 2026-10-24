@@ -14,9 +14,7 @@ in the docs. Those sections say so explicitly instead of inventing content.
 
 | # | Document | Covers |
 |---|---|---|
-| 1 | [01-architecture-blueprint.md](01-architecture-blueprint.md) | MVVM layers, system diagram, data flow, state management, threading, DI |
-| 2 | [02-tech-stack-dependencies.md](02-tech-stack-dependencies.md) | Language/toolchain versions, min–target SDK, every dependency with version and purpose |
-| 3 | [03-codebase-setup.md](03-codebase-setup.md) | Repo, branches, IDE setup, environment config, build/test/run commands |
+| 1 | [DEVELOPMENT.md](DEVELOPMENT.md) | Architecture, tech stack, codebase setup |
 
 ## Security & Operations
 
@@ -26,9 +24,8 @@ No backend, no credentials, no CI — local-only app, manual `./gradlew` builds.
 
 | # | Document | Covers |
 |---|---|---|
-| - | [PRD.md](PRD.md) | Product Requirement Document: Executive summary, goals, user stories, detailed features, technical constraints |
-| 6 | [06-functional-spec.md](06-functional-spec.md) | User stories, business rules, edge cases, RBAC; CSV/JSON backup formats (the app's only "interface") |
-| 8 | [08-design-system.md](08-design-system.md) | Tokens, typography, spacing, components, motion, test tags |
+| - | [PRODUCT.md](PRODUCT.md) | PRD and functional spec |
+| 8 | [DESIGN.md](DESIGN.md) | Design system and accessibility ID coverage |
 | 9 | [09-ios-migration-plan.md](09-ios-migration-plan.md) | **Plan (not implemented).** 48-step to-do list to release on iOS via KMP + Compose Multiplatform |
 
 ## Source-of-truth files already in the repo
@@ -40,7 +37,6 @@ test scope. Do not duplicate their content in new places without a reason.
 |---|---|
 | `AGENTS.md` | Rules for AI coding tools working in this repo |
 | `UI_SPEC.md` | What the app does; screen-by-screen behaviour |
-| `CATEGORIES.md` | Category IDs, columns, `countsInTotals` rules |
 | `TESTABILITY.md` | Test-tag contract, debug hooks, seed sets |
 | `improve/` | Design package: design system and screens |
 | `README.md` | Build commands, key files, APK download |
@@ -48,11 +44,11 @@ test scope. Do not duplicate their content in new places without a reason.
 ## Reading order for a new engineer
 
 1. `README.md` — build it and run it.
-2. [03-codebase-setup.md](03-codebase-setup.md) — local environment.
-3. [01-architecture-blueprint.md](01-architecture-blueprint.md) — how it fits together.
+2. [DEVELOPMENT.md](DEVELOPMENT.md) — local environment.
+3. [DEVELOPMENT.md](DEVELOPMENT.md) — how it fits together.
 4. `UI_SPEC.md` — what the app is supposed to do.
-5. [06-functional-spec.md](06-functional-spec.md) — the rules behind that spec.
-6. [08-design-system.md](08-design-system.md) — before writing any UI.
+5. [PRODUCT.md](PRODUCT.md) — the rules behind that spec.
+6. [DESIGN.md](DESIGN.md) — before writing any UI.
 
 ## Status
 
