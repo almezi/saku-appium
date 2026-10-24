@@ -6,10 +6,10 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 0 | 67 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 8 | 59 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 0 | 32 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **0** | **146** |
+| **All** | **17** | **146** | **8** | **138** |
 
 ---
 
@@ -17,16 +17,16 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 ### 1.A — Smoke & Navigation (TC-NAV) — 8 tasks
 
-- [ ] TC-NAV-01: App launches, `tambah_screen` visible
-- [ ] TC-NAV-02: Tambah tab → `tambah_screen` present
-- [ ] TC-NAV-03: Transaksi tab → `daftar_screen` present
-- [ ] TC-NAV-04: Ringkasan tab → `ringkasan_screen` present
-- [ ] TC-NAV-05: Round-trip all tabs, no crash
-- [ ] TC-NAV-06: Back button on each tab, no crash
-- [ ] TC-NAV-07: Selected tab state persists on re-tap
-- [ ] TC-NAV-08: 20 rapid tab switches, no ANR
+- [x] TC-NAV-01: App launches, `tambah_screen` visible
+- [x] TC-NAV-02: Tambah tab → `tambah_screen` present
+- [x] TC-NAV-03: Transaksi tab → `daftar_screen` present
+- [x] TC-NAV-04: Ringkasan tab → `ringkasan_screen` present
+- [x] TC-NAV-05: Round-trip all tabs, no crash
+- [x] TC-NAV-06: Back button on each tab, no crash
+- [x] TC-NAV-07: Selected tab state persists on re-tap
+- [x] TC-NAV-08: 20 rapid tab switches, no ANR
 
-**Spec:** `src/tests/smoke/navigation.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/smoke/navigation.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
 
 ### 1.B — Add Income (TC-INC) — 9 tasks
 
