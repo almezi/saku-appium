@@ -6,10 +6,10 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 8 | 59 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 17 | 50 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 0 | 32 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **8** | **138** |
+| **All** | **17** | **146** | **17** | **129** |
 
 ---
 
@@ -30,17 +30,17 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 ### 1.B — Add Income (TC-INC) — 9 tasks
 
-- [ ] TC-INC-01: Income + amount + category → save enabled → save succeeds
-- [ ] TC-INC-02: Saved income appears in Transaksi same day
-- [ ] TC-INC-03: `daftar_summary_masuk` increments
-- [ ] TC-INC-04: Ringkasan income card + balance update
-- [ ] TC-INC-05: Income with note → note persisted (verify on edit reopen)
-- [ ] TC-INC-06: Income on non-default account recorded correctly
-- [ ] TC-INC-07: Multiple incomes same day → day total = sum
-- [ ] TC-INC-08: Form resets after save (amount 0, category placeholder, note empty)
-- [ ] TC-INC-09: Save returns to Tambah / confirmation shown
+- [x] TC-INC-01: Income + amount + category → save enabled → save succeeds
+- [x] TC-INC-02: Saved income appears in Transaksi same day
+- [x] TC-INC-03: `daftar_summary_masuk` increments
+- [x] TC-INC-04: Ringkasan income card + balance update
+- [x] TC-INC-05: Income with note → note persisted (verify on edit reopen)
+- [x] TC-INC-06: Income on non-default account recorded correctly
+- [x] TC-INC-07: Multiple incomes same day → day total = sum
+- [x] TC-INC-08: Form resets after save (amount 0, category placeholder, note empty)
+- [x] TC-INC-09: Save returns to Tambah / confirmation shown
 
-**Spec:** `src/tests/phase1/add-income.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/phase1/add-income.spec.ts` | **Agent:** ZCode (GLM-5.3) — 9/9 passing 2026-10-24
 
 ### 1.C — Add Expense (TC-EXP) — 8 tasks
 

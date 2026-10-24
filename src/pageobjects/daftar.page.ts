@@ -118,4 +118,15 @@ export class DaftarPage extends BasePage {
     const headers = await $$(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`)
     return headers.length
   }
+
+  /**
+   * Net total of the first (newest) day header — weekday, date and amount
+   * render as child TextViews and readAmount takes the last digit-bearing
+   * text, i.e. the total.
+   */
+  async firstDayHeaderTotal(): Promise<number> {
+    return readAmount(
+      $(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`),
+    )
+  }
 }

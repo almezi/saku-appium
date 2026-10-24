@@ -138,6 +138,17 @@ export class TambahPage extends BasePage {
     return this.fieldText(await this.amountInput)
   }
 
+  async getNoteText(): Promise<string> {
+    return this.fieldText(await this.noteInput)
+  }
+
+  /** Rendered account name on the account selector (e.g. "Tunai", "BCA"). */
+  async getAccountText(): Promise<string> {
+    const label = await byTag(tags.tambah.selectAccount).$('.//android.widget.TextView')
+    if (!(await label.isExisting())) return ''
+    return (await label.getText()).trim()
+  }
+
   async getHelperText(): Promise<string> {
     return this.helperText.getText()
   }
