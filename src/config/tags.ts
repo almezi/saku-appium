@@ -58,6 +58,10 @@ export const tags = {
     monthNext: 'daftar_month_switcher_next',
     monthPicker: 'daftar_month_picker',
     backupButton: 'daftar_backup_button',
+    // Root of the delete-confirmation sheet (verified live: the shared
+    // `component_sheet_bottom` root claimed by TESTABILITY.md does not exist
+    // in the v2.2 APK — each screen scopes its own sheet root).
+    deleteSheet: 'daftar_delete_sheet',
     summaryMasuk: 'daftar_summary_masuk',
     summaryKeluar: 'daftar_summary_keluar',
     item: (transactionId: string) => `daftar_item_${transactionId}`,

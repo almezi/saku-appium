@@ -332,3 +332,12 @@ Locate by text/content-desc only:
 ---
 
 Total: ~140 test cases across 25 areas. Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
+
+---
+
+## Failure Log (appended by agents per AGENTS.md)
+
+### 2026-10-24 — 1.H Undo Delete (ZCode / GLM-5.3)
+- Run 1 (4/5 failed): every wait on `component_sheet_bottom` timed out although the sheet was open. Live page-source inspection: the delete sheet root is tagged `daftar_delete_sheet` in the v2.2 APK — the shared `component_sheet_bottom` root listed in TESTABILITY.md does not exist (contract drift). Fix: `tags.daftar.deleteSheet` added; spec waits updated; TESTABILITY.md corrected.
+- Run 2 (1 failed, TC-DEL-02): after deleting the only transaction the list swaps to the empty state and `daftar_summary_masuk` leaves the hierarchy, so `summaryIncome() === 0` threw NoSuchElement. Fix: assert the empty state (`daftar_empty_state`) + zero `daftar_item_*` rows instead.
+- Run 3: 5/5 passing (TC-DEL-01/03, TC-UNDO-01/02, TC-DEL-02 ≙ TC-UNDO-03). Toast undo window is 5 s (UI_SPEC.md).

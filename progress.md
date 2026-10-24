@@ -6,10 +6,10 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 33 | 34 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 36 | 31 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 0 | 32 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **33** | **113** |
+| **All** | **17** | **146** | **36** | **110** |
 
 > Note: 3 tasks in 1.D are marked **SKIPPED** (repeat failures, see the 1.D section) and stay counted in "Remaining" until unblocked.
 
@@ -119,11 +119,11 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 ### 1.H — Undo Delete (TC-UNDO) — 3 tasks
 
-- [ ] TC-UNDO-01: Delete transaction → toast with "Urungkan" action appears
-- [ ] TC-UNDO-02: Tap "Urungkan" before timeout → transaction restored, summary & list updated
-- [ ] TC-UNDO-03: Let toast expire without tap → deletion becomes permanent
+- [x] TC-UNDO-01: Delete transaction → toast with "Urungkan" action appears
+- [x] TC-UNDO-02: Tap "Urungkan" before timeout → transaction restored, summary & list updated
+- [x] TC-UNDO-03: Let toast expire without tap → deletion becomes permanent
 
-**Spec:** `src/tests/transaksi/delete-undo.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/delete-undo.spec.ts` | **Agent:** ZCode (GLM-5.3) — 5/5 passing 2026-10-24 (TC-UNDO-01/02, TC-DEL-02 ≙ TC-UNDO-03; also covers TC-DEL-01/03). Undo toast window: 5 s. Fixed en route: delete sheet root is `daftar_delete_sheet` (not the documented `component_sheet_bottom`); empty list replaces the summary cards with `daftar_empty_state`.
 
 ---
 

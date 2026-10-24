@@ -95,7 +95,9 @@ Dynamic prefixes like `mark_` and `avatar_` are suffixed with the category id.
 - Warning: `cadangan_warning`
 
 ### Delete sheet (shared)
-- Root: `component_sheet_bottom`
+- Root: screen-scoped — `daftar_delete_sheet` (verified in the v2.2 APK;
+  `component_sheet_bottom` does not exist), plus `anggaran_delete_sheet`,
+  `kategori_delete_sheet`, `ubah_delete_sheet`
 - Confirm: `component_sheet_button_confirm`
 - Cancel: `component_sheet_button_cancel`
 
