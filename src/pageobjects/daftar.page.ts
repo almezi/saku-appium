@@ -68,12 +68,27 @@ export class DaftarPage extends BasePage {
     return this.monthLabelEl.getText()
   }
 
+  /**
+   * Month switching with a verify-retry: the arrow click can race list
+   * recomposition and silently not register, so re-click until the label
+   * actually changes (bounded).
+   */
+  private async switchMonth(arrow: string): Promise<void> {
+    const before = await this.monthLabel()
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await byTag(arrow).click()
+      const after = await this.monthLabel().catch(() => before)
+      if (after !== before) return
+    }
+    throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
+  }
+
   async prevMonth(): Promise<void> {
-    await byTag(tags.daftar.monthPrev).click()
+    await this.switchMonth(tags.daftar.monthPrev)
   }
 
   async nextMonth(): Promise<void> {
-    await byTag(tags.daftar.monthNext).click()
+    await this.switchMonth(tags.daftar.monthNext)
   }
 
   /**

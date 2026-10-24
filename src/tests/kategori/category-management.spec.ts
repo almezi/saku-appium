@@ -80,7 +80,7 @@ describe('TC-KAT — category management (Phase 2)', () => {
   it('TC-KAT-08 renaming a category updates its list row', async () => {
     const newName = `Uji Gaji ${Date.now().toString(36)}`.slice(0, 20)
     await kategori.openEditDialog(categories.income.salary)
-    await kategori.renameInDialog(newName)
+    await kategori.renameInDialog(categories.income.salary, newName)
     const rowText = await kategori.row(categories.income.salary).getText()
     expect(rowText).toContain(newName)
   })

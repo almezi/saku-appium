@@ -6,10 +6,12 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 25 | 42 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 33 | 34 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 0 | 32 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **25** | **121** |
+| **All** | **17** | **146** | **33** | **113** |
+
+> Note: 3 tasks in 1.D are marked **SKIPPED** (repeat failures, see the 1.D section) and stay counted in "Remaining" until unblocked.
 
 ---
 
@@ -57,19 +59,19 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 ### 1.D — Transaction List (TC-LIST) — 11 tasks
 
-- [ ] TC-LIST-01: Empty month → empty state / zero summaries
-- [ ] TC-LIST-02: Day header shows weekday + date + net total
-- [ ] TC-LIST-03: Items grouped under correct day header
-- [ ] TC-LIST-04: Items sorted newest first
-- [ ] TC-LIST-05: Row shows category, type label, formatted amount
-- [ ] TC-LIST-06: Income row no minus; day total `−Rp` for expenses
-- [ ] TC-LIST-07: Long category name truncates/wraps, no overlap
-- [ ] TC-LIST-08: Scroll 100+ items, no crash
-- [ ] TC-LIST-09: `daftar_summary_masuk` = sum income in month
-- [ ] TC-LIST-10: `daftar_summary_keluar` = sum expense in month
-- [ ] TC-LIST-11: Pull-to-refresh → data still correct
+- [x] TC-LIST-01: Empty month → empty state / zero summaries
+- [x] TC-LIST-02: Day header shows weekday + date + net total
+- [x] TC-LIST-03: Items grouped under correct day header
+- [x] TC-LIST-04: Items sorted newest first
+- [x] TC-LIST-05: Row shows category, type label, formatted amount
+- [x] TC-LIST-06: Income row no minus; day total `−Rp` for expenses
+- [ ] TC-LIST-07: Long category name truncates/wraps, no overlap — **SKIPPED** (failed 4×): rename-dialog save button never visible under WebdriverIO; flow works live via Appium MCP
+- [ ] TC-LIST-08: Scroll 100+ items, no crash — **SKIPPED** (failed 4×): seeding 100 items through the real form (~12 s/item) exceeds the 20-min test timeout; blocked on the app's unimplemented `test_seed` intent
+- [x] TC-LIST-09: `daftar_summary_masuk` = sum income in month
+- [x] TC-LIST-10: `daftar_summary_keluar` = sum expense in month
+- [ ] TC-LIST-11: Pull-to-refresh → data still correct — **SKIPPED** (failed 5×, always as a cascade): expected sums depended on TC-LIST-07/08 data; revisit together with TC-LIST-08
 
-**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24
 
 
 ### 1.E — Summary / Ringkasan (TC-SUM) — 13 tasks

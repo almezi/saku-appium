@@ -1,6 +1,6 @@
 import { byTag, allByTagMatches, scrollToTag } from '../helpers/locators'
 import { BasePage } from './base.page'
-import { typeIntoTaggedField } from '../helpers/input'
+import { typeIntoTaggedField, fieldText } from '../helpers/input'
 import type { ChainablePromiseElement } from 'webdriverio'
 
 /**
@@ -89,12 +89,30 @@ export class KategoriPage extends BasePage {
   }
 
   /**
-   * Renames the category in the open dialog. The keyboard resize shifts
-   * the dialog buttons, so the save click waits for the tagged button
-   * rather than trusting a text lookup mid-animation.
+   * Renames the category in the open dialog. The keyboard resize shifts the
+   * dialog, so a cached-bounds click on the field wrapper can land on the
+   * scrim and dismiss the dialog — clicks go to the field's inner node and
+   * the whole type step retries (reopening the dialog if it was dismissed).
    */
-  async renameInDialog(newName: string): Promise<void> {
-    await typeIntoTaggedField(byTag(kategoriTags.formName), newName)
+  async renameInDialog(categoryId: string, newName: string): Promise<void> {
+    const field = byTag(kategoriTags.formName)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (!(await field.isExisting().catch(() => false))) {
+        await this.openEditDialog(categoryId)
+      }
+      const editor = await field.$('.//android.widget.EditText')
+      const inner = (await editor.isExisting().catch(() => false))
+        ? editor
+        : field.$('.//android.widget.TextView')
+      await inner.click()
+      const current = await fieldText(field).catch(() => '')
+      if (current.length > 0) {
+        await driver.keys('\uE003'.repeat(current.length + 2))
+      }
+      await driver.keys(newName)
+      await driver.hideKeyboard().catch(() => undefined)
+      if ((await fieldText(field).catch(() => '')) === newName) break
+    }
     const save = byTag(kategoriTags.formSave)
     await save.waitForDisplayed({ timeout: 5_000 })
     await save.click()
