@@ -238,3 +238,187 @@ return byTag(tags.ringkasan.balanceValue).getText()
 ```
 
 **Rationale:** Step 2 (move `readAmount`) should come first because it's a refactor that touches multiple files — do it while the mental model is fresh and nothing else has changed. Then Step 1 (extract helper) naturally uses the relocated import. The unit tests (Step 3) should come early to validate the refactored extraction logic.
+
+---
+
+# Project-Wide Review: `saku-appium` (Five-Axis Quality + Security & Hardening)
+
+**Scope:** entire repo excluding `ringkasan.page.ts` (reviewed above) — `wdio.conf.ts`, `tsconfig.json`, `src/types.ts`, `src/config/*`, 7 page objects, 4 helpers, all 9 specs, `package.json`, repo hygiene, git history, dependency supply chain
+**Date:** 2026-10-24
+**Method:** `code-review-and-quality` five-axis review (delegated to a review subagent) + `security-and-hardening` threat-model review (executed in-session)
+**Overall grade:** **B** (quality) / **B+** (security posture for a local test harness)
+
+---
+
+## Part A — Five-Axis Quality Review
+
+### A.1 Executive Summary
+
+The Phase 1 suite (navigation, tambah, transaksi, ringkasan — all green per `progress.md`) is genuinely well-engineered: strict TypeScript, a disciplined test-tag contract, real behavioral assertions (exact numeric equality, percentage sums, ratio closeness), bounded retries instead of sleeps, and unusually good "verified live" documentation of device quirks. However, both Phase 2 spec files (`budget.spec.ts`, `category-management.spec.ts`) have **never been executed** (unchecked in `progress.md`, no run logs in `reports/`) and each contains **deterministic navigation failures** that will fail 100% of runs; the failure-screenshot hook has **silently never worked**; and shared-module hygiene is weak — one helper duplicated three times, an entire dead page object, and page objects bypassing `config/tags.ts` with magic strings.
+
+### A.2 Critical Findings
+
+| # | Location | Issue | Fix |
+|---|----------|-------|-----|
+| C1 | `src/tests/anggaran/budget.spec.ts:55-81` (TC-BUD-08, TC-BUD-09) | **Deterministic failure: `createTransaction` called from the Anggaran screen, which has no bottom bar** (UI_SPEC.md:45 — only Tambah/Transaksi/Ringkasan have it; `anggaran.page.ts:23-24` documents this). `createTransaction` → `tambah.open()` → clicks `navTambah`, which does not exist on Anggaran → 15 s timeout, test fails. Even if that passed, `anggaran.rowText()` (lines 62, 76) then waits for a budget row **while the app sits on the Tambah screen** after seeding → second timeout. Both tests are unrunnable as written. | Between TC-BUD-07's end and each `createTransaction`, add `await anggaran.tapBack()` (Anggaran → Ringkasan), and after seeding add `await ringkasan.open(); await anggaran.openFromRingkasan()` before reading rows. |
+| C2 | `src/tests/kategori/category-management.spec.ts:88-112` (TC-KAT-11) | **Three independent deterministic failures in one test.** (a) TC-KAT-06 types `search('gaj')` (line 73) and it is never cleared — UI_SPEC.md:98 says the filter *persists even across tab changes* — so `toggleHidden(gift)` at line 89 targets a row filtered out of the list → timeout. (b) Line 95 `byTag(tags.navTambah).click()` — the kategori screen has **no bottom bar** (UI_SPEC.md:45) → timeout. (c) Lines 97–105: the category sheet is opened then `waitForDisplayed({ reverse: true })` is awaited **with no dismiss action** — the sheet cannot close itself → 15 s timeout. | Clear the search after TC-KAT-06 (or before line 89); navigate via `kategori.tapBack()` → `tambah.open()`; dismiss the sheet (`driver.back()` or tap-outside) before the reverse wait. |
+| C3 | `wdio.conf.ts:105-110` | **The failure-screenshot feature has never produced a single image.** `afterTest` writes to `reports/screenshots/…`, but that directory is never created; WDIO's `saveScreenshot` does not create parent directories, so every write fails with ENOENT — and `.catch(() => undefined)` swallows it. All failure diagnostics from ~20 recorded run logs are lost. | Add `mkdirSync(path.join('reports','screenshots'), { recursive: true })` in `onPrepare`, and log in the catch: `.catch(e => console.warn('screenshot failed', e.message))`. |
+
+### A.3 Required Findings
+
+| # | Location | Issue | Fix |
+|---|----------|-------|-----|
+| R1 | `src/pageobjects/daftar.page.ts:76-84` (same family as prior review #5 on `ringkasan.page.ts:112-120`) | **`switchMonth` retry can silently double-switch months.** Click → label read *immediately* (no settle wait) → if recomposition lags, `after === before` → the loop **clicks again** → label now differs → returns, but the app is 2 months back, not 1. The loop verifies only *that* the label changed, never *to what*. TC-LIST-01 catches it (asserts exact label); TC-EDIT-05 (`edit-transaction.spec.ts:139`) and TC-SUM-10 do not. Also `.catch(() => before)` converts a real read failure into "unchanged" → extra click. | Poll for label change with a short settle wait after each click before deciding to re-click, and assert the expected target label before returning. |
+| R2 | `src/pageobjects/tambah.page.ts:65-80` vs `src/helpers/input.ts:8-26` | **Byte-for-byte duplicated helpers.** `typeIntoField` + private `fieldText` in TambahPage are identical to `typeIntoTaggedField` + `fieldText` in `helpers/input.ts`. `kategori.renameInDialog` (`kategori.page.ts:107-114`) is a *third* inline copy of the clear-then-type sequence — and actually the best one (verify + retry); the others type blindly. | Delete TambahPage's private copies and consume `helpers/input.ts`; upgrade `typeIntoTaggedField` to verify text landed and retry (port the kategori logic), then use it in `renameInDialog` too. Three copies → one. |
+| R3 | `src/pageobjects/kategori.page.ts:97-120` | **`renameInDialog` falls through to Save on failure.** If all 3 attempts fail to enter the text, the method proceeds to click `formSave` anyway with wrong field content — the test then fails downstream with a misleading "row text" mismatch. | `throw new Error(...)` after the loop if final verification failed. |
+| R4 | `kategori.page.ts:53,58,69`; `anggaran.page.ts:60,73,75,83,88,89,102,104`; `cadangan.page.ts:31`; `budget.spec.ts:25` | **The `tags.ts` contract is bypassed with magic strings.** `ringkasan_kelola_button`, `tambah_link_kelola_kategori`, `component_field_search`, `ringkasan_anggaran_button`, `component_button_primary`, `component_toast`, `component_sheet_button_confirm`, `component_button_text_danger`, `daftar_backup_button`, `tambah_screen` all exist in `config/tags.ts` but are hardcoded. Worse, `component_sheet_picker`, `component_row_category_chip_*`, `component_input_amount` (`anggaran.page.ts:73,75,83`) exist in **no catalog at all** — undocumented additions to the locator contract. | Use `tags.*` constants where they exist; add the three missing component tags to the local tag maps (or `tags.ts` once unfrozen). |
+| R5 | `src/pageobjects/cadangan.page.ts` (entire file, 54 lines) | **Dead page object.** No spec imports `CadanganPage`/`cadanganTags`; no `cadangan` test directory; no `test:cadangan` script. | Delete it, or wire it into the planned TC-BACKUP phase — do not ship untested test code. |
+| R6 | `src/helpers/locators.ts:16-21`; `daftar.page.ts:107-111,142-144`; `kategori.page.ts:123-125`; `src/config/tags.ts:14,62-63,72-73,111` | **Dead exports:** `byTagMatches`, `allByTag` (helpers), `hasRowText`, `firstRow` (DaftarPage), `cancelDialog` (KategoriPage), and tag constants `loadingScreen`, `monthPicker`, `backupButton`, `itemAny`, `dayHeaderAny`, `sheetBottom` are all unreferenced — ~90 lines of misleading dead surface. | Remove; keep tag constants only if the frozen-contract rationale is documented per-entry. |
+| R7 | `daftar.page.ts:153-165` (`rowTexts`); raw `$$` in `delete-undo.spec.ts:70,124-127,160-167`, `edit-transaction.spec.ts:70,81-84`, `transaction-list.spec.ts:167`, `summary.spec.ts:165-166` | **Unprotected stale-element read + locator discipline drift.** `rowTexts` does scroll → find → child enumeration with no retry (the exact exposure the prior review flagged on `ringkasan.breakdownBarRatio` #3), while `tapRowAction` five lines up shows the correct retry pattern. Separately, 10+ raw `$$('android=…')` calls in specs bypass the locator helpers. | Wrap `rowTexts` in the same 3-attempt retry; replace raw `$$` selectors with locator helpers. |
+| R8 | `wdio.conf.ts:80-87` | **Global 20-minute mocha timeout** justified by the 100-transaction seed test — which is `it.skip`ped (`transaction-list.spec.ts:198`). Every quick navigation test now has a 20-minute failure ceiling on hangs. (`newCommandTimeout` 240 s does bound true driver hangs.) | Drop to ~120–180 s; re-raise locally if/when TC-LIST-08 is revived. |
+| R9 | `src/helpers/money.ts:43` | **Latent sign bug in `parseAmountText`.** `value > 0 && /^-/.test(normalized.trim())` tests the minus against the *whole string* while taking the *last* numeric run. Any mixed-sign string ("−Rp 50.000 … Rp 25.000" — exactly what a Ringkasan comparison row renders) parses to −25.000. No current caller hits it, but it is a trap. | Test the character immediately preceding the matched run's index instead of the string head. |
+
+### A.4 Optional / Nit Findings
+
+| # | Location | Issue |
+|---|----------|-------|
+| O1 | `package.json` | No `typecheck`/lint script — add `"typecheck": "tsc --noEmit"` and wire before `test`. |
+| O2 | `wdio.conf.ts:78` | Only the `spec` reporter — add junit for CI dashboards / failure-log protocol. |
+| O3 | `tambah.page.ts:100-106` | Sheet scroll bound is magic `8 × 45%`; compute from sheet height or try `scrollToTagMatches` first. |
+| O4 | `add-income.spec.ts:110` vs `tambah.page.ts:165-168` | TC-INC-09 re-implements `save()` inline — call `tambah.save()` instead. |
+| O5 | `tsconfig.json:12` | `types` has both `webdriverio` and `@wdio/globals/types` (redundant); consider `noUncheckedIndexedAccess` given heavy `texts[0]` indexing. |
+| O6 | `ubah.page.ts:39-42` | `openFromDaftar(daftar, categoryId)` takes another page object as a parameter — page-to-page coupling; instantiate internally or move into the spec. (Echoes prior review: move `readAmount` out of `daftar.page.ts` — still unfixed.) |
+| N1 | `navigation.spec.ts:27-46` | TC-NAV-03/04/05 use bare `waitForDisplayed()` while TC-NAV-01/02 use explicit `expect(...)` — pick one house style. |
+| N2 | `navigation.spec.ts:87` | `Array.from({length: 20}, …)` is a convoluted plain loop. |
+| N3 | `transaction-list.spec.ts:177-179` | `as WebdriverIO.Element` casts after `toBeDefined()` guard — defensible; a non-null helper would remove them. |
+| N4 | `wdio.conf.ts:46` | `as unknown as Capabilities…` cast carries an explanatory comment and compensates for a real @wdio/types gap — acceptable, leave. |
+
+### A.5 Architecture Assessment
+
+**Pattern consistency: good, with two documented deviations.** All seven pages extend `BasePage` with the screenTag/waitForScreen/tapBack/systemBack contract; all locators flow through `helpers/locators.ts` by tag. Deviations: (1) `kategori`/`anggaran`/`cadangan` each carry a private tag map with a "tags.ts frozen for Phase 1" rationale — acceptable, but see R4 for strings escaping even those maps; (2) `readAmount` is exported from `daftar.page.ts` rather than a helper (prior review flagged this — still unfixed).
+
+**Coupling map (verified, no circular dependencies):**
+
+```
+base.page  ← tambah, daftar, ubah, kategori, anggaran, cadangan, ringkasan   (healthy)
+daftar     ← ringkasan (readAmount)      ← ubah (DaftarPage ctor param)     (page→page, 2 edges)
+helpers/transactions → tambah.page (+ locators, tags)                       (helper→page; OK for UI seeding)
+config/tags ← everything
+```
+
+**Duplication inventory (the real tax):**
+
+| Pattern | Copies | Locations |
+|---|---|---|
+| Clear-then-type field entry | 3 | `helpers/input.ts:8`, `tambah.page.ts:65` (identical), `kategori.page.ts:107` (inline) |
+| "Collect child TextView texts" loop | 7 | `daftar.page.ts:47,153,187,203` + ringkasan ×3 (prior review) + `transaction-list.spec.ts:170` |
+| `switchMonth` verify-retry | 2 | `daftar.page.ts:76`, ringkasan (prior review) |
+| Raw `android=new UiSelector().className("android.widget.TextView")` literal | 10 | daftar ×4, ringkasan ×3, specs ×3 |
+
+A single `childTexts(el)` + verified `typeIntoTaggedField(el, text)` in `helpers/` would erase most of this.
+
+**Assertion quality: the strongest axis.** ~82 `it` blocks with exact-value assertions (`summaryIncome() === AMOUNT` via parsed numbers, `balanceText() === formatRp(...)`), math validation (percentages sum to 100, ratios `toBeCloseTo`), and state-negative checks (`isExisting()` false after delete). No assertion-free tests beyond the bare-wait style in TC-NAV-03..05.
+
+### A.6 Flakiness Risk Assessment
+
+**Fixed sleeps: 5 total across 3 files — unusually disciplined:**
+
+| Count | Location | Nature |
+|---|---|---|
+| 1 | `ringkasan.page.ts:163` (400 ms) | scroll settle (prior-review file) |
+| 1 | `daftar.page.ts:125` (500 ms) | error-path backoff only — good pattern |
+| 3 | `delete-undo.spec.ts:66,88,159` (6–6.5 s) | toast-undo-window expiry, each with written rationale |
+
+**Actual race exposure:** the `switchMonth` click→read race (R1, both daftar + ringkasan) is the highest residual race in the green suite; `.catch(() => before)` ×2 masks read failures as "unchanged"; ringkasan `comparisonTexts`/`emptyStateTexts` no-scroll (prior review #7) fails below-fold. Stale elements: protected in `daftar.tapRowAction` and `tambah.selectCategory`; unprotected in `daftar.rowTexts` (R7) and ringkasan breakdown reads (prior review).
+
+**Never-run risk:** all 15 tests in `budget.spec.ts` + `category-management.spec.ts` are unexecuted; 3 are deterministically broken (C1/C2). Everything else is evidenced green or explicitly `it.skip`ped — honest state management.
+
+---
+
+## Part B — Security & Hardening Review
+
+### B.1 Executive Summary
+
+**Posture: B+ for a local-only E2E harness.** No secrets in the working tree or in any of the 57 commits of git history; strict TypeScript; no `eval`/`child_process`/network-call/fs-write usage anywhere in `src/`; single lockfile; Appium service binds localhost only; no credentials in capabilities; env-driven config (`SAKU_APK`, `ANDROID_UDID`). The dominant risk is **supply chain**: 34 lockfile vulnerabilities (7 critical) whose available fixes require breaking changes, plus an unpinned `npx -y appium-mcp@latest` execution vector in `opencode.json`. Repo hygiene is good — the APK, `reports/` logs, and `.idea/` are all correctly gitignored (untracked), with one stray tracked binary signature file.
+
+### B.2 Findings
+
+| Severity | Finding | Evidence | Recommended fix |
+|---|---|---|---|
+| **High** | Dependency vulnerabilities in the committed lockfile: 7 critical / 25 high / 2 moderate (see B.3) | `npm audit --package-lock-only`: 34 vulnerabilities | Triage by reachability (B.3); do **not** run `npm audit fix --force` — fixes cross declared ranges (would downgrade `appium` 3.x → 2.19); document deferral with review date |
+| **Medium** | Unpinned remote-code execution vector: `npx -y appium-mcp@latest` runs whatever is newest on npm at invocation time (typosquat/compromise exposure) | `opencode.json` (`mcp.servers.appium-mcp.command`) | Pin an exact version (`appium-mcp@<x.y.z>`); update deliberately |
+| **Low** | Tracked binary signature file without its APK: the `.idsig` is useless alone and is 178 KB of repo bloat | `git ls-files` → `resources/SimpleMoneyTrackerKT-v2.2.apk.idsig` tracked; the `.apk` itself is correctly gitignored | Remove from tracking (`git rm --cached`); add `*.idsig` to `.gitignore` |
+| **Low** | Install boundary not pinned: no `packageManager` / `engines` field, no `.nvmrc` | `package.json` | Add `"engines": { "node": ">=20" }` (or as appropriate) + `.nvmrc`; ensures reproducible installs and enables `npm ci` in CI |
+| **Low** | `ts-node` is in maintenance mode (superseded by `tsx`) | `package.json` devDependencies | Fine short-term as the WDIO TS runner; plan migration to `tsx` or native WDIO TS support |
+| **Info** | Local (untracked) logs contain expired Appium session IDs, emulator UDID `emulator-5554`, and user home paths | `reports/appium.log` (13 matches; case-sensitive token/auth/password greps: zero hits) | Fine locally; do not publish/share `reports/` archives |
+| **Info** | Over-aggressive `.gitignore`: global `*.txt` and `*temp*` rules could silently exclude legitimate fixtures or docs | `.gitignore` "Documentation & Generated Files" section | Narrow `*.txt` to specific paths if ever needed |
+| **Info** | Machine-specific absolute path committed | `opencode.json` → `"ANDROID_HOME": "/Users/auliameiazizi/…"` | Use `env` inheritance or document the per-machine override |
+
+### B.3 Dependency Audit & Reachability Triage
+
+`npm audit --package-lock-only` (against committed `package-lock.json`, no install performed): **34 vulnerabilities — 7 critical, 25 high, 2 moderate.**
+
+| Advisory | Severity | Chain | Reachability (local harness context) | Verdict |
+|---|---|---|---|---|
+| `shell-quote` GHSA-pqg4-j6r4-53mv — `quote()` command injection via line terminator after `{ comment }` token | Critical | `appium`, `appium-uiautomator2-driver` | **Runtime path** (driver shells out during every session), but inputs to the quoting are developer-controlled capability/driver strings, not hostile user input. Practical exploitability low; a compromised repo/config would already be game over | Defer; monitor upstream appium 3.x fix. Do NOT accept audit's "fix" — it downgrades `appium` 3.x → 2.19 (breaking) |
+| `sharp` < 0.35.5 — librsvg CVE-2026-96889 | High | `appium-uiautomator2-driver` → sharp | **Runtime path** (screenshot/image processing), but image data comes from the developer's own app/device | Defer with review date; not attacker-controlled input |
+| `serialize-javascript` — CPU exhaustion DoS + XSS via unescaped `</script>` | Moderate/High | `mocha` (test framework) | **Test-time only**; no browser rendering of serialized output in this harness | Defer; no practical exposure |
+| Remaining 30 (various) | Mostly high | Transitive, concentrated under appium/uiautomator2-driver | Mostly runtime-adjacent but low practical risk in a localhost-only harness | Bulk-track; re-audit each release |
+
+**Rule applied (per `security-and-hardening`):** fixes that require `--force` cross declared dependency ranges and are prohibited to apply automatically. Audit advisories match *known* CVEs only — they say nothing about install-script safety, which is why the pinning findings above matter.
+
+### B.4 Verification Results
+
+- **Secrets in working tree:** zero hits across `src/`, `wdio.conf.ts`, `opencode.json`, `qodana.yaml`, `package.json` (patterns: password/secret/api-key/AKIA/private-key/token)
+- **Secrets in git history:** zero hits across all 57 commits (`git rev-list --all` fully enumerated); no `.env*` file ever committed; deleted-files inventory is documentation only (`CATEGORIES.md`, `Phases.md`, old `docs/*` — no sensitive material)
+- **Dangerous APIs in `src/`:** zero — no `eval`, `new Function`, `child_process`, `fetch`/`axios`/http, `writeFile`/`rmSync`, no dynamic `import()` of user-controlled names
+- **Config hardening:** `noReset: false` (fresh DB per spec), no `autoGrantPermissions`/`allowTestPackages`, `printPageSourceOnFindFailure: false` (avoids page-source log spam), fail-fast APK existence check in `onPrepare`, Appium on `localhost:4725` (default bind, no `--address` override), timeouts sane (`waitforTimeout` 15 s, `connectionRetryTimeout` 180 s)
+- **`tsconfig.json`:** `strict: true` ✓
+- **Lockfile:** single `package-lock.json`, no competing lockfiles ✓
+
+### B.5 Committed-Artifact Inventory
+
+| Artifact | Size | Tracked? | Verdict |
+|---|---|---|---|
+| `resources/SimpleMoneyTrackerKT-v2.2.apk` | 21.7 MB | No (gitignored via `*.apk`) | Correct — binary out of git |
+| `resources/SimpleMoneyTrackerKT-v2.2.apk.idsig` | 178 KB | **Yes** | Remove — useless without the APK |
+| `reports/*.log` (~24 files) | 456 KB | No (gitignored via `reports/`, `*.log`) | Correct — local diagnostics only |
+| `.idea/` | 40 KB | No (gitignored) | Correct — complies with AGENTS.md |
+
+---
+
+## Part C — Merged Action Plan (both reviews + prior `ringkasan.page.ts` review)
+
+### P0 — Before next Phase 2 run (blockers)
+
+- [ ] **Fix TC-BUD-08/09 navigation** (C1): `anggaran.tapBack()` before `createTransaction`; re-enter Anggaran before `rowText()`
+- [ ] **Fix TC-KAT-11** (C2): clear search filter, navigate via `tapBack()` (no bottom bar on kategori), dismiss sheet before reverse-wait
+- [ ] **Make the screenshot hook work** (C3): `mkdirSync('reports/screenshots', { recursive: true })` in `onPrepare` + log the catch — restores all failure evidence the AGENTS.md bug protocol depends on
+- [ ] **Pin `appium-mcp`** in `opencode.json` to an exact version (supply-chain fix, 1-line)
+
+### P1 — Quality debt with compounding interest
+
+- [ ] **Harden `switchMonth`** against the double-step race in BOTH `daftar.page.ts:76-84` and `ringkasan.page.ts` (R1 + prior review #5): settle-wait before reading the label; assert the *target* label, not merely "changed"; stop masking read errors via `.catch(() => before)`
+- [ ] **Consolidate helpers** (R2/R3 + duplication table): one verified-retrying `typeIntoTaggedField` and one `childTexts(el)` in `helpers/`, deleting 3 typing copies and 7 text-loop copies
+- [ ] **Move `readAmount` out of `daftar.page.ts`** into `helpers/` (prior review Step 2 — still open; blocks clean helper consolidation)
+- [ ] **Wrap `daftar.rowTexts` in the `tapRowAction` retry pattern** (R7) and replace 10+ raw `$$` selectors in specs with locator helpers
+
+### P2 — Hygiene
+
+- [ ] Delete dead code: `cadangan.page.ts` (or test it), unused helpers/methods/constants (R5/R6)
+- [ ] Replace magic tag strings with `tags.*` constants; catalogue the 3 uncatalogued component tags (R4)
+- [ ] Drop mocha timeout to ~120–180 s now that the 100-tx seed test is skipped (R8)
+- [ ] Fix the latent `parseAmountText` sign bug (R9)
+- [ ] `git rm --cached resources/*.idsig` + ignore `*.idsig`; add `engines`/`.nvmrc`
+- [ ] Add `"typecheck": "tsc --noEmit"` script (O1) and a junit reporter (O2)
+
+### P3 — Track / deferred
+
+- [ ] Dependency re-audit each release; document shell-quote/sharp deferrals with a review date (B.3) — **never** `npm audit fix --force`
+- [ ] Unit tests for `parseAmountText` + extraction helpers (prior review Step 3)
+- [ ] Optional/nit items O3–O6, N1–N4 at author discretion
+
+### Verdict
+
+- **Quality:** Request changes — C1/C2 make Phase 2 specs unrunnable as written; C3 has been silently losing failure evidence across ~20 recorded runs.
+- **Security:** Approve with conditions — no secrets, no dangerous APIs, clean history; conditions are the version pin (P0) and documented dependency-deferral policy (P3). Do not run forced audit fixes.
