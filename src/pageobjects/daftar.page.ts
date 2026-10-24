@@ -112,16 +112,17 @@ export class DaftarPage extends BasePage {
 
   /**
    * Row action clicks go through UiScrollable, and Compose recomposition can
-   * stale the resolved element between find and click — retry once on a
-   * fresh query.
+   * stale the resolved element between find and click — retry on a fresh
+   * query, with a pause so a just-dismissed overlay (toast, date picker
+   * window) can release the click interception.
    */
   private async tapRowAction(tagPattern: string): Promise<void> {
-    for (let attempt = 0; attempt < 2; attempt++) {
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
         await scrollToTagMatches(tagPattern).click()
         return
       } catch {
-        // stale element — re-query and retry
+        await driver.pause(500)
       }
     }
     throw new Error(`Row action ${tagPattern} could not be clicked`)

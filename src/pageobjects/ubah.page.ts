@@ -21,8 +21,18 @@ export class UbahPage extends BasePage {
     return byTag(tags.ubah.buttonDelete)
   }
 
-  get headerText(): Promise<string> {
-    return byTag(tags.ubah.header).getText()
+  /** Header title via its child TextView (the tag node's own text is empty). */
+  async headerLabel(): Promise<string> {
+    const own = ((await byTag(tags.ubah.header).getText()) || '').trim()
+    if (own) return own
+    const children = await byTag(tags.ubah.header).$$(
+      'android=new UiSelector().className("android.widget.TextView")',
+    )
+    for (const child of children) {
+      const text = ((await child.getText()) || '').trim()
+      if (text) return text
+    }
+    return ''
   }
 
   /** Opens the edit screen from the Transaksi list via the row's edit affordance. */

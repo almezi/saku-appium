@@ -6,10 +6,10 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 36 | 31 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 44 | 23 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 0 | 32 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **36** | **110** |
+| **All** | **17** | **146** | **44** | **102** |
 
 > Note: 3 tasks in 1.D are marked **SKIPPED** (repeat failures, see the 1.D section) and stay counted in "Remaining" until unblocked.
 
@@ -94,16 +94,16 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 ### 1.F — Edit Transaction (TC-EDIT) — 8 tasks
 
-- [ ] TC-EDIT-01: Tap `Ubah` → form opens prefilled
-- [ ] TC-EDIT-02: Change amount → save → row updates
-- [ ] TC-EDIT-03: Change category → breakdown recalculates
-- [ ] TC-EDIT-04: Change type income→expense → summaries swap
-- [ ] TC-EDIT-05: Change date → item moves to new month
-- [ ] TC-EDIT-06: Edit note only → amount/category intact
-- [ ] TC-EDIT-07: Cancel edit → no data change
-- [ ] TC-EDIT-08: Edit to invalid state (amount 0) → save blocked
+- [x] TC-EDIT-01: Tap `Ubah` → form opens prefilled
+- [x] TC-EDIT-02: Change amount → save → row updates
+- [x] TC-EDIT-03: Change category → breakdown recalculates
+- [x] TC-EDIT-04: Change type income→expense → summaries swap
+- [x] TC-EDIT-05: Change date → item moves to new month
+- [x] TC-EDIT-06: Edit note only → amount/category intact
+- [x] TC-EDIT-07: Cancel edit → no data change
+- [x] TC-EDIT-08: Edit to invalid state (amount 0) → save blocked
 
-**Spec:** `src/tests/transaksi/edit-transaction.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/edit-transaction.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24. Verified live: prefill amount renders formatted ("Rp 123.000"); edit-screen type toggle uses `component_toggle_segmented_*` and categories render inline (no sheet) with `mark_<id>` selection markers; "Simpan perubahan" starts disabled until something changed (UI_SPEC 6.4). Note: TC-EDIT-05 runs last — row-action taps stop registering from a previous-month view under WDIO (verified clickable via MCP; see failure log).
 
 ### 1.G — Delete Transaction (TC-DEL) — 7 tasks
 

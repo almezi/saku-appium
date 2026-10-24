@@ -3,6 +3,7 @@ import { tags } from '../../config/tags'
 import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
 import { DaftarPage } from '../../pageobjects/daftar.page'
+import { RingkasanPage } from '../../pageobjects/ringkasan.page'
 import { UbahPage } from '../../pageobjects/ubah.page'
 import { TambahPage } from '../../pageobjects/tambah.page'
 import { formatRp } from '../../helpers/money'
@@ -12,9 +13,16 @@ const NEW_AMOUNT = 456_000
 
 describe('TC-EDIT — edit transaction (Phase 1)', () => {
   const daftar = new DaftarPage()
+  const ringkasan = new RingkasanPage()
   const ubah = new UbahPage()
   const tambah = new TambahPage()
   const note = uniqueNote('edit')
+  const today = new Date()
+  // The 15th of the previous month: far enough inside the month that the
+  // Material picker needs exactly one prev-month step from today's grid.
+  const prevMonthDay = new Date(today.getFullYear(), today.getMonth() - 1, 15)
+  const idDate = (d: Date) =>
+    new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d)
 
   before(async () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
@@ -26,27 +34,111 @@ describe('TC-EDIT — edit transaction (Phase 1)', () => {
     })
   })
 
-  it('TC-EDIT-01 tapping Ubah opens the form prefilled with the saved amount', async () => {
+  /**
+   * The Ubah screen renders its categories inline in the pager (no bottom
+   * sheet like Tambah), and both categories used here sit on the first page,
+   * so a direct tap on the item tag is enough.
+   */
+  async function selectCategoryInline(categoryId: string): Promise<void> {
+    const item = byTag(tags.tambah.categoryItem(categoryId))
+    await item.waitForDisplayed({ timeout: 5_000 })
+    await item.click()
+  }
+
+  // Test order follows a data timeline, not the checklist numbering: the
+  // date-move (TC-EDIT-05) runs LAST because row-action taps are only
+  // exercised from the current-month view — after the move the row lives in
+  // the previous month and the taps stopped registering under WebdriverIO
+  // (verified clickable there via MCP; a timing/window quirk, not app logic).
+
+  it('TC-EDIT-01 tapping Ubah opens the form prefilled', async () => {
     await daftar.open()
     await ubah.openFromDaftar(daftar, categories.income.refund)
     expect(await ubah.isDisplayed()).toBe(true)
+    expect(await ubah.headerLabel()).toBe('Ubah transaksi')
     expect(await tambah.getAmountText()).toBe(formatRp(AMOUNT))
+    expect(await tambah.getNoteText()).toBe(note)
+    // UI_SPEC 6.4: "Simpan perubahan" is enabled only when something changed.
+    expect(await ubah.isSaveEnabled()).toBe(false)
   })
 
-  it('TC-EDIT-02 changing the amount and saving updates the row', async () => {
+  it('TC-EDIT-02 changing the amount and saving updates the row and summary', async () => {
     await tambah.fillAmount(NEW_AMOUNT)
     await ubah.save()
-    const updated = await daftar.findRowText(formatRp(NEW_AMOUNT))
-    expect(await updated.isDisplayed()).toBe(true)
+    expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
+    expect(await daftar.summaryIncome()).toBe(NEW_AMOUNT)
+    const stale = await $$(`android=new UiSelector().textContains("${formatRp(AMOUNT)}")`)
+    expect(stale.length).toBe(0)
   })
 
-  it('TC-EDIT-07 leaving edit without saving keeps the original data', async () => {
+  it('TC-EDIT-03 changing the category recalculates the Ringkasan breakdown', async () => {
     await ubah.openFromDaftar(daftar, categories.income.refund)
-    await tambah.fillAmount(AMOUNT)
+    await selectCategoryInline(categories.income.salary)
+    await ubah.save()
+    await ringkasan.open()
+    const salaryRow = await ringkasan.breakdownItemTexts(categories.income.salary)
+    expect(salaryRow).toContain(formatRp(NEW_AMOUNT))
+    const refundItems = await $$(
+      `android=new UiSelector().resourceId("ringkasan_category_item_${categories.income.refund}")`,
+    )
+    expect(refundItems.length).toBe(0)
+  })
+
+  it('TC-EDIT-04 switching income to expense swaps the summaries', async () => {
+    await daftar.open()
+    await ubah.openFromDaftar(daftar, categories.income.salary)
+    // The edit screen's type toggle uses the shared segmented ids (verified
+    // live; Tambah's tambah_toggle_type_* does not exist here).
+    await byTag(tags.component.toggleSegmented(1)).click()
+    // Switching type clears the income category — pick an expense one.
+    await selectCategoryInline(categories.expense.dailyFood)
+    await ubah.save()
+    expect(await daftar.summaryExpense()).toBe(NEW_AMOUNT)
+    expect(await daftar.summaryIncome()).toBe(0)
+    expect(await daftar.firstDayHeaderTotal()).toBe(-NEW_AMOUNT)
+  })
+
+  it('TC-EDIT-06 editing only the note keeps amount and category', async () => {
+    const editedNote = uniqueNote('note')
+    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await tambah.fillNote(editedNote)
+    await ubah.save()
+    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    expect(await tambah.getNoteText()).toBe(editedNote)
+    expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
+    const mark = byTag(tags.tambah.categoryMark(categories.expense.dailyFood))
+    await mark.waitForDisplayed({ timeout: 5_000 })
     await ubah.systemBack()
     await byTag(tags.daftar.screen).waitForDisplayed()
-    // The unsaved amount (AMOUNT) is gone; the row still shows NEW_AMOUNT
-    // persisted by the previous edit.
+  })
+
+  it('TC-EDIT-07 leaving the edit without saving keeps the data', async () => {
+    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await tambah.fillAmount(999_999)
+    await ubah.systemBack()
+    await byTag(tags.daftar.screen).waitForDisplayed()
     expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
+    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
+  })
+
+  it('TC-EDIT-08 editing to an invalid amount blocks save', async () => {
+    // Still on the reopened edit screen from TC-EDIT-07.
+    await tambah.fillAmount(0)
+    expect(await ubah.isSaveEnabled()).toBe(false)
+    await ubah.systemBack()
+    await byTag(tags.daftar.screen).waitForDisplayed()
+  })
+
+  it('TC-EDIT-05 changing the date moves the item to another month', async () => {
+    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await tambah.selectDate(prevMonthDay)
+    await ubah.save()
+    // The list keeps showing the current month, which now has no transactions.
+    await byTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
+    await daftar.prevMonth()
+    expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
+    const headerTexts = await daftar.firstDayHeaderTexts()
+    expect(headerTexts).toContain(idDate(prevMonthDay))
   })
 })

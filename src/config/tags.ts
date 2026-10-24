@@ -32,6 +32,9 @@ export const tags = {
     // passes TAMBAH_CATEGORY_ITEM as the sheet testTag); rows carry _<id>.
     categorySheetRoot: 'tambah_category_item',
     categoryItem: (categoryId: string) => `tambah_category_item_${categoryId}`,
+    // Selected-category marker inside the form's category pager
+    // (verified live on the Ubah screen; absent when no category is set).
+    categoryMark: (categoryId: string) => `mark_${categoryId}`,
     categorySearch: 'tambah_category_search',
     categorySearchEmpty: 'tambah_category_search_empty',
     linkKelolaKategori: 'tambah_link_kelola_kategori',
@@ -116,6 +119,8 @@ export const tags = {
     toast: 'component_toast',
     toastAction: 'component_toast_action',
     fieldSearch: 'component_field_search',
+    // Type toggle on the Ubah (edit) screen — Tambah uses tambah_toggle_type_*.
+    toggleSegmented: (index: 0 | 1) => `component_toggle_segmented_${index}`,
     emptyState: 'component_state_empty',
   },
 
