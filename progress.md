@@ -6,10 +6,10 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 44 | 23 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 64 | 3 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 0 | 32 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **44** | **102** |
+| **All** | **17** | **146** | **64** | **82** |
 
 > Note: 3 tasks in 1.D are marked **SKIPPED** (repeat failures, see the 1.D section) and stay counted in "Remaining" until unblocked.
 
@@ -76,21 +76,21 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 ### 1.E — Summary / Ringkasan (TC-SUM) — 13 tasks
 
-- [ ] TC-SUM-01: `ringkasan_balance_value` = income − expense (verified `−Rp 21.758`)
-- [ ] TC-SUM-02: Income card == `daftar_summary_masuk`
-- [ ] TC-SUM-03: Expense card == `daftar_summary_keluar`
-- [ ] TC-SUM-04: Savings rate formula (verified `−671,1%`)
-- [ ] TC-SUM-05: Savings rate = 0% when income 0 (no divide-by-zero)
-- [ ] TC-SUM-06: Comparison amounts match cards
-- [ ] TC-SUM-07: Income breakdown percentages sum 100%
-- [ ] TC-SUM-08: Expense breakdown percentages sum 100%
-- [ ] TC-SUM-09: Breakdown bar width proportional
-- [ ] TC-SUM-10: Empty month → all zeros, no NaN/Infinity
-- [ ] TC-SUM-11: Large values format with separators, no clipping
-- [ ] TC-SUM-12: Negative balance renders `−Rp` not `Rp -`
-- [ ] TC-SUM-13: Scroll to bottom → all sections render
+- [x] TC-SUM-01: `ringkasan_balance_value` = income − expense (verified `−Rp 21.758`)
+- [x] TC-SUM-02: Income card == `daftar_summary_masuk`
+- [x] TC-SUM-03: Expense card == `daftar_summary_keluar`
+- [x] TC-SUM-04: Savings rate formula (verified `−671,1%`)
+- [x] TC-SUM-05: Savings rate = 0% when income 0 (no divide-by-zero)
+- [x] TC-SUM-06: Comparison amounts match cards
+- [x] TC-SUM-07: Income breakdown percentages sum 100%
+- [x] TC-SUM-08: Expense breakdown percentages sum 100%
+- [x] TC-SUM-09: Breakdown bar width proportional
+- [x] TC-SUM-10: Empty month → all zeros, no NaN/Infinity
+- [x] TC-SUM-11: Large values format with separators, no clipping
+- [x] TC-SUM-12: Negative balance renders `−Rp` not `Rp -`
+- [x] TC-SUM-13: Scroll to bottom → all sections render
 
-**Spec:** `src/tests/ringkasan/summary.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/ringkasan/summary.spec.ts` | **Agent:** ZCode (GLM-5.3) — 13/13 passing 2026-10-24. Verified live: income-0 renders the savings value as "—" (not "0,0%") and hides the income breakdown card; the empty month replaces the whole content area with `ringkasan_empty_state`; breakdown bars are untagged container+fill Views (fill/container width = share). Fixed en route: `mobile: scrollGesture "down"` is a silent no-op on this Compose LazyColumn — scrolling uses raw W3C touch swipes and breakdown rows are read from atomic page-source dumps (element-handle reads stale out; see failure log).
 
 ### 1.F — Edit Transaction (TC-EDIT) — 8 tasks
 
@@ -107,15 +107,15 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 ### 1.G — Delete Transaction (TC-DEL) — 7 tasks
 
-- [ ] TC-DEL-01: Tap `Hapus` → confirmation dialog
-- [ ] TC-DEL-02: Confirm → row removed, summaries decrease
-- [ ] TC-DEL-03: Cancel → row remains
-- [ ] TC-DEL-04: Delete last item of month → empty state
-- [ ] TC-DEL-05: Delete updates Ringkasan balance/cards
-- [ ] TC-DEL-06: Delete removes stale breakdown entry
-- [ ] TC-DEL-07: Rapid delete two items → both removed
+- [x] TC-DEL-01: Tap `Hapus` → confirmation dialog
+- [x] TC-DEL-02: Confirm → row removed, summaries decrease
+- [x] TC-DEL-03: Cancel → row remains
+- [x] TC-DEL-04: Delete last item of month → empty state
+- [x] TC-DEL-05: Delete updates Ringkasan balance/cards
+- [x] TC-DEL-06: Delete removes stale breakdown entry
+- [x] TC-DEL-07: Rapid delete two items → both removed
 
-**Spec:** `src/tests/transaksi/delete-undo.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/delete-undo.spec.ts` | **Agent:** ZCode (GLM-5.3) — 9/9 passing 2026-10-24 (TC-DEL-01/02/03 in the shared undo describe, TC-DEL-04–07 in a second describe with its own seeds; TC-DEL-02 doubles as TC-UNDO-03). Verified live: the delete sheet opens over a pending undo toast, so back-to-back deletes are safe; the empty list drops the summary cards and shows `daftar_empty_state`. Toast-expiry waits use a plain 6 s pause — the toast node can linger composed after expiry, so disappearance waits flake.
 
 ### 1.H — Undo Delete (TC-UNDO) — 3 tasks
 
