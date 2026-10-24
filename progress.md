@@ -6,10 +6,10 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 17 | 50 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 25 | 42 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 0 | 32 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **17** | **129** |
+| **All** | **17** | **146** | **25** | **121** |
 
 ---
 
@@ -44,16 +44,16 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 
 ### 1.C — Add Expense (TC-EXP) — 8 tasks
 
-- [ ] TC-EXP-01: Expense + amount + category → save succeeds
-- [ ] TC-EXP-02: Expense appears in list, day total shows `−Rp`
-- [ ] TC-EXP-03: `daftar_summary_keluar` increments
-- [ ] TC-EXP-04: Ringkasan balance decrements
-- [ ] TC-EXP-05: Expense breakdown category shows 100% for single item
-- [ ] TC-EXP-06: Expense on default account Tunai
-- [ ] TC-EXP-07: Mixed income+expense same day → day total = net
-- [ ] TC-EXP-08: Expense > balance → balance negative `−Rp`
+- [x] TC-EXP-01: Expense + amount + category → save succeeds
+- [x] TC-EXP-02: Expense appears in list, day total shows `−Rp`
+- [x] TC-EXP-03: `daftar_summary_keluar` increments
+- [x] TC-EXP-04: Ringkasan balance decrements
+- [x] TC-EXP-05: Expense breakdown category shows 100% for single item
+- [x] TC-EXP-06: Expense on default account Tunai
+- [x] TC-EXP-07: Mixed income+expense same day → day total = net
+- [x] TC-EXP-08: Expense > balance → balance negative `−Rp`
 
-**Spec:** `src/tests/tambah/add-expense.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/tambah/add-expense.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
 
 ### 1.D — Transaction List (TC-LIST) — 11 tasks
 

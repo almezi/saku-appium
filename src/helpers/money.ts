@@ -38,7 +38,9 @@ export function parseAmountText(text: string): number {
   if (Number.isNaN(value)) {
     throw new Error(`Cannot parse amount from text: "${text}"`)
   }
-  return value
+  // "\u2212Rp 75.000" carries the sign before the currency, outside the
+  // numeric run — apply it when the text leads with a minus.
+  return value > 0 && /^-/.test(normalized.trim()) ? -value : value
 }
 
 /** Indonesian savings-rate rendering: 75 -> "75,0%", -12.25 -> "−12,3%" (1 decimal, comma). */

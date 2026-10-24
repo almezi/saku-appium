@@ -4,24 +4,24 @@ import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
 import { DaftarPage } from '../../pageobjects/daftar.page'
 import { RingkasanPage } from '../../pageobjects/ringkasan.page'
+import { UbahPage } from '../../pageobjects/ubah.page'
+import { TambahPage } from '../../pageobjects/tambah.page'
 import { formatNegativeRp, formatRp } from '../../helpers/money'
 
-const INCOME = 200_000
 const EXPENSE = 75_000
+const INCOME = 200_000
 const BIG_EXPENSE = 500_000
 
 describe('TC-EXP — add expense (Phase 1)', () => {
+  const tambah = new TambahPage()
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
+  const ubah = new UbahPage()
 
+  // The expense is the only transaction of the day so the day total renders
+  // the negative "−Rp" form before later tests add income on top.
   before(async () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
-    await createTransaction({
-      type: 'pemasukan',
-      amount: INCOME,
-      categoryId: categories.income.freelance,
-      note: uniqueNote('exp-inc'),
-    })
     await createTransaction({
       type: 'pengeluaran',
       amount: EXPENSE,
@@ -38,19 +38,53 @@ describe('TC-EXP — add expense (Phase 1)', () => {
     expect(await row.isDisplayed()).toBe(true)
   })
 
-  it('TC-EXP-03 list expense summary equals the saved expense', async () => {
-    expect(await daftar.summaryExpense()).toBe(EXPENSE)
-    expect(await daftar.summaryIncome()).toBe(INCOME)
+  it('TC-EXP-02 expense-only day total renders −Rp', async () => {
+    // Verified live: the day header renders "−Rp 75.000" (U+2212 minus),
+    // which parseAmountText reads back as a negative number.
+    expect(await daftar.firstDayHeaderTotal()).toBe(-EXPENSE)
   })
 
-  it('TC-EXP-04 balance decreases to income minus expense', async () => {
+  it('TC-EXP-03 list expense summary equals the saved expense', async () => {
+    expect(await daftar.summaryExpense()).toBe(EXPENSE)
+    expect(await daftar.summaryIncome()).toBe(0)
+  })
+
+  it('TC-EXP-04 Ringkasan balance decrements below zero', async () => {
     await ringkasan.open()
-    expect(await ringkasan.balanceValue()).toBe(INCOME - EXPENSE)
+    expect(await ringkasan.expenseTotal()).toBe(EXPENSE)
+    expect(await ringkasan.balanceValue()).toBe(-EXPENSE)
+    expect(await ringkasan.balanceText()).toBe(formatNegativeRp(EXPENSE))
+  })
+
+  it('TC-EXP-05 single expense category shows 100% of the breakdown', async () => {
+    const texts = await ringkasan.breakdownItemTexts(categories.expense.dailyFood)
+    expect(texts).toContain('100%')
+    expect(texts).toContain(formatRp(EXPENSE))
+  })
+
+  it('TC-EXP-06 expense on the default account Tunai is recorded correctly', async () => {
+    // Rows never show the account; the edit form's account selector does.
+    await daftar.open()
+    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    expect(await tambah.getAccountText()).toBe('Tunai')
+    await ubah.tapBack()
+    await daftar.waitForScreen()
+  })
+
+  it('TC-EXP-07 mixed income and expense same day net to the day total', async () => {
+    await createTransaction({
+      type: 'pemasukan',
+      amount: INCOME,
+      categoryId: categories.income.freelance,
+      note: uniqueNote('exp-inc'),
+    })
+    await daftar.open()
+    expect(await daftar.firstDayHeaderTotal()).toBe(INCOME - EXPENSE)
+    expect(await daftar.summaryIncome()).toBe(INCOME)
+    expect(await daftar.summaryExpense()).toBe(EXPENSE)
   })
 
   it('TC-EXP-08 expense above balance renders a negative balance', async () => {
-    const tambahTag = byTag(tags.navTambah)
-    await tambahTag.click()
     await createTransaction({
       type: 'pengeluaran',
       amount: BIG_EXPENSE,

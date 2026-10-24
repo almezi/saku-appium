@@ -1,4 +1,4 @@
-import { byTag } from '../helpers/locators'
+import { byTag, scrollToTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
 import { readAmount } from './daftar.page'
@@ -43,5 +43,21 @@ export class RingkasanPage extends BasePage {
 
   async openKelolaKategori(): Promise<void> {
     await byTag(tags.ringkasan.kelolaButton).click()
+  }
+
+  /**
+   * Rendered texts of a breakdown category row — name, percentage and
+   * formatted amount (e.g. ["Makanan & Minuman", "100%", "Rp 75.000"]).
+   * Scrolls the LazyColumn when the row is below the fold.
+   */
+  async breakdownItemTexts(categoryId: string): Promise<string[]> {
+    const item = await scrollToTag(tags.ringkasan.categoryItem(categoryId))
+    const children = await item.$$('android=new UiSelector().className("android.widget.TextView")')
+    const texts: string[] = []
+    for (const child of children) {
+      const text = ((await child.getText()) || '').trim()
+      if (text) texts.push(text)
+    }
+    return texts
   }
 }
