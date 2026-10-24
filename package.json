@@ -1,12 +1,25 @@
 {
   "name": "saku-appium",
   "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
+  "description": "Appium + WebdriverIO + TypeScript E2E automation for Saku (Simple Money Tracker, Android)",
+  "license": "MIT",
   "type": "commonjs",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "wdio run ./wdio.conf.ts",
+    "test:smoke": "wdio run ./wdio.conf.ts --spec ./src/tests/smoke/*.spec.ts",
+    "test:phase1": "wdio run ./wdio.conf.ts --spec ./src/tests/phase1/*.spec.ts",
+    "wdio": "wdio run ./wdio.conf.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@wdio/appium-service": "^9.0.0",
+    "@wdio/cli": "^9.0.0",
+    "@wdio/local-runner": "^9.0.0",
+    "@wdio/mocha-framework": "^9.0.0",
+    "@wdio/spec-reporter": "^9.0.0",
+    "appium": "^3.0.0",
+    "appium-uiautomator2-driver": "^8.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0"
   }
 }

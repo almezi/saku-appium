@@ -1,6 +1,45 @@
 # Simple Money Tracker Project
 
-This project includes end-to-end test cases for the Simple Money Tracker mobile app, generated via Appium MCP.
+This project includes end-to-end test cases for the Simple Money Tracker mobile app, generated via Appium MCP, plus an automated **Appium + WebdriverIO + TypeScript** suite (see below).
+
+## Automated E2E suite (WebdriverIO + Appium + TypeScript)
+
+The executable suite lives in `src/`. It drives the Android app (UiAutomator2) through the test-tag contract in `TESTABILITY.md` — every interaction locates elements by test tag (rendered as resource-ids via `testTagsAsResourceId`), never by visible text.
+
+### Prerequisites
+
+- Node.js ≥ 22 and an Android emulator/device connected via `adb` (default udid `emulator-5554`, override with `ANDROID_UDID`)
+- The app APK at `resources/SimpleMoneyTrackerKT-v2.2.apk` (override with `SAKU_APK`, e.g. to point at a debug build)
+- Appium is installed automatically with `npm install` — no global install needed
+
+### Run
+
+```bash
+npm install
+npm test          # all specs (smoke + Phase 1)
+npm run test:smoke
+npm run test:phase1
+npx wdio run ./wdio.conf.ts --spec ./src/tests/phase1/add-income.spec.ts   # single spec
+```
+
+Each spec file runs in a fresh Appium session with clean app data (`appium:noReset = false`), so specs are isolated. Failure screenshots land in `reports/screenshots/`.
+
+### Layout
+
+```
+wdio.conf.ts          runner config (Android caps, Appium service, Mocha)
+src/config/tags.ts    test-tag contract, mirrors TestTags.kt (single source: the app repo)
+src/config/categories.ts   stable category/account IDs (CATEGORIES.md)
+src/helpers/          tag locators, rupiah formatting/parsing, transaction factory
+src/pageobjects/      Tambah, Daftar, Ringkasan, Ubah pages
+src/tests/smoke/      TC-NAV navigation smoke
+src/tests/phase1/     Phase 1 core flows: TC-INC, TC-EXP, TC-LIST, TC-SUM, TC-EDIT, TC-DEL/TC-UNDO
+```
+
+### Notes
+
+- Test data setup goes through the real UI (`createTransaction` helper). The `test_seed` / `test_now` intent extras in TESTABILITY.md are not implemented in the app yet; seed-based specs (TC-SEED) wait on that.
+- Phase 2 (budgets, category management, backup) and Phase 3 (validation, persistence, a11y, performance) cases are catalogued in `test-cases-simple-money-tracker.md` and follow the same page-object pattern.
 
 ## Generated test cases
 
