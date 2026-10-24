@@ -16,10 +16,11 @@ The executable suite lives in `src/`. It drives the Android app (UiAutomator2) t
 
 ```bash
 npm install
-npm test          # all specs (smoke + Phase 1)
-npm run test:smoke
-npm run test:phase1
-npx wdio run ./wdio.conf.ts --spec ./src/tests/phase1/add-income.spec.ts   # single spec
+npm test          # all specs
+npm run test:navigasi
+npm run test:tambah
+npm run test:transaksi
+npx wdio run ./wdio.conf.ts --spec ./src/tests/tambah/add-income.spec.ts   # single spec
 ```
 
 Each spec file runs in a fresh Appium session with clean app data (`appium:noReset = false`), so specs are isolated. Failure screenshots land in `reports/screenshots/`.
@@ -32,8 +33,12 @@ src/config/tags.ts    test-tag contract, mirrors TestTags.kt (single source: the
 src/config/categories.ts   stable category/account IDs (CATEGORIES.md)
 src/helpers/          tag locators, rupiah formatting/parsing, transaction factory
 src/pageobjects/      Tambah, Daftar, Ringkasan, Ubah pages
-src/tests/smoke/      TC-NAV navigation smoke
-src/tests/phase1/     Phase 1 core flows: TC-INC, TC-EXP, TC-LIST, TC-SUM, TC-EDIT, TC-DEL/TC-UNDO
+src/tests/navigasi/    TC-NAV navigation smoke (bottom bar, back, rapid switching)
+src/tests/tambah/      Tambah form flows: TC-INC, TC-EXP
+src/tests/transaksi/   Transaksi list flows: TC-LIST, TC-EDIT, TC-DEL/TC-UNDO
+src/tests/ringkasan/   Ringkasan flows: TC-SUM
+src/tests/anggaran/    Anggaran/budget flows: TC-BUDGET
+src/tests/kategori/    Kelola kategori flows: TC-KAT
 ```
 
 ### Notes

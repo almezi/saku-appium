@@ -26,7 +26,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [x] TC-NAV-07: Selected tab state persists on re-tap
 - [x] TC-NAV-08: 20 rapid tab switches, no ANR
 
-**Spec:** `src/tests/smoke/navigation.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
+**Spec:** `src/tests/navigasi/navigation.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
 
 ### 1.B — Add Income (TC-INC) — 9 tasks
 
@@ -40,7 +40,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [x] TC-INC-08: Form resets after save (amount 0, category placeholder, note empty)
 - [x] TC-INC-09: Save returns to Tambah / confirmation shown
 
-**Spec:** `src/tests/phase1/add-income.spec.ts` | **Agent:** ZCode (GLM-5.3) — 9/9 passing 2026-10-24
+**Spec:** `src/tests/tambah/add-income.spec.ts` | **Agent:** ZCode (GLM-5.3) — 9/9 passing 2026-10-24
 
 ### 1.C — Add Expense (TC-EXP) — 8 tasks
 
@@ -53,7 +53,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-EXP-07: Mixed income+expense same day → day total = net
 - [ ] TC-EXP-08: Expense > balance → balance negative `−Rp`
 
-**Spec:** `src/tests/phase1/add-expense.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/tambah/add-expense.spec.ts` | **Agent:** ___________
 
 ### 1.D — Transaction List (TC-LIST) — 11 tasks
 
@@ -69,7 +69,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-LIST-10: `daftar_summary_keluar` = sum expense in month
 - [ ] TC-LIST-11: Pull-to-refresh → data still correct
 
-**Spec:** `src/tests/phase1/transaction-list.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ___________
 
 
 ### 1.E — Summary / Ringkasan (TC-SUM) — 13 tasks
@@ -88,7 +88,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-SUM-12: Negative balance renders `−Rp` not `Rp -`
 - [ ] TC-SUM-13: Scroll to bottom → all sections render
 
-**Spec:** `src/tests/phase1/summary.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/ringkasan/summary.spec.ts` | **Agent:** ___________
 
 ### 1.F — Edit Transaction (TC-EDIT) — 8 tasks
 
@@ -101,7 +101,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-EDIT-07: Cancel edit → no data change
 - [ ] TC-EDIT-08: Edit to invalid state (amount 0) → save blocked
 
-**Spec:** `src/tests/phase1/edit-transaction.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/edit-transaction.spec.ts` | **Agent:** ___________
 
 ### 1.G — Delete Transaction (TC-DEL) — 7 tasks
 
@@ -113,7 +113,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-DEL-06: Delete removes stale breakdown entry
 - [ ] TC-DEL-07: Rapid delete two items → both removed
 
-**Spec:** `src/tests/phase1/delete-undo.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/delete-undo.spec.ts` | **Agent:** ___________
 
 ### 1.H — Undo Delete (TC-UNDO) — 3 tasks
 
@@ -121,7 +121,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-UNDO-02: Tap "Urungkan" before timeout → transaction restored, summary & list updated
 - [ ] TC-UNDO-03: Let toast expire without tap → deletion becomes permanent
 
-**Spec:** `src/tests/phase1/delete-undo.spec.ts` | **Agent:** ___________
+**Spec:** `src/tests/transaksi/delete-undo.spec.ts` | **Agent:** ___________
 
 ---
 
@@ -141,7 +141,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-BUDGET-10: Edit/remove budget works
 - [ ] TC-BUDGET-11: Back button returns to Ringkasan
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** `src/tests/anggaran/budget.spec.ts` *(written, not yet executed)* | **Agent:** ___________
 
 ### 2.B — Category Management (TC-KAT) — 15 tasks
 
@@ -161,7 +161,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-KAT-14: Category mark color renders
 - [ ] TC-KAT-15: Back button returns to previous screen
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** `src/tests/kategori/category-management.spec.ts` *(written, not yet executed)* | **Agent:** ___________
 
 ### 2.C — Backup & Export (TC-BACKUP) — 6 tasks
 
@@ -172,7 +172,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-BACKUP-05: Cancel export → no side effects
 - [ ] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** *planned: `src/tests/transaksi/backup.spec.ts`* | **Agent:** ___________
 
 
 ---
@@ -199,7 +199,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-VAL-16: Rapid double-tap save → only one transaction
 - [ ] TC-VAL-17: Save with keyboard open → works
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** *planned: `src/tests/tambah/form-validation.spec.ts`* | **Agent:** ___________
 
 ### 3.B — Amount Input Behavior (TC-AMT) — 7 tasks
 
@@ -211,7 +211,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-AMT-06: Cursor position stable during formatting
 - [ ] TC-AMT-07: Max digits limit → no crash
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** *planned: `src/tests/tambah/amount-input.spec.ts`* | **Agent:** ___________
 
 ### 3.C — Persistence (TC-PERS) — 5 tasks
 
@@ -221,7 +221,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-PERS-04: Force-stop mid-save → no corrupt DB, no crash
 - [ ] TC-PERS-05: Reinstall → data cleared
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** *planned: `src/tests/app/persistence.spec.ts`* | **Agent:** ___________
 
 ### 3.D — Rotation & Config Change (TC-ROT) — 6 tasks
 
@@ -232,7 +232,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-ROT-05: App backgrounded → resumed, no data loss
 - [ ] TC-ROT-06: Font scale 200% → no clipped text
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** *planned: `src/tests/app/rotation-config.spec.ts`* | **Agent:** ___________
 
 ### 3.E — Accessibility (TC-A11Y) — 7 tasks
 
@@ -244,7 +244,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-A11Y-06: Icon-only buttons have labels ("Buka pilihan", "Bulan sebelumnya")
 - [ ] TC-A11Y-07: Amount values readable as currency
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** *planned: `src/tests/app/accessibility.spec.ts`* | **Agent:** ___________
 
 ### 3.F — Performance (TC-PERF) — 5 tasks
 
@@ -254,7 +254,7 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 - [ ] TC-PERF-04: Save transaction < 1s
 - [ ] TC-PERF-05: No memory growth after 50 add/delete cycles
 
-**Spec:** *not yet implemented* | **Agent:** ___________
+**Spec:** *planned: `src/tests/app/performance.spec.ts`* | **Agent:** ___________
 
 ---
 
@@ -263,9 +263,10 @@ Track completion of every test task from `Phases.md`. Check `[x]` when a test ca
 1. **Claim ownership**: Write your agent name (or your name) in the `Agent:` field for each sub-phase you will run.
 2. **Mark complete**: Change `- [ ]` to `- [x]` when a test case passes.
 3. **Update summary**: Edit the "Completed" and "Remaining" counts in the Quick Summary table as you progress.
-4. **One spec per sub-phase**: Each sub-phase maps to one WebdriverIO spec file (see the "Spec" line). Run it with:
+4. **One spec per sub-phase**: Each sub-phase maps to one WebdriverIO spec file (see the "Spec" line). Specs are organized by screen, not by phase:
    ```bash
-   npm run test:phase1 -- --spec ./src/tests/phase1/<name>.spec.ts
+   npx wdio run ./wdio.conf.ts --spec ./src/tests/tambah/<name>.spec.ts
    ```
-5. **Phase 2 & 3**: Spec files do not exist yet. Create them under `src/tests/phase2/` and `src/tests/phase3/` following the same Page Object pattern as Phase 1.
+   Folder map: `navigasi/` (TC-NAV), `tambah/` (TC-INC, TC-EXP, TC-VAL, TC-AMT), `transaksi/` (TC-LIST, TC-EDIT, TC-DEL, TC-UNDO, TC-BACKUP), `ringkasan/` (TC-SUM), `anggaran/` (TC-BUDGET), `kategori/` (TC-KAT), `app/` (cross-cutting TC-PERS, TC-ROT, TC-A11Y, TC-PERF). There are npm shortcuts per folder, e.g. `npm run test:tambah`.
+5. **Missing specs**: Create new spec files in the screen folder listed on the sub-phase's "Spec" line, following the same Page Object pattern as the existing specs.
 
