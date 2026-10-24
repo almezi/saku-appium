@@ -312,6 +312,23 @@ Locate by text/content-desc only:
 - TC-PERF-04 Save transaction < 1s
 - TC-PERF-05 No memory growth after 50 add/delete cycles
 
+### W. Debug Tooling & Seeding (TC-SEED)
+- TC-SEED-01 Launch with intent extra `test_seed = seed_empty` → database initialized empty
+- TC-SEED-02 Launch with `test_seed = seed_month_mixed` → loads mixed data per specification
+- TC-SEED-03 Launch with `test_seed = seed_excluded_categories` → loads special categories (Transfer, Tabungan, Investasi)
+- TC-SEED-04 Launch with `test_seed = seed_month_boundaries` → data at start & end of month tested
+- TC-SEED-05 Launch with `test_seed = seed_same_day_ordering` → same-day transaction ordering by created time tested
+- TC-SEED-06 Launch with intent extra `test_now = 2026-09-15T10:00` → app uses injected fake clock, not system clock
+- TC-SEED-07 Verify release build is clean of debug seeding hooks
+
+### X. Undo Delete Toast (TC-UNDO)
+- TC-UNDO-01 Delete transaction → toast with "Urungkan" action appears
+- TC-UNDO-02 Tap "Urungkan" before timeout → transaction restored, summary & list updated
+- TC-UNDO-03 Let toast expire without tap → deletion becomes permanent
+
+### Y. Excluded & Transfer Categories (TC-EXC)
+- TC-EXC-01 Verify transfer/savings categories treated per UI_SPEC.md rules (excluded from regular expense counting or budget if set accordingly)
+
 ---
 
-Total: ~140 test cases across 22 areas. Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
+Total: ~140 test cases across 25 areas. Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
