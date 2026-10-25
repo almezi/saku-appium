@@ -81,6 +81,24 @@ P2
 - **App build:** SimpleMoneyTrackerKT-v2.2.apk
 - **Android API level:** 36 (HiOS build)
 
+## Fix Ownership
+**MIXED — no confirmed fix path on either side today; workaround = emulator-only runs.**
+
+Not a code defect in either repo per current evidence (same APK, same API
+level passes 8/8 repeatedly on the stock-Android emulator; the app works
+manually on the phone). It is a HiOS ↔ uiautomator2 incompatibility, so:
+
+- **App code (investigation):** the app team is the only party who can
+  change the accessibility surface — experiment with the Compose
+  semantics/testTags configuration (e.g. how `testTagsAsResourceId` and
+  dialog/window semantics interact on HiOS) to see if a build change
+  avoids the deadlock.
+- **Automation/infra (investigation):** try a newer
+  appium-uiautomator2-server release and driver settings
+  (`disableWindowAnimation` already applied, no effect).
+- **Blocked-ness:** real-device runs stay blocked; `emulator-5554` is the
+  sanctioned target (HANDOVER.md §8).
+
 ## Additional Notes
 - Emulator unaffected: run the matrix/shard against `emulator-5554` until this is fixed.
 - Device-side fixes applied during triage that DID resolve separate issues and should

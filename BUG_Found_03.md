@@ -89,7 +89,14 @@ P1
 - **App build:** SimpleMoneyTrackerKT-v2.2.apk
 - **Android API level:** 37
 
-## Additional Notes — fix classification (app code, not automation)
+## Fix Ownership
+**APP CODE (confirmed by the experiment in the Description above).** The
+trigger is environmental (emulator storage distress), but the silent
+destruction of committed data on trigger can only be fixed where the
+database is configured. The harness cannot prevent or repair it — it
+keeps only a detection tripwire (TC-BACKUP-06's empty-state assertion).
+
+## Additional Notes — fix details (app repo)
 The trigger is environmental (emulator disk distress), but the *silent
 destruction of committed data on trigger* is fixable only in the app repo
 (this workspace holds the test harness only). Recommended, in order:

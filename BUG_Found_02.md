@@ -69,6 +69,25 @@ P2
 - **App build:** SimpleMoneyTrackerKT-v2.2.apk
 - **Android API level:** 37
 
+## Fix Ownership
+**AUTOMATION CODE.** The app is verified working end-to-end (import via
+MCP succeeded, result toast and count correct); every failure is in the
+scripted drive of the system DocumentsUI surface, which only the harness
+can change.
+
+Next actions (in order):
+1. Trigger a media scan after `adb push` (`adb shell cmd media_scanner
+   scan <file>`) so the file appears in the picker's "Recent" view and the
+   roots-drawer navigation can be skipped entirely.
+2. Drive the drawer by DocumentsUI resource-ids with an explicit
+   drawer-closed verification between taps (prevents the double-tap
+   close-open flake).
+3. If (1) lands, delete the Downloads-root navigation from
+   `backup.spec.ts` TC-BACKUP-04 and un-skip the test case.
+
+App code: **no change needed** — TC-BACKUP-04 blocks on system-surface
+automation, not on the import feature.
+
 ## Additional Notes
 - The app is NOT at fault — import verified working via direct MCP
   interaction, including the result toast and transaction count update.
