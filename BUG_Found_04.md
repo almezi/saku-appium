@@ -76,6 +76,22 @@ P2
 - **App build:** SimpleMoneyTrackerKT-v2.2.apk
 - **Android API level:** 37
 
+## Fix Ownership
+**AUTOMATION CODE (primary — a proven workaround exists), app-side
+investigation secondary.**
+
+- **Automation:** the identical dialog flow works via driver-level
+  `set_value` (MCP-proven all day), so the next spec-level fix is
+  `typeIntoTaggedField` gaining a `setValue`-based mode that bypasses key
+  events entirely, plus driver-setting trials (`waitForIdleTimeout`,
+  `ignoreUnimportantViews`). That is what un-skips TC-KAT-08/10 and
+  TC-LIST-07.
+- **App code (only if the automation fix is insufficient):** determine why
+  the dialog's dismiss path fires during the uiautomator2 accessibility
+  focus walk. If the dialog proves fragile to *legitimate* accessibility
+  events (not just automation), harden it app-side; today's evidence does
+  not require this.
+
 ## Additional Notes
 - Same-family suspicion as BUG_FOUND.md (HiOS real-device deadlock):
   Compose dialog/window animation + accessibility re-walk under

@@ -12,8 +12,12 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 | **All** | **17** | **146** | **92** | **54** |
 
 > Note: 3 tasks in 1.D, TC-KAT-08/10 in 2.B, and TC-BACKUP-04/06 in 2.C are marked **SKIPPED**
-> (3-failure rule; see the sub-phase sections and `BUG_FOUND.md` / `BUG_Found_02.md` /
-> `BUG_Found_03.md` / `BUG_Found_04.md`) and stay counted in "Remaining" until unblocked.
+> (3-failure rule) and stay counted in "Remaining" until unblocked. Fix ownership per bug file:
+> `BUG_FOUND.md` → **mixed / blocked** (HiOS↔uiautomator2; investigate app-side + harness, run on
+> emulator meanwhile) · `BUG_Found_02.md` → **automation code** (SAF picker drive; app verified
+> fine) · `BUG_Found_03.md` → **app code** (WAL invalidation silently discards data; TRUNCATE
+> journal mode / checkpoint-on-stop) · `BUG_Found_04.md` → **automation code** (setValue-based
+> dialog typing; app-side investigation only if that proves insufficient).
 
 ---
 
