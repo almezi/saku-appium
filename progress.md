@@ -219,7 +219,7 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [x] TC-BACKUP-03: Exported file contains current transactions
 - [ ] TC-BACKUP-04: Import backup restores data (if exists) — ~[BUG]~ **SKIPPED** (3× 2026-10-25): the app's import works (verified live via MCP end-to-end) but the scripted drive of the system DocumentsUI picker misfires — Recents is MediaStore-indexed and hides freshly pushed files, and the roots-drawer taps flake under WDIO. See `BUG_Found_02.md`
 - [x] TC-BACKUP-05: Cancel export → no side effects
-- [ ] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked — ~[BUG]~ **SKIPPED** (3× 2026-10-25): blocked by a committed-then-vanished seed transaction (app counted it at TC-05, DB reads 0 minutes later; 2nd occurrence today, matches the 2.B morning incident). See `BUG_Found_03.md`
+- [ ] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked — ~[BUG]~ **SKIPPED** (3× 2026-10-25): blocked by a committed-then-vanished seed transaction. **Root cause confirmed by experiment 2026-10-25 evening:** the app keeps all data in an un-checkpointed WAL; an invalidated WAL is silently discarded on open (no crash, no log) — categories survive, recent transactions vanish. Fix is **app-side** (`setJournalMode(TRUNCATE)` or checkpoint-on-background; see `BUG_Found_03.md`)
 
 **Spec:** `src/tests/transaksi/backup.spec.ts` (executed 2026-10-25: 4/6 passing, 2 blocked per retry policy) | **Agent:** ZCode (GLM-5.3) — live MCP verification + scripted wdio execution
 

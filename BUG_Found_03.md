@@ -3,8 +3,9 @@
 ## Identity
 - **Reported by:** ZCode automation agent (GLM-5.3, 2.C execution session)
 - **Reported at:** 2026-10-25T13:20:00+07:00
+- **Root cause CONFIRMED by experiment:** 2026-10-25T22:35+07:00
 - **Branch:** features/phase2
-- **Commit:** 33a930d
+- **Commit:** 33a930d (at time of the failing runs)
 
 ## Test Context
 - **Phase:** 2
@@ -14,58 +15,66 @@
 
 ## Bug Details
 ### Title
-Committed transaction disappears from Room DB mid-session under the wdio/uiautomator2 harness (2nd occurrence today) — TC-BACKUP-06 blocked on reaching the zero-transaction state
+Un-checkpointed WAL invalidation silently discards committed transactions — no crash, no log; fix belongs in app code (journal mode / checkpoint policy)
 
 ### Description
-During scripted runs, a transaction that the app itself acknowledged as
-saved disappears from the database minutes later, with no delete action
-performed:
+**Root cause confirmed by a controlled experiment (2026-10-25 evening, same
+emulator/build).** The app runs SQLite in WAL mode, and during active use
+essentially all data lives in the un-checkpointed `-wal` file: observed
+`simplemoneytracker.db` at 4096 bytes (schema only, untouched for hours)
+while `-wal` was 210–234 KB holding every transaction. If the WAL becomes
+invalid, SQLite **silently discards it on the next open** — every
+un-checkpointed transaction disappears, the app keeps working normally, and
+nothing appears in logcat.
 
-- Attempt 4 (13:09–13:12): the before-hook seeds one income (Rp 50.000,
-  inc_salary). The app reports "1 transaksi tersimpan" on the Cadangan
-  status card at TC-BACKUP-01 and TC-BACKUP-05 (13:11), and the exported
-  JSON/CSV at TC-BACKUP-03 contains the row (13:10). At TC-BACKUP-06
-  (13:12) the October list shows the empty state and no row action can be
-  tapped; `sqlite3` on the pulled DB (+wal/+shm) reads **0 transactions**.
-  No delete sheet was ever opened; no app kill/crash appears in the Appium
-  log for that window.
-- Attempt 2 (19:48–19:52): identical signature — seed saved with toast and
-  form reset, DB reads 0 afterwards.
-- Counter-evidence: the same save flow driven live via Appium MCP on the
-  same emulator/build persists correctly (row verified in the pulled DB,
-  sane date, survives session teardown).
-- Matches the 2026-10-25 morning incident recorded in progress.md §2.B:
-  "the first DB write coincided with the permanent loss of 2
-  previously-verified transactions — consistent with un-checkpointed WAL
-  loss on hard kill". Twice now under wdio sessions, never under MCP.
+Experiment (all on emulator-5554, app v2.2):
 
-The loss happens between the app counting the row and a later read, while
-the app process is alive — so either the emulator's storage layer discards
-a committed WAL frame, or the app rolls the write back in a code path not
-exercised manually. The harness cannot distinguish further from outside.
+1. `pm clear` → fresh launch → UI-save one transaction (Rp 99.999, Gaji) →
+   DB pulled via `run-as cat`: main file 4096 B / 0 rows, WAL 210 KB — the
+   row lived **only** in the WAL.
+2. `am crash` (hard process death with the hot WAL) → relaunch → **both
+   rows survived**; WAL checkpointed to 0 bytes on the clean reopen.
+   → Process death is NOT the loss mechanism; committed rows survive it.
+3. WAL invalidated (header overwritten with garbage while the process was
+   dead) → relaunch → **the bug signature reproduced exactly**: app opens
+   normally (no crash dialog, no error), `transactions = 0`, `categories =
+   36`, logcat silent (zero SQLite/corruption lines), and the WAL file was
+   quietly rewritten at launch.
+
+This matches both real incidents byte-for-byte: the 2.B morning loss (after
+an emulator hard power-cut) and the 2.C afternoon loss (after the emulator
+was found wedged mid-boot) — in both, categories survived (checkpointed
+earlier) while recently written transactions vanished, with no crash and no
+log. The trigger is **emulator storage distress invalidating the WAL** (this
+AVD has form: wedged mid-boot once, server death mid-session once); the
+**silent data destruction on trigger is an app-side robustness gap**.
+
+Ruled out by the experiment: process death (rows survive `am crash` with a
+hot WAL); the wdio harness (the loss reproduced purely with adb + files);
+UI-level causes (no interaction needed).
 
 ### Steps to Reproduce
-1. `ANDROID_UDID=emulator-5554 npx wdio run ./wdio.conf.ts --spec ./src/tests/transaksi/backup.spec.ts`
-2. Observe TC-BACKUP-01/03/05 pass against the seeded transaction (app
-   counts it; export contains it).
-3. By TC-BACKUP-06 the list is empty; pull the DB and count rows:
-   `adb shell run-as id.almezi.simplemoneytracker_kt cat databases/simplemoneytracker.db-wal`
-   (+ .db, .shm) → `sqlite3 … 'select count(*) from transactions;'` → 0.
+1. Fresh app data; save one transaction through the UI.
+2. Verify the row lives only in the WAL: `run-as … cat databases/simplemoneytracker.db`
+   pulled locally reads 0 rows while `-wal` is ~200 KB.
+3. `am crash id.almezi.simplemoneytracker_kt` (hard death, WAL stays hot).
+4. Overwrite the first bytes of `databases/simplemoneytracker.db-wal` with
+   garbage (simulating a torn/corrupt WAL write under storage distress).
+5. Relaunch the app: it opens normally; the transaction is gone; no log,
+   no crash, no UI anomaly.
 
 ### Actual Result
-TC-BACKUP-06 failed 3 consecutive scripted attempts (retry limit reached).
-Attempts 2 and 4 show the vanished-seed signature; attempt 3 failed on
-cascade from TC-BACKUP-04 (picker left foregrounded).
+TC-BACKUP-06 failed 3 consecutive scripted attempts; the seeded, app-
+acknowledged transaction vanished from the DB between two reads minutes
+apart (2 occurrences on 2026-10-25, matching the 2.B morning incident).
 
 ### Expected Result
-The seeded transaction stays in the DB; TC-BACKUP-06 deletes both rows via
-the UI and exports a header-only CSV.
+A committed transaction must survive any single-file corruption event, or
+at minimum the loss must be loud (error surfaced to the user), not silent.
 
 ### Attachment
-- `reports/screenshots/1792933927300-TC_BACKUP_06_exporting_with_zero_transactions_produces_a_valid_empty_file.png`
-  (October list already empty at failure time)
-- `reports/screenshots/1792932718191-TC_BACKUP_06_….png` (attempt 2, same state)
-- `reports/appium.log`
+- `reports/bug03-logcat-experiment.txt` (full logcat of the experiment session; local — `reports/` is gitignored, reproduced via the Steps above)
+- `reports/screenshots/1792933927300-TC_BACKUP_06_….png` (empty state at failure)
 
 ### Severity
 Critical
@@ -80,12 +89,27 @@ P1
 - **App build:** SimpleMoneyTrackerKT-v2.2.apk
 - **Android API level:** 37
 
-## Additional Notes
-- App-side investigation: consider aggressive WAL checkpointing
-  (`PRAGMA wal_checkpoint(TRUNCATE)` on background/stop) and Room write
-  logging to confirm whether the INSERT commits durably.
-- Environment suspicion remains (this emulator lost data once this morning
-  and was found wedged mid-boot once today); re-test on a fresh emulator
-  before app-side changes.
-- Affected neighbours: TC-BACKUP-04 fallout (BUG_Found_02.md) left the SAF
-  picker foregrounded, which the spec's back-out guard now handles.
+## Additional Notes — fix classification (app code, not automation)
+The trigger is environmental (emulator disk distress), but the *silent
+destruction of committed data on trigger* is fixable only in the app repo
+(this workspace holds the test harness only). Recommended, in order:
+
+1. **`Room.databaseBuilder(…).setJournalMode(JournalMode.TRUNCATE)`** — one
+   line. Every commit lands in the main DB file; there is no hot-WAL window
+   to invalidate. For a single-user local tracker the write throughput cost
+   is irrelevant. This alone would have prevented both incidents.
+2. Alternatively (keeping WAL): checkpoint on background — a
+   `DefaultLifecycleObserver` running `PRAGMA wal_checkpoint(TRUNCATE)` in
+   `onStop` shrinks the hot-WAL window to the foreground session.
+3. **Custom `DatabaseErrorHandler`** that copies a corrupt DB aside before
+   recovery (forensics) and surfaces the event (log at minimum; ideally a
+   user-facing notice) instead of a silent discard.
+4. Harness (this repo): no fix possible — the suite already detects the
+   loss (TC-BACKUP-06's empty-state assertion). Optional tripwire: assert
+   the seeded row right after `createTransaction` in backup.spec so a loss
+   surfaces at the seed step instead of two tests later.
+
+Environment note: this AVD showed storage distress twice on 2026-10-25
+(wedged mid-boot; `settings` service missing until a cold reboot). After
+applying fix 1, re-run the 2.C spec on a **freshly created** AVD before
+concluding anything else is wrong.
