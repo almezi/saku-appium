@@ -13,7 +13,7 @@ Closing summary of the **2026-10-24 review** (a `ringkasan.page.ts` deep-dive gr
 | `ringkasan.page.ts` findings 1–8, steps 1–10 | ✅ all fixed |
 | Optional/nit tier (O1–O6, N1–N4) | O1 done; O2 deferred by decision; O3–O6 + N1–N3 open at discretion; N4 kept as-is |
 | Security conditions | ✅ `appium-mcp` pinned; dependency-deferral policy documented below |
-| Verification | ⚠️ static only — `tsc --noEmit` clean, unit tests 17/17. **No device run yet** (see Device gate) |
+| Verification | `tsc --noEmit` clean, unit tests 17/17. **Device run 2026-10-25:** transaction-list spec green on emulator (9 passing incl. seed, 3 policy-skipped) — validated the refactors on device and caught+fixed a real regression (typing helper's exact-equality verify broke currency-field seeds; now `'exact'/'digits'` modes). TC-LIST-07 revival failed 4× — rename dialog still dismisses under WDIO (works via MCP `set_value`), remains skipped with root-cause trail in progress.md. **Still never device-run:** Phase 2 specs (budget, category-management), TC-SUM-09 bar guard |
 
 ---
 

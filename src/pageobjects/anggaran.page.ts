@@ -90,7 +90,13 @@ export class AnggaranPage extends BasePage {
 
   /** Fills "Batas bulanan" on the open budget form. */
   async fillLimit(amount: number): Promise<void> {
-    await typeIntoTaggedField(byTag(anggaranTags.inputAmount), String(amount))
+    // 'digits': currency-formatted field, same as tambah.fillAmount.
+    await typeIntoTaggedField(
+      byTag(anggaranTags.inputAmount),
+      String(amount),
+      'budget limit',
+      'digits',
+    )
   }
 
   /** "Simpan anggaran" on the open budget form. */

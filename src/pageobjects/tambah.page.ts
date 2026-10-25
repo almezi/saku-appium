@@ -51,7 +51,9 @@ export class TambahPage extends BasePage {
   }
 
   async fillAmount(amount: number): Promise<void> {
-    await typeIntoTaggedField(this.amountInput, String(amount), tags.tambah.inputAmount)
+    // 'digits': the field live-formats the input as currency ("254000"
+    // renders "Rp 254.000"), so exact-equality verification can never hold.
+    await typeIntoTaggedField(this.amountInput, String(amount), tags.tambah.inputAmount, 'digits')
   }
 
   async fillNote(note: string): Promise<void> {

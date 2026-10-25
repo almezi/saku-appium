@@ -186,6 +186,7 @@ Locate by text/content-desc only:
 - TC-LIST-05 Row shows category, type label, formatted amount
 - TC-LIST-06 Income row no minus; day total `−Rp` for expenses
 - TC-LIST-07 Long category name truncates/wraps, no overlap
+  - 2026-10-25: revival attempt failed 4×. Three real layers found & fixed in `helpers/input.ts` (currency-verify mismatch breaking every seed — regression from the R2/R3 consolidation; `kategori_form_name` IS the EditText so `fieldText` read empty; stale handles not re-resolved per retry). Dialog now opens and types under WDIO but still dismisses mid-interaction (scrim misclick on keyboard-resize recompose); identical flow works via Appium MCP `set_value`. Remains skipped; next lever: setValue-based entry or app-side stable dialog state.
 - TC-LIST-08 Scroll 100+ items, no crash
 - TC-LIST-09 `daftar_summary_masuk` = sum income in month
 - TC-LIST-10 `daftar_summary_keluar` = sum expense in month

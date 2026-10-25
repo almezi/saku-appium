@@ -65,13 +65,13 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [x] TC-LIST-04: Items sorted newest first
 - [x] TC-LIST-05: Row shows category, type label, formatted amount
 - [x] TC-LIST-06: Income row no minus; day total `−Rp` for expenses
-- [ ] TC-LIST-07: Long category name truncates/wraps, no overlap — **SKIPPED** (failed 4×): rename-dialog save button never visible under WebdriverIO; flow works live via Appium MCP
+- [ ] TC-LIST-07: Long category name truncates/wraps, no overlap — **SKIPPED** (4× 2026-10-24, 4× 2026-10-25): the "Ubah kategori" dialog dismisses mid-interaction under WebdriverIO (scrim misclick on keyboard-resize recompose) even after three helper-layer fixes (currency verify, EditText-is-the-tagged-node fieldText, fresh re-resolution per retry); the identical flow works live via Appium MCP `set_value`. Next lever: setValue-based entry or app-side stable dialog state
 - [ ] TC-LIST-08: Scroll 100+ items, no crash — **SKIPPED** (failed 4×): seeding 100 items through the real form (~12 s/item) exceeds the 20-min test timeout; blocked on the app's unimplemented `test_seed` intent
 - [x] TC-LIST-09: `daftar_summary_masuk` = sum income in month
 - [x] TC-LIST-10: `daftar_summary_keluar` = sum expense in month
 - [ ] TC-LIST-11: Pull-to-refresh → data still correct — **SKIPPED** (failed 5×, always as a cascade): expected sums depended on TC-LIST-07/08 data; revisit together with TC-LIST-08
 
-**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24
+**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24; re-validated on device 2026-10-25 (9 passing incl. seed, 0 failing) after helper fixes from the review remediation
 
 
 ### 1.E — Summary / Ringkasan (TC-SUM) — 13 tasks
