@@ -87,12 +87,21 @@ export class RingkasanPage extends BasePage {
     throw new Error(`Breakdown item ${categoryId} not found in page source`)
   }
 
-  /** Rendered texts of the "Pemasukan vs pengeluaran" comparison card. */
+  /**
+   * Rendered texts of the "Pemasukan vs pengeluaran" comparison card —
+   * scrolled into view first, since the card can sit below the fold in the
+   * summary LazyColumn.
+   */
   async comparisonTexts(): Promise<string[]> {
-    return extractChildTexts(byTag(tags.ringkasan.comparison))
+    return extractChildTexts(scrollToTag(tags.ringkasan.comparison))
   }
 
-  /** Child texts of the empty state (title, hint, action label). */
+  /**
+   * Child texts of the empty state (title, hint, action label). Read without
+   * scrolling: the empty state replaces the whole content area when a month
+   * has no data — no scrollable container exists for UiScrollable to attach
+   * to — and it always sits at the top of the screen.
+   */
   async emptyStateTexts(): Promise<string[]> {
     return extractChildTexts(byTag(tags.ringkasan.emptyState))
   }
@@ -101,22 +110,31 @@ export class RingkasanPage extends BasePage {
    * Bar-fill fraction of one breakdown row: the row's untagged trailing Views
    * are [bar container, bar fill] (verified live — at 80% the fill is 712 px
    * of a 890 px container), so fill.width / container.width is the share.
+   * Exactly two Views are required — a different count means the layout
+   * drifted (e.g. a wrapper View appeared), and failing loudly beats
+   * silently reading the wrong pair.
    */
   async breakdownBarRatio(categoryId: string): Promise<number> {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const item = await scrollToTag(tags.ringkasan.categoryItem(categoryId))
+        // UiScrollable can resolve a ghost reference when the row never
+        // composes — confirm existence for a clear failure instead of an
+        // opaque child-enumeration error.
+        await item.waitForExist({ timeout: 10_000 })
         // WDIO v9 types the `$$` chainable's `length` as Promise<number>;
         // spread the awaited result into a real array before indexing.
         const viewList = [
           ...(await item.$$('android=new UiSelector().className("android.view.View")')),
         ]
-        if (viewList.length < 2) continue
-        const container = await viewList[viewList.length - 2].getSize()
-        const fill = await viewList[viewList.length - 1].getSize()
+        if (viewList.length !== 2) continue
+        const container = await viewList[0].getSize()
+        const fill = await viewList[1].getSize()
         return barFillRatio(container.width, fill.width)
       } catch {
-        // stale element — re-scroll and retry
+        // Stale element or mid-recompose ghost — back off before the fresh
+        // re-query (same error-path pause as DaftarPage.tapRowAction).
+        await driver.pause(500)
       }
     }
     throw new Error(`Breakdown item ${categoryId} has no measurable bar views`)

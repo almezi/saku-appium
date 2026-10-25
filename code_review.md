@@ -23,6 +23,8 @@ const item = await scrollToTag(tags.ringkasan.categoryItem(categoryId))
 await item.waitForExist({ timeout: 10_000 })
 ```
 
+> ✅ **Resolved 2026-10-25** — `breakdownBarRatio` runs exactly this `waitForExist({ timeout: 10_000 })` guard before child enumeration. The `breakdownItemTexts` half was invalidated by the cafa16c page-source rewrite: the method no longer dereferences the scrolled element at all — it parses an atomic XML dump and terminates with the explicit `Breakdown item ${categoryId} not found in page source` error, so the `item.$$(...)` crash scenario cannot occur there. A `waitForExist` was deliberately *not* added to it: on the not-found path it would only add up to 30 s of waiting (3 attempts × 10 s) ahead of an already-clear error.
+
 #### 2. Unsafe type cast: `as unknown as Element[]`
 
 **Line:** 99
@@ -40,6 +42,8 @@ const viewList = await views as Element[]
 const viewList = await item.$$('android=new UiSelector().className("android.view.View")')
 ```
 
+> ✅ **Resolved 2026-10-25** — the cast is gone, and `import type { Element } from 'webdriverio'` was removed with it (closing finding #6 for this file too). Correction to the original suggestion: in the installed WDIO v9 types, plain `await` on the `$$` chainable does **not** yield `Element[]` — its `length` is typed `Promise<number>`, which is exactly what the double-cast was hiding. The type-honest idiom is spreading the awaited chainable into a real array: `const viewList = [...(await item.$$(selector))]`. `grep -rn "as unknown as" src/` now matches only the documented `wdio.conf.ts` capabilities cast (N4, intentionally kept).
+
 ### 🟠 HIGH
 
 #### 3. Stale element after scroll in `breakdownBarRatio`
@@ -51,6 +55,8 @@ const viewList = await item.$$('android=new UiSelector().className("android.view
 Compare to `DaftarPage.tapRowAction` (lines 119-129) which retries on a fresh query. `breakdownBarRatio` has no such protection.
 
 **Fix:** Wrap in a retry loop that re-queries on each attempt.
+
+> ✅ **Resolved 2026-10-25** — the method re-queries fresh on every attempt (scroll → `waitForExist` → child enumeration all inside the try, so nothing survives across attempts), and is now aligned with the cited `DaftarPage.tapRowAction` pattern end-to-end: the explicit `waitForExist` re-verifies existence before enumeration, and the retry catch backs off 500 ms before the fresh re-query — the same error-path pause `tapRowAction` uses — so a recomposition storm is not hammered with immediate re-queries.
 
 #### 4. Fragile bar-view indexing (assumes exactly 2 Views at the end)
 
@@ -64,6 +70,8 @@ const fill = await viewList[viewList.length - 1].getSize()
 The guard only checks `length < 2`, but if there are **3 or more Views**, the method silently picks the wrong elements. A Compose layout change (e.g., adding a ripple wrapper View) would cause incorrect ratio calculations, not an error.
 
 **Fix:** Add a guard for exactly 2 Views, or use a more specific selector.
+
+> ✅ **Resolved 2026-10-25** — the guard is now `viewList.length !== 2` with direct `[0]`/`[1]` indexing; any other count retries and fails loudly with `has no measurable bar views` instead of silently computing a ratio from a wrong pair. ⚠️ Residual: the exactly-two-Views premise could not be re-counted on a device at fix time (no emulator was running) — it rests on the live-verified trailing-pair measurement. If TC-SUM-09 fails with that error, the row renders extra Views and the guard should relax to `length < 2` (one-character change).
 
 #### 5. No wait between click and label read in `switchMonth`
 
@@ -81,6 +89,8 @@ There is no delay between the click and reading the label. If recomposition take
 await byTag(arrow).click()
 await driver.pause(300)
 ```
+
+> ✅ **Resolved 2026-10-25** — the 300 ms settle wait is in place, and the `.catch(() => before)` masking is removed: a failed label read now surfaces as a real error instead of masquerading as "unchanged" and triggering the double-step re-click. Residual: the byte-identical `switchMonth` twin in `daftar.page.ts` is unchanged and remains open under R1 / Part C P1, which additionally asks for asserting the *target* label rather than merely "changed".
 
 ### 🟡 MEDIUM
 
@@ -195,23 +205,26 @@ return byTag(tags.ringkasan.balanceValue).getText()
 
 ### Priority 2 (P2) — Lower Priority
 
-- [ ] **Step 6:** Add `waitForExist` guards after `scrollToTag` calls
+- [x] **Step 6:** Add `waitForExist` guards after `scrollToTag` calls
   - **Location:** `breakdownItemTexts` (line 55), `breakdownBarRatio` (line 97)
   - **Files affected:** `ringkasan.page.ts` only
   - **Effort:** 10 min
   - **Risk reduction:** Clear error instead of opaque crash when item is not found
+  - ✅ **Done 2026-10-25:** `breakdownBarRatio` now runs `item.waitForExist({ timeout: 10_000 })` after the scroll, before enumerating children. `breakdownItemTexts` needs no guard anymore: since the page-source rewrite (commit cafa16c) it never touches the scrolled element — it reads an atomic XML dump and already fails with the explicit `Breakdown item X not found in page source` error, so a 10 s per-attempt wait would only slow down that failure path.
 
-- [ ] **Step 7:** Add scroll to `comparisonTexts()` and `emptyStateTexts()` for consistency
+- [x] **Step 7:** Add scroll to `comparisonTexts()` and `emptyStateTexts()` for consistency
   - **Location:** Replace `byTag(...)` with `scrollToTag(...)` in lines 67, 80
   - **Files affected:** `ringkasan.page.ts` only
   - **Effort:** 10 min
   - **Risk reduction:** Handles below-fold elements gracefully
+  - ✅ **Done 2026-10-25 (split decision):** `comparisonTexts()` now uses `scrollToTag` — the card can sit below the fold in the summary LazyColumn. `emptyStateTexts()` deliberately keeps `byTag`, documented in-method: the empty state replaces the whole content area when a month has no data (no scrollable container exists for UiScrollable to attach to) and always sits at the top of the screen — the review's "or document explicitly why not" branch.
 
-- [ ] **Step 8:** Add guard for exactly 2 bar Views in `breakdownBarRatio`
+- [x] **Step 8:** Add guard for exactly 2 bar Views in `breakdownBarRatio`
   - **Location:** `ringkasan.page.ts` lines 100-101
   - **Files affected:** `ringkasan.page.ts` only
   - **Effort:** 10 min
   - **Risk reduction:** Detects layout changes that add wrapper Views
+  - ✅ **Done 2026-10-25:** the guard is now `viewList.length !== 2`, with direct `[0]`/`[1]` indexing; any other count retries and fails loudly with `has no measurable bar views` instead of silently reading a wrong pair. ⚠️ **Needs one device run to confirm:** the strict guard assumes the live-verified trailing pair is today exactly two Views per row — no emulator was running at implementation time to re-count. If TC-SUM-09 fails with `has no measurable bar views`, the row renders extra Views and the guard should relax to `length < 2` (one-character change).
 
 ### Priority 3 (P3) — Nice-to-Have
 
