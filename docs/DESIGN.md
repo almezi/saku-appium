@@ -30,8 +30,9 @@ kategori, Cadangan data). That canvas lives in the designer's tool of choice,
 outside version control.
 
 **The artboard names are the screen names in code.** If the canvas is ever
-shared, link it here. Until then, `tokens.css` plus `01-design-system.md` are
-the only durable, versioned design references.
+shared, link it here. Until then, `tokens.css` plus the component specs in
+`improve/DESIGN.md` (§01-design-system) are the only durable, versioned
+design references.
 
 ---
 
@@ -386,8 +387,9 @@ style.
 9. **Keep it dark.** Do not add a light theme.
 10. **Check the empty state.** Every list and every summary needs one; there is
     a shared `EmptyState` component.
-11. **If the design canvas changes,** update `tokens.css`,
-    `01-design-system.md` and `SakuColor.kt` / `SakuDimens.kt` together.
+11. **If the design canvas changes,** update `tokens.css`, the component
+    specs in `improve/DESIGN.md` (§01-design-system), and `SakuColor.kt` /
+    `SakuDimens.kt` together.
 
 ---
 
@@ -416,8 +418,8 @@ structure without relying on screen-specific markup. The full registry is
 
 - `improve/DESIGN.md` — the full component specification
 - `improve/tokens.css` — canonical token values
-- [02-tech-stack-dependencies.md](02-tech-stack-dependencies.md) — bundled fonts and their licence
-- [06-functional-spec.md](06-functional-spec.md) — business rules these components display
+- [DEVELOPMENT.md §2.6 Bundled assets](DEVELOPMENT.md#26-bundled-assets) — bundled fonts and their licence
+- [UI_SPEC.md](../UI_SPEC.md) — business rules these components display
 ---
 
 # Accessibility ID coverage plan

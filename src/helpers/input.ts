@@ -38,6 +38,11 @@ export async function typeIntoTaggedField(
   let lastError: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
+      // Composition wait: on a cold start the first field lookup can run
+      // while the screen is still composing, and the interaction retries
+      // below span only ~1 s. Wait for the field to enter the tree first;
+      // the retry loop then handles interaction-level staleness only.
+      await $(selector).waitForExist({ timeout: 15_000 })
       const fresh = await $(selector)
       // Focus the inner editor node where one exists: a cached-bounds click on
       // the wrapper can land on a scrim once the keyboard resize shifts the

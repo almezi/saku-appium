@@ -10,9 +10,13 @@ import { formatRp } from '../../helpers/money'
  * TC-BUD — Anggaran / budget limits and status indicators (Phase 2).
  * Cases picked from Phase 2.A in progress.md / test-cases-simple-money-tracker.md.
  *
- * Budget rows expose no raw-status tag, so status labels ("Aman", "Lewat
- * batas") and the "Rp X dari Rp Y" / "Sisa Rp Z" strings are asserted on the
- * row's rendered text — rendered-output assertions, not locators.
+ * Verified live (2026-10-25, see progress.md 2.A): the Ringkasan Anggaran and
+ * Kelola buttons are HIDDEN while the month has no transactions (UI_SPEC 6.3),
+ * so `before` seeds one income first — income spends no budget, which keeps
+ * the "Aman" math below intact. Budget rows expose no raw-status tag, so
+ * status labels ("Aman", "Lewat batas") and the "Rp X dari Rp Y" / "Sisa Rp Z"
+ * strings are asserted on the row's rendered text — rendered-output
+ * assertions, not locators.
  */
 const BUDGET_LIMIT = 500_000
 const FIRST_EXPENSE = 100_000 // 20% of the limit -> "Aman"
@@ -24,6 +28,12 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
 
   before(async () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await createTransaction({
+      type: 'pemasukan',
+      amount: 50_000,
+      categoryId: categories.income.salary,
+      note: uniqueNote('bud-seed'),
+    })
     await ringkasan.open()
   })
 

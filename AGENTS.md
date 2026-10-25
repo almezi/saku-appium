@@ -5,7 +5,7 @@ This file tells coding agents how to operate within the Saku test harness worksp
 ## Commands to Run
 
 - **Build (Android)**: `./gradlew assembleDebug`
-- **Run tests locally**: See `test-execution-plan.md` for the OpenCode workflow.
+- **Run tests locally**: See `HANDOVER.md` §3 (how to run) — the wdio/npm commands; the old `test-execution-plan.md` no longer exists.
 - **Start Appium session**: `opencode mcp run --session <session> -- npx -y appium-mcp@latest`
 
 ## Git Commit Conventions
@@ -75,11 +75,14 @@ Copy the template from `BUG_FOUND.template.md` and fill every field:
 ├── improve/       # Design system and screen specs
 ├── TESTABILITY.md   # Test tag contracts (read this first)
 ├── UI_SPEC.md       # UI behavior spec (read this too)
-├── CATEGORIES.md    # Category definitions (read this too)
+├── CATEGORIES.md    # Merged into TESTABILITY.md ("# CATEGORIES (merged)" section)
 ├── AGENTS.md        # Agent operating instructions (this file)
 ├── agent.md         # Agent bug reporting protocol
 ├── BUG_FOUND.template.md   # Bug report template
 ├── BUG_FOUND.md            # Created when a bug is found (do not delete)
+├── BUG_Found_02.md         # Active: SAF picker drive (TC-BACKUP-04)
+├── BUG_Found_03.md         # Active: vanishing committed transaction (TC-BACKUP-06)
+├── BUG_Found_04.md         # Active: rename-dialog self-dismiss under WDIO (TC-KAT-08/10, TC-LIST-07)
 ├── progress.md             # Test execution checklist (mark [x]/~[BUG]~)
 ┕ root /            # Test infrastructure files
 │   ├── README.md

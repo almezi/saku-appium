@@ -60,7 +60,11 @@ APK path is wrong. See §8 (Debugging).
 ### Environment overrides (when you need them)
 | Variable | Default | Use |
 |---|---|---|
-| `ANDROID_UDID` | `emulator-5554` | Point at a different device/emulator. |
+| `SAKU_DEVICES` | unset | Comma-separated UDIDs, e.g. `"emulator-5554,140892554V003873"` — enables parallel runs (any device count, each gets its own systemPort). Takes precedence over the vars below. |
+| `ANDROID_UDID` | `emulator-5554` | Point at a different device/emulator (legacy single-device selection). |
+| `REAL_DEVICE_UDID` | unset | Second device for parallel runs (legacy two-slot selection). |
+| `SAKU_SHARD` | unset | `1` = shard mode: split spec files across devices instead of running the full suite on each. |
+| `SAKU_APPIUM_PORTS` | unset | e.g. `"4723,4725"` — connect to self-started Appium servers (one per device, `npm run appium:server1` / `appium:server2`) instead of the runner-spawned shared server on 4725. |
 | `SAKU_APK` | `resources/...v2.2.apk` | Use a different build (e.g. a debug APK). |
 | `ANDROID_HOME` | auto | Override the SDK location. |
 
@@ -79,6 +83,10 @@ npm run test:kategori                      # category management flows
 
 # Run a single file:
 npx wdio run ./wdio.conf.ts --spec ./src/tests/ringkasan/summary.spec.ts
+
+# Parallel across devices (export SAKU_DEVICES first, needs ≥ 2 devices):
+npm run test:shard                         # split spec files across devices — ~2x faster
+npm run test:parallel                      # every spec on every device — coverage
 
 # Pure unit tests (no emulator needed!) for the money/element helpers:
 npm run test:unit
@@ -118,7 +126,8 @@ saku-appium/
 │   │   ├── tambah.page.ts        # Add transaction screen
 │   │   ├── ubah.page.ts          # Edit transaction screen
 │   │   ├── anggaran.page.ts      # Budget screen
-│   │   └── kategori.page.ts      # Category management screen
+│   │   ├── kategori.page.ts      # Category management screen
+│   │   └── cadangan.page.ts      # Backup/export screen (share-sheet + SAF import flows)
 │   └── tests/                   # The actual Mocha specs, grouped by feature
 │       ├── navigasi/  tambah/  transaksi/  ringkasan/  anggaran/  kategori/
 ├── reports/                     # Appium log + screenshots (gitignored in practice)
@@ -370,12 +379,62 @@ categories have `countsInTotals = false` (e.g. `inc_transfer_in`, `exp_finance_i
 - **"Element not found" right after a click** → recomposition race. Add a small
   `driver.pause(...)` or a `waitForDisplayed` before reading. Copy the verify-retry in
   `switchMonth`.
+- **First field lookup fails on a cold start** → the screen tag exists but the field is
+  still composing; `typeIntoTaggedField` now waits for the field to exist (15 s) before
+  its tight interaction retries (2026-10-25, TC-BACKUP before-hook).
 - **Reading a LazyColumn row returns stale/wrong data** → use the page-source dump +
   scroll-retry pattern from `breakdownItemTexts`, not per-element reads.
 - **`scrollGesture` does nothing** → it's a known Compose no-op here; use
   `scrollContentDown` (raw touch actions).
 - **Negative balance shows `Rp -` in your assertion but `−Rp` in the app** → you're
   comparing formatted strings; use `formatNegativeRp` / `readAmount` consistently.
+- **Emulator wedged mid-boot** (`cmd: Can't find service: settings`, empty
+  `sys.boot_completed`, session create fails) → restart it:
+  `adb -s emulator-5554 emu kill`, then relaunch
+  `emulator @Pixel_10 -no-snapshot-load -no-window` and wait for `sys.boot_completed=1`.
+  Happened 2026-10-25 after a spontaneous framework crash; also implicated in
+  BUG_Found_03.md's data loss.
+- **System surfaces (share sheet, SAF DocumentsUI) have no test tags** → text /
+  content-desc locators are the sanctioned exception there, but know their traps:
+  DocumentsUI opens on MediaStore-indexed "Recent" (a freshly `adb push`ed file is
+  invisible — navigate "Show roots" → "Downloads" for a filesystem listing), the roots
+  drawer is itself scrollable so `UiScrollable` can race it, and stale-retries can
+  double-tap the hamburger closed. See `backup.spec.ts` TC-BACKUP-04 and
+  `BUG_Found_02.md`.
+- **A save the app acknowledged (toast + count + export) later vanishes from the DB**
+  → un-checkpointed WAL loss under the wdio harness, seen twice on 2026-10-25;
+  do NOT burn retries — file it (see `BUG_Found_03.md`) and pull the DB
+  (`run-as … cat databases/simplemoneytracker.db*`) to confirm.
+
+### Real-device prerequisites (TECNO CM7 & other OEM phones)
+
+Run these once per device before pointing the suite at a real phone:
+
+```bash
+# 1. Allow the Appium helper APK install (Play Protect blocks it otherwise):
+adb -s <udid> shell settings put global verifier_verify_adb_installs 0
+# 2. Keep the screen awake while plugged in (60 s screen timeout kills sessions):
+adb -s <udid> shell svc power stayon true
+# 3. Disable system animations (UiAutomator-friendly, standard CI device setup):
+adb -s <udid> shell settings put global window_animation_scale 0
+adb -s <udid> shell settings put global transition_animation_scale 0
+adb -s <udid> shell settings put global animator_duration_scale 0
+# 4. Exempt the test servers from battery optimization (HiOS is aggressive):
+adb -s <udid> shell dumpsys deviceidle whitelist +io.appium.uiautomator2.server
+adb -s <udid> shell dumpsys deviceidle whitelist +io.appium.uiautomator2.server.test
+adb -s <udid> shell dumpsys deviceidle whitelist +id.almezi.simplemoneytracker_kt
+```
+
+**Known blocker (BUG_FOUND.md):** on the TECNO CM7 (HiOS, Android 16) the
+uiautomator2 instrumentation deadlocks whenever the Saku app is foreground — the
+first hierarchy command hangs, then the instrumentation "crashes". The app works
+fine manually and the same APK passes on the Android 16 emulator, so treat real-device
+runs on this phone as blocked until the bug is resolved; use `emulator-5554` for now.
+
+**Active 2.C blockers (2026-10-25):** `BUG_Found_02.md` (SAF picker drive under WDIO —
+app import itself is fine) and `BUG_Found_03.md` (committed transaction vanishing from
+the DB mid-session — Critical/P1, needs app-side or fresh-emulator investigation).
+Suite status per sub-phase lives in `progress.md`.
 
 ---
 

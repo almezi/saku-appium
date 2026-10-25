@@ -1633,7 +1633,7 @@ Stage 0 spike module now.
 
 ## See also
 
-- [01-architecture-blueprint.md](01-architecture-blueprint.md) — the layers being migrated
-- [02-tech-stack-dependencies.md](02-tech-stack-dependencies.md) — the versions being changed
+- [DEVELOPMENT.md §1 Architecture Blueprint](DEVELOPMENT.md#1-architecture--technical-blueprint) — the layers being migrated
+- [DEVELOPMENT.md §2 Tech Stack & Dependencies](DEVELOPMENT.md#2-tech-stack--dependency-manifest) — the versions being changed
 - `AGENTS.md` — the stack claim this plan makes real
 - `TESTABILITY.md` — the Stage 0 question this plan answers

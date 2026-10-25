@@ -2,6 +2,14 @@
 
 Consolidated test data, execution plan, examples, and results template.
 
+> **Status note (2026-10-25):** this is the original **manual/MCP execution
+> plan**. The `test-data/` files and helper scripts it describes
+> (`schema-validator.py`, `duplicate-checker.py`, …) are illustrative — they
+> were never committed to this repo. The **executable source of truth** is the
+> WebdriverIO suite in `src/` (run via `npm test`, see `HANDOVER.md` §3);
+> live per-sub-phase status is in `progress.md`, and known issues are in the
+> `BUG_FOUND*.md` / `BUG_Found_*.md` files.
+
 ## utest data specification
 
 

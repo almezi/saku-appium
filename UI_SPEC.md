@@ -114,8 +114,8 @@ Same form as Tambah, header "Ubah transaksi", no bottom bar, all fields pre-fill
 
 ### 6.7 Cadangan data
 
-- Status card: transactions stored on this device and the last backup date, or "belum pernah".
-- Export CSV (UTF-8 with BOM, one row per transaction) and export JSON (transactions, categories, budgets, accounts, plus a version).
+- Status card: transactions stored on this device and the last backup date, or "belum pernah". The backup date is set the moment an export writes the file — cancelling the share sheet afterwards does not revert it (verified live 2026-10-25).
+- Export CSV (UTF-8 with BOM, one row per transaction) and export JSON (transactions, categories, budgets, accounts, plus a version). Export writes `cache/backups/saku-cadangan.csv|.json` in private storage and opens the system share sheet (verified live 2026-10-25 on v2.2).
 - Import from a picked file, Saku JSON only. A transaction is a duplicate when date, type, amount, category, account and note all match. Result: "12 transaksi ditambahkan, 3 dilewati karena sudah ada." An unreadable file shows "File tidak valid. Pilih file CSV atau JSON dari Saku." Import never deletes anything.
 - Warning card: "Data hanya tersimpan di perangkat ini. Jika data dihapus atau ganti perangkat, buat cadangan dulu."
 
@@ -139,6 +139,6 @@ Login or PIN, multi-wallet, multi-currency, transfers between accounts, recurrin
 
 ### Known gaps
 - CSV import is not implemented, so a CSV file shows the "file tidak valid" message.
-- Export writes to the app's own external folder, which Android 11 and later hide from the file picker. There is no share sheet.
+- Export writes to `cache/backups/` in private storage and opens the system share sheet (live-verified on v2.2, 2026-10-25 — supersedes the earlier gap note about the hidden external folder / missing share sheet).
 - The seeded category set (9 income, 27 expense) is much larger than the 6 and 7 in the design reference.
 - No instrumented tests exist yet, so the UI is verified by hand rather than by `connectedAndroidTest`.
