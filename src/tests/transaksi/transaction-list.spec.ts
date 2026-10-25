@@ -22,7 +22,7 @@ const idDate = (d: Date) =>
   new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d)
 const ID_WEEKDAYS = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU']
 
-describe('TC-LIST — transaction list (Phase 1)', () => {
+describe('TC-LIST — transaction list (Phase 1) @regression', () => {
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
   const kategori = new KategoriPage()

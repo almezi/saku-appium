@@ -8,7 +8,7 @@ import { formatRp } from '../../helpers/money'
 
 const AMOUNT = 111_000
 
-describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1)', () => {
+describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1) @integration', () => {
   const daftar = new DaftarPage()
 
   async function openDeleteSheet(): Promise<void> {
@@ -72,7 +72,7 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1)', () 
   })
 })
 
-describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1)', () => {
+describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @integration', () => {
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
 

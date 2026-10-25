@@ -11,7 +11,7 @@ import { formatRp } from '../../helpers/money'
 const AMOUNT = 123_000
 const NEW_AMOUNT = 456_000
 
-describe('TC-EDIT — edit transaction (Phase 1)', () => {
+describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
   const ubah = new UbahPage()

@@ -18,7 +18,7 @@ const BUDGET_LIMIT = 500_000
 const FIRST_EXPENSE = 100_000 // 20% of the limit -> "Aman"
 const SECOND_EXPENSE = 450_000 // total 550.000 -> 110% -> "Lewat batas"
 
-describe('TC-BUD — monthly category budgets (Phase 2)', () => {
+describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
   const ringkasan = new RingkasanPage()
   const anggaran = new AnggaranPage()
 

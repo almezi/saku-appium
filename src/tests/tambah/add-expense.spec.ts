@@ -12,7 +12,7 @@ const EXPENSE = 75_000
 const INCOME = 200_000
 const BIG_EXPENSE = 500_000
 
-describe('TC-EXP — add expense (Phase 1)', () => {
+describe('TC-EXP — add expense (Phase 1) @regression', () => {
   const tambah = new TambahPage()
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()

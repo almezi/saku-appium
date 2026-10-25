@@ -3,7 +3,7 @@ import { tags } from '../../config/tags'
 
 const APP_ID = 'id.almezi.simplemoneytracker_kt'
 
-describe('TC-NAV — smoke & navigation', () => {
+describe('TC-NAV — smoke & navigation @sanity', () => {
   before(async () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
   })

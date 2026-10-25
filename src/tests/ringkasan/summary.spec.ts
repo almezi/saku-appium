@@ -16,7 +16,7 @@ const SALES = 50_000
 const EXTRA_EXPENSE = 300_000
 const BIG_INCOME = 1_500_000_000
 
-describe('TC-SUM — Ringkasan summary math (Phase 1)', () => {
+describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
 

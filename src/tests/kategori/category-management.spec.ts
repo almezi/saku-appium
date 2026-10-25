@@ -23,7 +23,7 @@ const DEFAULT_INCOME_IDS = [
   categories.income.other,
 ]
 
-describe('TC-KAT — category management (Phase 2)', () => {
+describe('TC-KAT — category management (Phase 2) @regression', () => {
   const tambah = new TambahPage()
   const ringkasan = new RingkasanPage()
   const kategori = new KategoriPage()
