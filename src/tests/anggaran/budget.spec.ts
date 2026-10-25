@@ -21,7 +21,6 @@ import { formatRp } from '../../helpers/money'
 const BUDGET_LIMIT = 500_000
 const FIRST_EXPENSE = 100_000 // 20% of the limit -> "Aman"
 const SECOND_EXPENSE = 450_000 // total 550.000 -> 110% -> "Lewat batas"
-const FOOD = 'Makanan & Minuman' // display name of categories.expense.dailyFood
 
 describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
   const ringkasan = new RingkasanPage()
@@ -56,7 +55,7 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
 
   it('TC-BUD-03/07 "Atur anggaran baru" saves a budget and shows its row', async () => {
     await anggaran.openForm()
-    await anggaran.selectFormCategory(FOOD)
+    await anggaran.selectFormCategory(categories.expense.dailyFood)
     await anggaran.fillLimit(BUDGET_LIMIT)
     await anggaran.saveForm()
     expect(await anggaran.row(categories.expense.dailyFood).isDisplayed()).toBe(true)

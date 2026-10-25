@@ -259,6 +259,16 @@ Locate by text/content-desc only:
 > seed transaction committed (app-acknowledged) then vanished from the DB mid-session; 2nd
 > occurrence today, matching the 2.B WAL-loss incident — see `BUG_Found_03.md`.
 
+### Q. Budget / Anggaran (TC-BUDGET) — wdio-executed 2026-10-25
+- `budget.spec.ts`: first-ever wdio run 3/7 → fixes (before-seed, tag-based sheet selection,
+  child-text row reads, `anggaran_form_delete_sheet`) → **final run 7/7 PASSING**.
+
+### R. Category management (TC-KAT) — wdio-executed 2026-10-25
+- `category-management.spec.ts`: run 1 0/13 (empty-month cascade — no seed), run 2 3/13
+  (UiScrollable scrollIntoView unreliable on the LazyColumn), run 3 9/13, final (dialog-typing
+  tests skipped per the 3-failure rule) **11/13 PASSING, 2 SKIPPED** — TC-KAT-08/10 hit the
+  TC-LIST-07 dialog self-dismiss flake (`BUG_Found_04.md`).
+
 ### Q. Budget / Anggaran (TC-BUDGET)
 - TC-BUDGET-01 Tap `ringkasan_anggaran_button` → budget screen opens
 - TC-BUDGET-02 Title "Anggaran", month label "Oktober 2026"

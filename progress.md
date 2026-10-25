@@ -7,11 +7,13 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
 | Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 64 | 3 |
-| Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 30 | 2 |
+| Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 28 | 4 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **94** | **52** |
+| **All** | **17** | **146** | **92** | **54** |
 
-> Note: 3 tasks in 1.D are marked **SKIPPED** (repeat failures, see the 1.D section) and stay counted in "Remaining" until unblocked. Same for TC-BACKUP-04/06 in 2.C (see `BUG_Found_02.md` / `BUG_Found_03.md`).
+> Note: 3 tasks in 1.D, TC-KAT-08/10 in 2.B, and TC-BACKUP-04/06 in 2.C are marked **SKIPPED**
+> (3-failure rule; see the sub-phase sections and `BUG_FOUND.md` / `BUG_Found_02.md` /
+> `BUG_Found_03.md` / `BUG_Found_04.md`) and stay counted in "Remaining" until unblocked.
 
 ---
 
@@ -147,7 +149,7 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [x] TC-BUDGET-10: Edit/remove budget works
 - [x] TC-BUDGET-11: Back button returns to Ringkasan
 
-**Spec:** `src/tests/anggaran/budget.spec.ts` *(written, not yet executed)* | **Agent:** Senior QA (Appium MCP interactive, orchestrated by lead) — 11/11 passing 2026-10-25
+**Spec:** `src/tests/anggaran/budget.spec.ts` | **Agent:** ZCode (GLM-5.3) — 11/11 MCP-verified + **7/7 passing under wdio 2026-10-25** (3 runs to green; fixes en route: `before` seed for the empty-month button hiding, tag-based category-sheet selection with sheet-root close signal, `rowText` via child texts, delete-sheet root is `anggaran_form_delete_sheet` — the documented `anggaran_delete_sheet` does not exist on v2.2)
 
 > Verified live (emulator-5554, Appium 3.8.0 @ :4725, app v2.2): ① On an **empty month** Ringkasan
 > hides the Anggaran/Kelola buttons entirely (only `ringkasan_empty_state` + `ringkasan_empty_action`
@@ -177,16 +179,16 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [x] TC-KAT-05: Expense list: default categories (daily_*, education_*, ...)
 - [x] TC-KAT-06: Search field filters by name
 - [x] TC-KAT-07: Edit (pencil) opens "Ubah kategori" dialog, field placeholder "1–20 karakter"
-- [x] TC-KAT-08: Rename category → list row + breakdown + transactions update
+- [x] TC-KAT-08: Rename category → list row + breakdown + transactions update — ~[BUG]~ **SKIPPED** (3× under wdio 2026-10-25): the rename dialog self-dismisses before typing (same signature as TC-LIST-07); app-side rename verified working via MCP. See `BUG_Found_04.md`
 - [x] TC-KAT-09: Rename empty/invalid → blocked or "Ubah" disabled
-- [x] TC-KAT-10: Cancel edit dialog → no change
+- [x] TC-KAT-10: Cancel edit dialog → no change — ~[BUG]~ **SKIPPED** (3× under wdio 2026-10-25): same dialog self-dismiss flake as TC-KAT-08. See `BUG_Found_04.md`
 - [x] TC-KAT-11: Hide (eye-slash) toggles category visibility
 - [x] TC-KAT-12: Hidden category not shown in picker
 - [x] TC-KAT-13: Category shows "Bawaan · N transaksi" count
 - [x] TC-KAT-14: Category mark color renders
 - [x] TC-KAT-15: Back button returns to previous screen
 
-**Spec:** `src/tests/kategori/category-management.spec.ts` *(written, not yet executed)* | **Agent:** Senior QA (Appium MCP interactive, orchestrated by lead) — 15/15 passing 2026-10-25
+**Spec:** `src/tests/kategori/category-management.spec.ts` | **Agent:** ZCode (GLM-5.3) — 15/15 MCP-verified + **11/13 passing, 2 skipped under wdio 2026-10-25** (TC-KAT-08/10 = dialog self-dismiss flake, `BUG_Found_04.md`; fixes en route: `before` seed for the empty-month button hiding, comb-search `scrollToRow` replacing the unreliable UiScrollable `scrollIntoView`, tag-based `rowText` via child texts, `toggleHidden` scrolls first; all row/action/search/back/mark tags verified live on v2.2)
 
 > Verified live (emulator-5554, Appium 3.8.0 @ :4725, app v2.2): ① `kategori.page.ts` tag contract is
 > accurate for this build — `kategori_row_<id>`, `_edit_`, `_hide_` (one toggle tag for both hide and

@@ -1,5 +1,6 @@
-import { byTag, allByTagMatches, scrollToTag } from '../helpers/locators'
+import { byTag, allByTagMatches } from '../helpers/locators'
 import { tags } from '../config/tags'
+import { extractChildTexts } from '../helpers/elements'
 import { BasePage } from './base.page'
 import { typeIntoTaggedField } from '../helpers/input'
 import type { ChainablePromiseElement } from '../types'
@@ -68,9 +69,64 @@ export class KategoriPage extends BasePage {
     return byTag(kategoriTags.formCancel)
   }
 
-  /** Scrolls a category row into view (LazyColumn rows recompose off-screen). */
+  /**
+   * Scrolls the LazyColumn until `categoryId`'s row is composed AND fully
+   * visible. UiScrollable scrollIntoView is unreliable over this list — rows
+   * compose/uncompose mid-fling and the target can settle clipped at a
+   * viewport edge (first wdio run failed TC-03/04 and TC-05 on exactly that)
+   * — so this comb-searches with the suite's raw-touch swipe: check after
+   * every step, sweep content-up first, then a content-down return sweep
+   * catches anything stepped over.
+   */
   async scrollToRow(categoryId: string): Promise<void> {
-    await scrollToTag(kategoriTags.row(categoryId))
+    const row = this.row(categoryId)
+    if (await row.isDisplayed().catch(() => false)) return
+    for (let sweep = 0; sweep < 2; sweep++) {
+      const direction = sweep === 0 ? 'up' : 'down'
+      for (let step = 0; step < 12; step++) {
+        if (await row.isDisplayed().catch(() => false)) return
+        await this.swipeList(direction as 'up' | 'down')
+      }
+    }
+    throw new Error(`kategori row ${categoryId} never became fully visible`)
+  }
+
+  /**
+   * One raw-touch swipe of the list content (~40 % of the screen). Raw W3C
+   * actions, not `mobile: scrollGesture` (a silent no-op on Compose
+   * LazyColumns here) and not UiScrollable (unreliable, see scrollToRow).
+   */
+  private async swipeList(direction: 'up' | 'down'): Promise<void> {
+    const { width, height } = await driver.getWindowSize()
+    const x = Math.floor(width / 2)
+    const yStart = direction === 'up' ? Math.floor(height * 0.7) : Math.floor(height * 0.3)
+    const yEnd = direction === 'up' ? Math.floor(height * 0.3) : Math.floor(height * 0.7)
+    await driver.performActions([
+      {
+        type: 'pointer',
+        id: 'finger1',
+        parameters: { pointerType: 'touch' },
+        actions: [
+          { type: 'pointerMove', duration: 0, x, y: yStart },
+          { type: 'pointerDown', button: 0 },
+          { type: 'pause', duration: 150 },
+          { type: 'pointerMove', duration: 500, x, y: yEnd },
+          { type: 'pointerUp', button: 0 },
+        ],
+      },
+    ])
+    await driver.pause(400)
+  }
+
+  /**
+   * Rendered texts of a category row (name, "Bawaan"/"Buatan sendiri",
+   * transaction count). The row is a Compose container that aggregates no
+   * text itself, so its child TextViews are read and joined — same pattern
+   * as daftar.rowTexts / anggaran.rowText.
+   */
+  async rowText(categoryId: string): Promise<string> {
+    await this.scrollToRow(categoryId)
+    return (await extractChildTexts(this.row(categoryId))).join(' ')
   }
 
   async openFromRingkasan(): Promise<void> {
@@ -105,9 +161,9 @@ export class KategoriPage extends BasePage {
 
   /** Opens the "Ubah kategori" dialog for `categoryId`. */
   async openEditDialog(categoryId: string): Promise<void> {
-    // The expense list holds 27 rows; scroll the row into view before
-    // clicking or it may not be composed at all.
-    await scrollToTag(kategoriTags.row(categoryId))
+    // The expense list holds 27 rows; bring the row fully into view before
+    // clicking or its action buttons may not be composed at all.
+    await this.scrollToRow(categoryId)
     await byTag(kategoriTags.rowEdit(categoryId)).click()
     await byTag(kategoriTags.formName).waitForDisplayed({ timeout: 10_000 })
   }
@@ -135,6 +191,7 @@ export class KategoriPage extends BasePage {
 
   /** Hides (or, when hidden, shows) the category via the eye toggle. */
   async toggleHidden(categoryId: string): Promise<void> {
+    await this.scrollToRow(categoryId)
     await byTag(kategoriTags.rowHide(categoryId)).click()
   }
 }

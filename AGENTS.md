@@ -82,6 +82,7 @@ Copy the template from `BUG_FOUND.template.md` and fill every field:
 ├── BUG_FOUND.md            # Created when a bug is found (do not delete)
 ├── BUG_Found_02.md         # Active: SAF picker drive (TC-BACKUP-04)
 ├── BUG_Found_03.md         # Active: vanishing committed transaction (TC-BACKUP-06)
+├── BUG_Found_04.md         # Active: rename-dialog self-dismiss under WDIO (TC-KAT-08/10, TC-LIST-07)
 ├── progress.md             # Test execution checklist (mark [x]/~[BUG]~)
 ┕ root /            # Test infrastructure files
 │   ├── README.md

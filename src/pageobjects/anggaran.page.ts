@@ -1,5 +1,6 @@
 import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
+import { extractChildTexts } from '../helpers/elements'
 import { BasePage } from './base.page'
 import { typeIntoTaggedField } from '../helpers/input'
 import type { ChainablePromiseElement } from '../types'
@@ -10,8 +11,10 @@ import type { ChainablePromiseElement } from '../types'
  * see progress.md 2.A): the form exposes its own `anggaran_form_*` tags —
  * the shared `component_input_amount` / `component_button_primary` /
  * `component_button_text_danger` tags from the earlier draft do NOT exist on
- * this build. The category picker sheet rows are untagged (documented text
- * fallback), while the per-row "Ubah"/"Hapus" actions ARE tagged.
+ * this build. The category picker sheet is fully tagged (root
+ * `anggaran_form_category_sheet` + `…_sheet_option_<categoryId>` rows,
+ * verified live 2026-10-25 — correcting the earlier "untagged rows" note),
+ * as are the per-row "Ubah"/"Hapus" actions.
  */
 export const anggaranTags = {
   screen: 'anggaran_screen',
@@ -24,12 +27,18 @@ export const anggaranTags = {
   emptyState: 'anggaran_empty_state',
   formScreen: 'anggaran_form_screen',
   formCategory: 'anggaran_form_category',
+  formCategorySheet: 'anggaran_form_category_sheet',
+  formCategoryOption: (categoryId: string) =>
+    `anggaran_form_category_sheet_option_${categoryId}`,
   formLimit: 'anggaran_form_limit',
   formNote: 'anggaran_form_note',
   formSwitch: 'anggaran_form_switch',
   formSave: 'anggaran_form_save',
   formDelete: 'anggaran_form_delete',
-  deleteSheet: 'anggaran_delete_sheet',
+  // Live-verified 2026-10-25: the budget delete sheet root is
+  // anggaran_form_delete_sheet — the documented anggaran_delete_sheet does
+  // not exist on build v2.2. Confirm/cancel are the shared component tags.
+  deleteSheet: 'anggaran_form_delete_sheet',
 } as const
 
 /**
@@ -79,16 +88,18 @@ export class AnggaranPage extends BasePage {
   }
 
   /**
-   * Picks `displayName` in the form's category picker sheet. The sheet's
-   * rows carry no test tags on build v2.2 (verified live) — the documented
-   * text fallback applies; display names are stable app copy, not test data.
+   * Picks the budgeted category in the form's picker sheet via its
+   * `…_sheet_option_<categoryId>` tag. The sheet ROOT tag is the close
+   * signal: waiting on the option's text to disappear can never succeed,
+   * because the form field shows the same display name once the selection
+   * is applied (seen in the first wdio run of budget.spec.ts).
    */
-  async selectFormCategory(displayName: string): Promise<void> {
+  async selectFormCategory(categoryId: string): Promise<void> {
     await this.formCategory.click()
-    const chip = $(`android=new UiSelector().text("${displayName}")`)
-    await chip.waitForDisplayed({ timeout: 10_000 })
-    await chip.click()
-    await chip.waitForDisplayed({ reverse: true, timeout: 10_000 })
+    const sheet = byTag(anggaranTags.formCategorySheet)
+    await sheet.waitForDisplayed({ timeout: 10_000 })
+    await byTag(anggaranTags.formCategoryOption(categoryId)).click()
+    await sheet.waitForDisplayed({ reverse: true, timeout: 10_000 })
   }
 
   /** Fills "Batas bulanan" on the open budget form. */
@@ -122,10 +133,15 @@ export class AnggaranPage extends BasePage {
     await byTag(anggaranTags.deleteSheet).waitForDisplayed({ reverse: true })
   }
 
-  /** Rendered text of a budget row (name, status, "Rp X dari Rp Y", "Sisa/Lebih Rp Z"). */
+  /**
+   * Rendered text of a budget row (name, status, "Rp X dari Rp Y",
+   * "Sisa/Lebih Rp Z"). The row is a Compose container that aggregates no
+   * text itself (container getText() returns ""), so its child TextViews are
+   * read and joined — same pattern as daftar.rowTexts.
+   */
   async rowText(categoryId: string): Promise<string> {
     const row = this.row(categoryId)
     await row.waitForDisplayed({ timeout: 10_000 })
-    return row.getText()
+    return (await extractChildTexts(row)).join(' ')
   }
 }
