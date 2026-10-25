@@ -54,12 +54,12 @@ SAKU_APPIUM_PORTS="4723,4725" SAKU_DEVICES="emulator-5554,140892554V003873" npm 
 ```
 wdio.conf.ts          runner config (Android caps, Appium service, Mocha)
 src/config/tags.ts    test-tag contract, mirrors TestTags.kt (single source: the app repo)
-src/config/categories.ts   stable category/account IDs (CATEGORIES.md)
+src/config/categories.ts   stable category/account IDs (TESTABILITY.md § CATEGORIES)
 src/helpers/          tag locators, rupiah formatting/parsing, transaction factory
-src/pageobjects/      Tambah, Daftar, Ringkasan, Ubah pages
+src/pageobjects/      Tambah, Daftar, Ringkasan, Ubah, Anggaran, Kategori, Cadangan pages
 src/tests/navigasi/    TC-NAV navigation smoke (bottom bar, back, rapid switching)
 src/tests/tambah/      Tambah form flows: TC-INC, TC-EXP
-src/tests/transaksi/   Transaksi list flows: TC-LIST, TC-EDIT, TC-DEL/TC-UNDO
+src/tests/transaksi/   Transaksi list flows: TC-LIST, TC-EDIT, TC-DEL/TC-UNDO, TC-BACKUP
 src/tests/ringkasan/   Ringkasan flows: TC-SUM
 src/tests/anggaran/    Anggaran/budget flows: TC-BUDGET
 src/tests/kategori/    Kelola kategori flows: TC-KAT
@@ -68,7 +68,7 @@ src/tests/kategori/    Kelola kategori flows: TC-KAT
 ### Notes
 
 - Test data setup goes through the real UI (`createTransaction` helper). The `test_seed` / `test_now` intent extras in TESTABILITY.md are not implemented in the app yet; seed-based specs (TC-SEED) wait on that.
-- Phase 2 (budgets, category management, backup) and Phase 3 (validation, persistence, a11y, performance) cases are catalogued in `test-cases-simple-money-tracker.md` and follow the same page-object pattern.
+- Execution status per sub-phase lives in `progress.md` (2026-10-25: Phase 1 64/67, Phase 2 30/32 — TC-BACKUP executed 4/6 with two blockers bug-filed, Phase 3 pending). Phase 3 cases (validation, persistence, a11y, performance) are catalogued in `test-cases-simple-money-tracker.md` and follow the same page-object pattern. Known issues: `BUG_FOUND.md` (TECNO real-device deadlock), `BUG_Found_02.md` (SAF picker drive), `BUG_Found_03.md` (vanishing committed transaction).
 
 ## Generated test cases
 

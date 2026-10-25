@@ -197,7 +197,7 @@ as an `accessibilityIdentifier`:
 `component_card_transaction_edit_<categoryId>`,
 `component_card_transaction_delete_<categoryId>`, `avatar_<categoryId>`.
 
-Screenshot: `docs/screenshots/saku-ios-real.png`. App: `iosApp/`.
+Screenshot: `docs/screenshots/saku-ios-real.png` (in the app repo — not carried into this test repo). App: `iosApp/` (app repo).
 
 ### Also noted (not blocking)
 
@@ -224,7 +224,7 @@ Extra names are proposals; confirm or change them and keep this table the single
 - `seed_same_day_ordering`: several items on one date with different created times
 
 ## Rules the suite must respect
-See UI_SPEC.md section 2 (amount limits, dates, totals exclusion, sort order, month filter, category reset, delete confirmation). Categories are referenced by ID from CATEGORIES.md.
+See UI_SPEC.md section 2 (amount limits, dates, totals exclusion, sort order, month filter, category reset, delete confirmation). Categories are referenced by ID from the CATEGORIES section of this file (merged — no standalone CATEGORIES.md).
 
 ---
 

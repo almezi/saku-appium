@@ -126,7 +126,8 @@ saku-appium/
 │   │   ├── tambah.page.ts        # Add transaction screen
 │   │   ├── ubah.page.ts          # Edit transaction screen
 │   │   ├── anggaran.page.ts      # Budget screen
-│   │   └── kategori.page.ts      # Category management screen
+│   │   ├── kategori.page.ts      # Category management screen
+│   │   └── cadangan.page.ts      # Backup/export screen (share-sheet + SAF import flows)
 │   └── tests/                   # The actual Mocha specs, grouped by feature
 │       ├── navigasi/  tambah/  transaksi/  ringkasan/  anggaran/  kategori/
 ├── reports/                     # Appium log + screenshots (gitignored in practice)
@@ -378,12 +379,32 @@ categories have `countsInTotals = false` (e.g. `inc_transfer_in`, `exp_finance_i
 - **"Element not found" right after a click** → recomposition race. Add a small
   `driver.pause(...)` or a `waitForDisplayed` before reading. Copy the verify-retry in
   `switchMonth`.
+- **First field lookup fails on a cold start** → the screen tag exists but the field is
+  still composing; `typeIntoTaggedField` now waits for the field to exist (15 s) before
+  its tight interaction retries (2026-10-25, TC-BACKUP before-hook).
 - **Reading a LazyColumn row returns stale/wrong data** → use the page-source dump +
   scroll-retry pattern from `breakdownItemTexts`, not per-element reads.
 - **`scrollGesture` does nothing** → it's a known Compose no-op here; use
   `scrollContentDown` (raw touch actions).
 - **Negative balance shows `Rp -` in your assertion but `−Rp` in the app** → you're
   comparing formatted strings; use `formatNegativeRp` / `readAmount` consistently.
+- **Emulator wedged mid-boot** (`cmd: Can't find service: settings`, empty
+  `sys.boot_completed`, session create fails) → restart it:
+  `adb -s emulator-5554 emu kill`, then relaunch
+  `emulator @Pixel_10 -no-snapshot-load -no-window` and wait for `sys.boot_completed=1`.
+  Happened 2026-10-25 after a spontaneous framework crash; also implicated in
+  BUG_Found_03.md's data loss.
+- **System surfaces (share sheet, SAF DocumentsUI) have no test tags** → text /
+  content-desc locators are the sanctioned exception there, but know their traps:
+  DocumentsUI opens on MediaStore-indexed "Recent" (a freshly `adb push`ed file is
+  invisible — navigate "Show roots" → "Downloads" for a filesystem listing), the roots
+  drawer is itself scrollable so `UiScrollable` can race it, and stale-retries can
+  double-tap the hamburger closed. See `backup.spec.ts` TC-BACKUP-04 and
+  `BUG_Found_02.md`.
+- **A save the app acknowledged (toast + count + export) later vanishes from the DB**
+  → un-checkpointed WAL loss under the wdio harness, seen twice on 2026-10-25;
+  do NOT burn retries — file it (see `BUG_Found_03.md`) and pull the DB
+  (`run-as … cat databases/simplemoneytracker.db*`) to confirm.
 
 ### Real-device prerequisites (TECNO CM7 & other OEM phones)
 
@@ -409,6 +430,11 @@ uiautomator2 instrumentation deadlocks whenever the Saku app is foreground — t
 first hierarchy command hangs, then the instrumentation "crashes". The app works
 fine manually and the same APK passes on the Android 16 emulator, so treat real-device
 runs on this phone as blocked until the bug is resolved; use `emulator-5554` for now.
+
+**Active 2.C blockers (2026-10-25):** `BUG_Found_02.md` (SAF picker drive under WDIO —
+app import itself is fine) and `BUG_Found_03.md` (committed transaction vanishing from
+the DB mid-session — Critical/P1, needs app-side or fresh-emulator investigation).
+Suite status per sub-phase lives in `progress.md`.
 
 ---
 

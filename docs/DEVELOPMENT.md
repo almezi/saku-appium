@@ -111,8 +111,9 @@ directory, and the system file picker (import only).
 │  │  transactions        │      └────────────────────────────────────┘   │
 │  │  categories          │                                                  │
 │  │  accounts            │      ┌────────────────────────────────────┐     │
-│  │  budgets             │      │ Files (no provider, no share sheet)│     │
-│  └──────────────────────┘      │ getExternalFilesDir/               │     │
+│  │  budgets             │      │ cache/backups + share sheet (v2.2) │     │
+│  └──────────────────────┘      │ (live-verified 2026-10-25; was      │     │
+│                                │  getExternalFilesDir/Files)         │     │
 │                                │  saku-cadangan.csv / .json         │     │
 │  ┌──────────────────────┐      │ SAF OpenDocument ──► read only     │     │
 │  │ SimpleMoneyTrackerApp│      └────────────────────────────────────┘     │
@@ -550,9 +551,14 @@ work:
 1. **CSV import is not implemented.** `BackupRepository.parseJson` only parses
    JSON. A CSV file reaches the `"File tidak valid"` error path. The CSV error
    message therefore names a format the importer cannot read.
-2. **No `FileProvider`, no share sheet.** `writeFile()` targets
-   `context.getExternalFilesDir(null)`, which Android 11+ hides from the file
-   picker. Exports are effectively device-local and hard to retrieve.
+2. **Share sheet: resolved as of v2.2** (live-verified 2026-10-25 on the built
+   APK): export writes `cache/backups/saku-cadangan.csv|.json` in private
+   storage and then opens the system share sheet
+   (`com.android.intentresolver`); the file is also retrievable via
+   `adb shell run-as`. The older description here (`writeFile()` targeting
+   `getExternalFilesDir(null)`, no share sheet) predates that — re-sync this
+   section against the app repo source before doing architecture work in
+   this area.
 3. **`BackupRepository.parseJson` returns `emptyList()` for accounts.** Look at
    line 179 — `BackupData(transactions, categories, emptyList(), budgets)`.
    Accounts in an import file are silently dropped. This is a data-loss path on
@@ -574,10 +580,10 @@ work:
 
 ## See also
 
-- [02-tech-stack-dependencies.md](02-tech-stack-dependencies.md) — versions and why each library is present
-- [03-codebase-setup.md](03-codebase-setup.md) — getting the project building
-- [06-functional-spec.md](06-functional-spec.md) — the business rules behind this architecture
-- [08-design-system.md](08-design-system.md) — tokens and components
+- [Tech Stack & Dependency Manifest](#2-tech-stack--dependency-manifest) (this file, §2) — versions and why each library is present
+- [Codebase Structure & Developer Setup](#3-codebase-structure--developer-setup-guide) (this file, §3) — getting the project building
+- [UI_SPEC.md](../UI_SPEC.md) — the business rules behind this architecture
+- [DESIGN.md](DESIGN.md) — tokens and components
 ---
 
 # 2. Tech Stack & Dependency Manifest
@@ -807,7 +813,7 @@ Three things to be aware of:
 3. **`buildConfig` is not enabled.** `BuildConfig` is not generated, so
    `BuildConfig.DEBUG` cannot currently gate debug-only hooks. Turn it on if
    you implement the seed/fake-clock intents (see
-   [01 §1.10](01-architecture-blueprint.md)).
+   [§1.10 Testability architecture](#110-testability-architecture) above).
 
 ---
 
@@ -876,9 +882,9 @@ Adaptive icon with three layers: `ic_launcher_background.xml`,
 
 ## See also
 
-- [01-architecture-blueprint.md](01-architecture-blueprint.md) — what each layer does
-- [03-codebase-setup.md](03-codebase-setup.md) — installing and verifying this toolchain
-- [08-design-system.md](08-design-system.md) — the design tokens derived from `improve/tokens.css`
+- [Architecture Blueprint](#1-architecture--technical-blueprint) (this file, §1) — what each layer does
+- [Codebase Structure & Developer Setup](#3-codebase-structure--developer-setup-guide) (this file, §3) — installing and verifying this toolchain
+- [DESIGN.md](DESIGN.md) — the design tokens derived from `improve/tokens.css`
 ---
 
 # 3. Codebase Structure & Developer Setup Guide
@@ -1235,16 +1241,16 @@ From `AGENTS.md` and enforced throughout the codebase:
 - [ ] `./gradlew assembleDebug` succeeds
 - [ ] `./gradlew testDebugUnitTest` passes
 - [ ] `./gradlew installDebug` runs on a device or emulator
-- [ ] Read `UI_SPEC.md`, `CATEGORIES.md`, `TESTABILITY.md` (required by `AGENTS.md`)
-- [ ] Read `docs/01-architecture-blueprint.md`
-- [ ] Learn the design system before touching UI — `docs/08-design-system.md`
+- [ ] Read `UI_SPEC.md`, `TESTABILITY.md` (incl. its CATEGORIES section) — required by `AGENTS.md`
+- [ ] Read this file's [Architecture Blueprint](#1-architecture--technical-blueprint) (§1)
+- [ ] Learn the design system before touching UI — [docs/DESIGN.md](DESIGN.md)
 - [ ] Note that categories are referenced **by ID** in tests, never by name
 
 ---
 
 ## See also
 
-- [01-architecture-blueprint.md](01-architecture-blueprint.md) — layer responsibilities
-- [02-tech-stack-dependencies.md](02-tech-stack-dependencies.md) — versions in detail
+- [Architecture Blueprint](#1-architecture--technical-blueprint) (this file, §1) — layer responsibilities
+- [Tech Stack & Dependency Manifest](#2-tech-stack--dependency-manifest) (this file, §2) — versions in detail
 ---
 

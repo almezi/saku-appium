@@ -1,5 +1,9 @@
 # Saku Design Package
 
+> **Format note (2026-10-25):** this package was flattened into the single file
+> you are reading — every numbered doc below is a `## section` in this file, not
+> a separate `.md`. Only `tokens.css` sits alongside it in `improve/`.
+
 ## 00-README
 
 
@@ -7,12 +11,12 @@ This package turned the Saku canvas design into the build instructions used for 
 
 ## What is in this package
 
-| File | Purpose | Give to the AI? |
+| Section / file | Purpose | Give to the AI? |
 |---|---|---|
-| `00-README.md` | This overview and how to use the package | No (for you) |
-| `01-design-system.md` | Colors, type, spacing, radius, and every component | Yes |
-| `tokens.css` | Design tokens as CSS variables, ready to paste into your project | Yes |
-| `02-screens-and-rules.md` | Every screen, its states, navigation, and business rules | Yes |
+| `00-README` (section) | This overview and how to use the package | No (for you) |
+| `01-design-system` (section) | Colors, type, spacing, radius, and every component | Yes |
+| `tokens.css` (file) | Design tokens as CSS variables, ready to paste into your project | Yes |
+| `02-screens-and-rules` (section) | Every screen, its states, navigation, and business rules | Yes |
 
 ## How to use it
 
