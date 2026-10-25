@@ -32,7 +32,11 @@ import { CadanganPage } from '../../pageobjects/cadangan.page'
  *   asserts no-data-change instead of an unchanged timestamp.
  */
 const APP_ID = 'id.almezi.simplemoneytracker_kt'
-const UDID = process.env.ANDROID_UDID ?? 'emulator-5554'
+// Fallback ONLY, for adb calls that somehow run before the session exists.
+// The helpers below prefer the live session's udid: in multi-device runs
+// (SAKU_DEVICES / shard mode) the env var is one value shared by every
+// worker, so it would silently send all workers' adb traffic to one device.
+const FALLBACK_UDID = process.env.ANDROID_UDID ?? 'emulator-5554'
 const CSV_HEADER = 'date,type,amount,category,account,note'
 const IMPORT_FILE_NAME = 'saku-import-test.json'
 const navTag = 'component_nav_bottom_daftar'
@@ -40,15 +44,25 @@ const SEED_AMOUNT = 50_000
 const IMPORT_AMOUNT = 77_000
 const seedNote = uniqueNote('backup')
 
-function adbShell(command: string): string {
-  return execSync(`adb -s ${UDID} shell "${command}"`, { encoding: 'utf8' })
+/**
+ * The udid of the device THIS worker's session actually drives. Read from the
+ * live session's capabilities (set per device by wdio.conf.ts) — never from
+ * the environment — so parallel/shard runs address their own device.
+ */
+async function deviceUdid(): Promise<string> {
+  const caps = (await driver.capabilities) as Record<string, unknown>
+  return (caps['appium:udid'] as string | undefined) ?? FALLBACK_UDID
 }
 
-function readExportedFile(path: string): string {
+async function adbShell(command: string): Promise<string> {
+  return execSync(`adb -s ${await deviceUdid()} shell "${command}"`, { encoding: 'utf8' })
+}
+
+async function readExportedFile(path: string): Promise<string> {
   return adbShell(`run-as ${APP_ID} cat ${path}`)
 }
 
-function pushImportFile(): void {
+async function pushImportFile(): Promise<void> {
   const payload = {
     version: 1,
     transactions: [
@@ -72,7 +86,7 @@ function pushImportFile(): void {
   }
   const localPath = '/tmp/saku-import-test.json'
   writeFileSync(localPath, JSON.stringify(payload))
-  execSync(`adb -s ${UDID} push ${localPath} /sdcard/Download/${IMPORT_FILE_NAME}`)
+  execSync(`adb -s ${await deviceUdid()} push ${localPath} /sdcard/Download/${IMPORT_FILE_NAME}`)
 }
 
 /**
@@ -132,7 +146,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
   })
 
   it('TC-BACKUP-03 the exported files contain the current transaction', async () => {
-    const json = JSON.parse(readExportedFile('cache/backups/saku-cadangan.json')) as {
+    const json = JSON.parse(await readExportedFile('cache/backups/saku-cadangan.json')) as {
       transactions: Array<{ amount: number; note: string | null }>
     }
     const seeded = json.transactions.find((t) => t.note === seedNote)
@@ -142,7 +156,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     await cadangan.exportCsvButton.click()
     await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
     await driver.back()
-    const csv = readExportedFile('cache/backups/saku-cadangan.csv').replace(/^\uFEFF/, '')
+    const csv = (await readExportedFile('cache/backups/saku-cadangan.csv')).replace(/^\uFEFF/, '')
     expect(csv).toContain(CSV_HEADER)
     expect(csv).toContain(seedNote)
     expect(csv).toContain(`,${SEED_AMOUNT},`)
@@ -165,7 +179,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
   })
 
   it('TC-BACKUP-04 importing a backup restores its transactions', async () => {
-    pushImportFile()
+    await pushImportFile()
     await cadangan.importButton.click()
 
     // SAF picker: it opens on "Recent files", which is MediaStore-indexed and
@@ -191,7 +205,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     expect(result).toContain('1 transaksi ditambahkan')
     const status = (await cadangan.statusTexts()).join(' ')
     expect(status).toContain('2 transaksi tersimpan')
-    adbShell(`rm -f /sdcard/Download/${IMPORT_FILE_NAME}`)
+    await adbShell(`rm -f /sdcard/Download/${IMPORT_FILE_NAME}`)
   })
 
   it('TC-BACKUP-06 exporting with zero transactions produces a valid empty file', async () => {
@@ -214,7 +228,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     await cadangan.exportCsvButton.click()
     await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
     await driver.back()
-    const csv = readExportedFile('cache/backups/saku-cadangan.csv').replace(/^\uFEFF/, '')
+    const csv = (await readExportedFile('cache/backups/saku-cadangan.csv')).replace(/^\uFEFF/, '')
     expect(csv.trim()).toBe(CSV_HEADER)
   })
 })
