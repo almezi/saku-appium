@@ -22,7 +22,7 @@ const idDate = (d: Date) =>
   new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d)
 const ID_WEEKDAYS = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU']
 
-describe('TC-LIST — transaction list (Phase 1)', () => {
+describe('TC-LIST — transaction list (Phase 1) @regression', () => {
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
   const kategori = new KategoriPage()
@@ -129,11 +129,15 @@ describe('TC-LIST — transaction list (Phase 1)', () => {
     expect(expenseRow).toContain(formatRp(B_TODAY_EXPENSE))
   })
 
-  // SKIPPED (failed 4x, 2026-10-24): the rename dialog's save button
-  // (kategori_form_save) never becomes visible under WebdriverIO — the
-  // keyboard-resize animation keeps the dialog recomposing — although the
-  // identical flow works live via the Appium MCP. Revisit with an explicit
-  // wait-for-idle or once the dialog exposes a stable state.
+  // SKIPPED (4x 2026-10-24, 4x 2026-10-25): the "Ubah kategori" dialog is
+  // not reliably operable under WebdriverIO. 2026-10-25 investigation fixed
+  // three real layers (currency-verify mismatch, tagged-node-IS-the-EditText
+  // structure in fieldText, stale cached handles not re-resolved per retry)
+  // and the dialog now opens + types — but it still dismisses mid-interaction
+  // (scrim misclick on the keyboard-resize recompose), so the field vanishes
+  // before Save. The identical flow works live via Appium MCP set_value.
+  // Next lever: drive the field with setValue/driver.setElementValue instead
+  // of click+keys, or an app-side stable dialog state.
   it.skip('TC-LIST-07 long category name does not overlap the row amount', async () => {
     const LONG_NAME = 'KATEGORI PANJANG SEK' // dialog max is 20 chars
     await ringkasan.open()
@@ -163,7 +167,9 @@ describe('TC-LIST — transaction list (Phase 1)', () => {
     expect(await row.isDisplayed()).toBe(true)
 
     // Layout contract: the (possibly truncated) category text must stay
-    // clear of the amount text — their bounds must not intersect.
+    // clear of the amount text — their bounds must not intersect. Element
+    // handles (not just texts) are needed for the bounds read, so
+    // extractChildTexts cannot replace this raw child enumeration.
     const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
     let name: WebdriverIO.Element | undefined
     let amount: WebdriverIO.Element | undefined
@@ -185,8 +191,8 @@ describe('TC-LIST — transaction list (Phase 1)', () => {
     expect(await daftar.summaryIncome()).toBe(A_YESTERDAY_INCOME + C_TODAY_INCOME)
   })
 
-  // No +10_000 here: TC-LIST-07 (which created that expense) is skipped,
-  // so the only expense row this month is B.
+  // No +10_000 here: TC-LIST-07 (which created that expense) is skipped
+  // (re-confirmed 2026-10-25), so the only expense row this month is B.
   it('TC-LIST-10 expense summary equals the sum of expense rows this month', async () => {
     expect(await daftar.summaryExpense()).toBe(B_TODAY_EXPENSE)
   })

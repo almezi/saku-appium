@@ -1,29 +1,8 @@
 import { byTag, scrollToTagMatches } from '../helpers/locators'
 import { tags } from '../config/tags'
-import { parseAmountText } from '../helpers/money'
+import { extractChildTexts, readAmount } from '../helpers/elements'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
-
-/** Amount-bearing tagged nodes are containers; the value renders in a child TextView. */
-export async function readAmount(el: ChainablePromiseElement): Promise<number> {
-  const texts: string[] = []
-  const own = (await el.getText()).trim()
-  if (own) texts.push(own)
-  const desc = await el.getAttribute('content-desc').catch(() => '')
-  if (desc && desc.trim()) texts.push(desc.trim())
-  const children = await el.$$(`android=new UiSelector().className("android.widget.TextView")`)
-  for (const child of children) {
-    const t = (await child.getText()).trim()
-    if (t) texts.push(t)
-  }
-  // The value node renders after the label ("MASUK" -> "Rp 250.000"), so the
-  // last digit-bearing text wins.
-  const withDigits = texts.filter((t) => /\d/.test(t))
-  if (withDigits.length === 0) {
-    throw new Error(`No amount text found on element (tried node, content-desc, children)`)
-  }
-  return parseAmountText(withDigits[withDigits.length - 1])
-}
 
 export class DaftarPage extends BasePage {
   constructor() {
@@ -45,15 +24,7 @@ export class DaftarPage extends BasePage {
 
   /** Child texts of the empty state (title, hint, actions). */
   async emptyStateTexts(): Promise<string[]> {
-    const children = await this.emptyState.$$(
-      'android=new UiSelector().className("android.widget.TextView")',
-    )
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(this.emptyState)
   }
 
   async summaryIncome(): Promise<number> {
@@ -77,7 +48,12 @@ export class DaftarPage extends BasePage {
     const before = await this.monthLabel()
     for (let attempt = 0; attempt < 3; attempt++) {
       await byTag(arrow).click()
-      const after = await this.monthLabel().catch(() => before)
+      // Recomposition is not instantaneous: a label read immediately after
+      // the click returns the old value, and re-clicking on it steps two
+      // months. Settle first, then let a failed read surface instead of
+      // masking it as "unchanged".
+      await driver.pause(300)
+      const after = await this.monthLabel()
       if (after !== before) return
     }
     throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
@@ -101,13 +77,6 @@ export class DaftarPage extends BasePage {
       `android=new UiScrollable(new UiSelector().scrollable(true))` +
         `.scrollIntoView(new UiSelector().textContains("${snippet}"))`,
     )
-  }
-
-  /** True when a row rendering `snippet` exists without scrolling the list. */
-  async hasRowText(snippet: string): Promise<boolean> {
-    return $(
-      `android=new UiSelector().textContains("${snippet}")`,
-    ).isDisplayed()
   }
 
   /**
@@ -138,30 +107,30 @@ export class DaftarPage extends BasePage {
     await this.tapRowAction(`daftar_item_.*_delete_${categoryId}`)
   }
 
-  /** Any rendered transaction row. */
-  async firstRow(): Promise<ChainablePromiseElement> {
-    return scrollToTagMatches('daftar_item_.*')
-  }
-
   /**
    * Child texts of the transaction row whose rendered text contains
    * `snippet` — category, type label, amount. findRowText resolves the
    * matching TEXT node, so the row container is reached via the nearest
    * daftar_item ancestor (XPath); a scroll-to-top first keeps top rows
-   * composed even when a previous test scrolled the list.
+   * composed even when a previous test scrolled the list. Like tapRowAction,
+   * the whole scroll-find-enumerate is retried on a fresh query — Compose
+   * recomposition can stale the row between find and enumeration.
    */
   async rowTexts(snippet: string): Promise<string[]> {
-    await scrollToTagMatches('daftar_item_.*')
-    const row = await $(
-      `//android.widget.TextView[contains(@text, "${snippet}")]/ancestor::*[starts-with(@resource-id, "daftar_item_")][1]`,
-    )
-    const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await scrollToTagMatches('daftar_item_.*')
+        const row = $(
+          `//android.widget.TextView[contains(@text, "${snippet}")]/ancestor::*[starts-with(@resource-id, "daftar_item_")][1]`,
+        )
+        // `return await` so a rejection inside the helper is caught by this
+        // retry's catch, not escaped past it.
+        return await extractChildTexts(row)
+      } catch {
+        await driver.pause(500)
+      }
     }
-    return texts
+    throw new Error(`Row texts for "${snippet}" could not be read`)
   }
 
   async dayHeaderCount(): Promise<number> {
@@ -185,14 +154,9 @@ export class DaftarPage extends BasePage {
    * ("SABTU"), date ("24 Okt 2026") and net total ("Rp …" / "−Rp …").
    */
   async firstDayHeaderTexts(): Promise<string[]> {
-    const header = $(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`)
-    const children = await header.$$('android=new UiSelector().className("android.widget.TextView")')
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(
+      $(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`),
+    )
   }
 
   /**

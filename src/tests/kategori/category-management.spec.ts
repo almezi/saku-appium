@@ -23,7 +23,7 @@ const DEFAULT_INCOME_IDS = [
   categories.income.other,
 ]
 
-describe('TC-KAT — category management (Phase 2)', () => {
+describe('TC-KAT — category management (Phase 2) @regression', () => {
   const tambah = new TambahPage()
   const ringkasan = new RingkasanPage()
   const kategori = new KategoriPage()
@@ -39,6 +39,9 @@ describe('TC-KAT — category management (Phase 2)', () => {
   })
 
   it('TC-KAT-02 the Tambah manage-category link opens kategori_screen', async () => {
+    // TC-KAT-01 leaves the app on kategori, which shows no bottom bar
+    // (UI_SPEC 4), so step back to a bar screen before opening Tambah.
+    await kategori.tapBack()
     await tambah.open()
     await kategori.openFromTambah()
     expect(await kategori.isDisplayed()).toBe(true)
@@ -86,14 +89,19 @@ describe('TC-KAT — category management (Phase 2)', () => {
   })
 
   it('TC-KAT-11/12 hiding a category removes it from the Tambah picker', async () => {
+    // TC-KAT-06's 'gaj' filter is still active — it persists (UI_SPEC 6.5) —
+    // and would keep the gift row out of the rendered list. Clearing the
+    // search backspaces the query away, restoring the full tab list.
+    await kategori.search('')
     await kategori.toggleHidden(categories.income.gift)
     // Hidden categories show the show icon instead of hide; the row stays.
     expect(await kategori.row(categories.income.gift).isDisplayed()).toBe(true)
 
     // The picker on the Tambah form no longer offers the hidden category,
-    // while a visible one still does (control).
-    await byTag(tags.navTambah).click()
-    await tambah.waitForScreen()
+    // while a visible one still does (control). Kategori shows no bottom
+    // bar (UI_SPEC 4), so step back to a bar screen before opening Tambah.
+    await kategori.tapBack()
+    await tambah.open()
     await byTag(tags.tambah.categoryPager).click()
     await byTag(tags.tambah.categorySheetRoot).waitForDisplayed({ timeout: 10_000 })
     expect(
@@ -102,6 +110,9 @@ describe('TC-KAT — category management (Phase 2)', () => {
     expect(
       await byTag(tags.tambah.categoryItem(categories.income.salary)).isDisplayed(),
     ).toBe(true)
+    // The sheet never closes on its own — dismiss it (system back) before
+    // asserting it is gone.
+    await driver.back()
     await byTag(tags.tambah.categorySheetRoot).waitForDisplayed({ reverse: true })
 
     // Restore visibility so the fresh-session assumption is not load-bearing

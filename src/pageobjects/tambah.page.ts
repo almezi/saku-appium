@@ -1,8 +1,9 @@
 import { byTag } from '../helpers/locators'
+import { typeIntoTaggedField, fieldText } from '../helpers/input'
 import { tags } from '../config/tags'
 import { accounts, type TransactionType } from '../config/categories'
 import { BasePage } from './base.page'
-import type { ChainablePromiseElement } from 'webdriverio'
+import type { ChainablePromiseElement } from '../types'
 
 export interface TransactionFormInput {
   type?: TransactionType
@@ -50,33 +51,13 @@ export class TambahPage extends BasePage {
   }
 
   async fillAmount(amount: number): Promise<void> {
-    await this.typeIntoField(this.amountInput, String(amount))
+    // 'digits': the field live-formats the input as currency ("254000"
+    // renders "Rp 254.000"), so exact-equality verification can never hold.
+    await typeIntoTaggedField(this.amountInput, String(amount), tags.tambah.inputAmount, 'digits')
   }
 
   async fillNote(note: string): Promise<void> {
-    await this.typeIntoField(this.noteInput, note)
-  }
-
-  /**
-   * Compose text fields expose the tag on a wrapper node, so `addValue` on it
-   * fails with "did you interact with the correct element". Click to focus,
-   * backspace any existing text away, then send keys to the focused field.
-   */
-  private async typeIntoField(field: ChainablePromiseElement, text: string): Promise<void> {
-    await field.click()
-    const current = await this.fieldText(field)
-    if (current.length > 0) {
-      await driver.keys('\uE003'.repeat(current.length + 2))
-    }
-    await driver.keys(text)
-    await driver.hideKeyboard().catch(() => undefined)
-  }
-
-  /** Rendered text of a field via its inner EditText node (the wrapper's own text is empty). */
-  private async fieldText(field: ChainablePromiseElement): Promise<string> {
-    const editor = await field.$('.//android.widget.EditText')
-    if (!(await editor.isExisting())) return ''
-    return (await editor.getText()).trim()
+    await typeIntoTaggedField(this.noteInput, note, tags.tambah.inputNote)
   }
 
   /**
@@ -168,11 +149,11 @@ export class TambahPage extends BasePage {
   }
 
   async getAmountText(): Promise<string> {
-    return this.fieldText(await this.amountInput)
+    return fieldText(this.amountInput)
   }
 
   async getNoteText(): Promise<string> {
-    return this.fieldText(await this.noteInput)
+    return fieldText(this.noteInput)
   }
 
   /** Rendered account name on the account selector (e.g. "Tunai", "BCA"). */

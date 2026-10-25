@@ -4,7 +4,7 @@
     "servers": {
       "appium-mcp": {
         "type": "local",
-        "command": ["npx", "-y", "appium-mcp@latest"],
+        "command": ["npx", "-y", "appium-mcp@1.97.1"],
         "env": {
           "ANDROID_HOME": "/Users/auliameiazizi/Library/Android/sdk"
         }

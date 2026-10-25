@@ -1,7 +1,8 @@
 import { byTag, allByTagMatches, scrollToTag } from '../helpers/locators'
+import { tags } from '../config/tags'
 import { BasePage } from './base.page'
-import { typeIntoTaggedField, fieldText } from '../helpers/input'
-import type { ChainablePromiseElement } from 'webdriverio'
+import { typeIntoTaggedField } from '../helpers/input'
+import type { ChainablePromiseElement } from '../types'
 
 /**
  * Test tags for the Kelola kategori screen, from TESTABILITY.md ("Kelola
@@ -50,12 +51,12 @@ export class KategoriPage extends BasePage {
   }
 
   async openFromRingkasan(): Promise<void> {
-    await byTag('ringkasan_kelola_button').click()
+    await byTag(tags.ringkasan.kelolaButton).click()
     await this.waitForScreen()
   }
 
   async openFromTambah(): Promise<void> {
-    await byTag('tambah_link_kelola_kategori').click()
+    await byTag(tags.tambah.linkKelolaKategori).click()
     await this.waitForScreen()
   }
 
@@ -66,7 +67,7 @@ export class KategoriPage extends BasePage {
 
   /** Types into the shared search field; text filters the current tab by name. */
   async search(query: string): Promise<void> {
-    await typeIntoTaggedField(byTag('component_field_search'), query)
+    await typeIntoTaggedField(byTag(tags.component.fieldSearch), query)
   }
 
   /**
@@ -89,39 +90,24 @@ export class KategoriPage extends BasePage {
   }
 
   /**
-   * Renames the category in the open dialog. The keyboard resize shifts the
-   * dialog, so a cached-bounds click on the field wrapper can land on the
-   * scrim and dismiss the dialog — clicks go to the field's inner node and
-   * the whole type step retries (reopening the dialog if it was dismissed).
+   * Renames the category in the open dialog via the shared verified typing
+   * helper. The keyboard resize shifts the dialog, so a cached-bounds click
+   * on the field wrapper can land on the scrim and dismiss the dialog — the
+   * helper clicks the field's inner node, verifies the text landed and
+   * retries, and throws if it never does, so Save below only runs with the
+   * intended content. If the dialog was dismissed before typing starts, it
+   * is reopened first.
    */
   async renameInDialog(categoryId: string, newName: string): Promise<void> {
     const field = byTag(kategoriTags.formName)
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (!(await field.isExisting().catch(() => false))) {
-        await this.openEditDialog(categoryId)
-      }
-      const editor = await field.$('.//android.widget.EditText')
-      const inner = (await editor.isExisting().catch(() => false))
-        ? editor
-        : field.$('.//android.widget.TextView')
-      await inner.click()
-      const current = await fieldText(field).catch(() => '')
-      if (current.length > 0) {
-        await driver.keys('\uE003'.repeat(current.length + 2))
-      }
-      await driver.keys(newName)
-      await driver.hideKeyboard().catch(() => undefined)
-      if ((await fieldText(field).catch(() => '')) === newName) break
+    if (!(await field.isExisting().catch(() => false))) {
+      await this.openEditDialog(categoryId)
     }
+    await typeIntoTaggedField(field, newName, kategoriTags.formName)
     const save = byTag(kategoriTags.formSave)
     await save.waitForDisplayed({ timeout: 5_000 })
     await save.click()
     await save.waitForDisplayed({ reverse: true, timeout: 5_000 })
-  }
-
-  /** Cancels the open edit dialog (no change). */
-  async cancelDialog(): Promise<void> {
-    await byTag(kategoriTags.formCancel).click()
   }
 
   /** Hides (or, when hidden, shows) the category via the eye toggle. */

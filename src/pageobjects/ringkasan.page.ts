@@ -1,8 +1,7 @@
 import { byTag, scrollToTag } from '../helpers/locators'
+import { barFillRatio, extractChildTexts, readAmount } from '../helpers/elements'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
-import { readAmount } from './daftar.page'
-import type { Element } from 'webdriverio'
 
 /** Non-empty text attributes of the subtree under the node with `resourceId`. */
 function childTextsFromSource(xml: string, resourceId: string): string[] {
@@ -54,6 +53,16 @@ export class RingkasanPage extends BasePage {
     return byTag(tags.ringkasan.monthLabel).getText()
   }
 
+  // Click-wait audit (code review Step 10): openAnggaran() and
+  // openKelolaKategori() click targets that belong to the Ringkasan screen
+  // this page is already on — open() ends in waitForScreen(), and WDIO's
+  // command auto-wait (waitforTimeout 15 s) bridges any remaining
+  // post-transition composition lag, so an explicit waitForExist guard
+  // would be redundant. Same verdict for open() (nav bar of the source
+  // screen, arrival verified by waitForScreen) and switchMonth() (arrows
+  // of the current screen; a missed click is caught by its label retry).
+  // Arrival on the target screen is asserted by the calling spec, matching
+  // openFromRingkasan() in the anggaran/kategori page objects.
   async openAnggaran(): Promise<void> {
     await byTag(tags.ringkasan.anggaranButton).click()
   }
@@ -71,6 +80,11 @@ export class RingkasanPage extends BasePage {
    * between find and read under WebdriverIO — three element-read runs
    * failed. The dump is atomic, so the row's children are parsed from the
    * XML directly; a scrollGesture retry covers rows not yet composed.
+   *
+   * @param categoryId Category id of the row's test tag — see
+   * tags.ringkasan.categoryItem.
+   * @returns The row's child texts in render order; throws naming the
+   * category when it never appears in the page source.
    */
   async breakdownItemTexts(categoryId: string): Promise<string[]> {
     const tag = tags.ringkasan.categoryItem(categoryId)
@@ -88,49 +102,59 @@ export class RingkasanPage extends BasePage {
     throw new Error(`Breakdown item ${categoryId} not found in page source`)
   }
 
-  /** Rendered texts of the "Pemasukan vs pengeluaran" comparison card. */
+  /**
+   * Rendered texts of the "Pemasukan vs pengeluaran" comparison card —
+   * scrolled into view first, since the card can sit below the fold in the
+   * summary LazyColumn.
+   */
   async comparisonTexts(): Promise<string[]> {
-    const children = await byTag(tags.ringkasan.comparison).$$(
-      'android=new UiSelector().className("android.widget.TextView")',
-    )
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(scrollToTag(tags.ringkasan.comparison))
   }
 
-  /** Child texts of the empty state (title, hint, action label). */
+  /**
+   * Child texts of the empty state (title, hint, action label). Read without
+   * scrolling: the empty state replaces the whole content area when a month
+   * has no data — no scrollable container exists for UiScrollable to attach
+   * to — and it always sits at the top of the screen.
+   */
   async emptyStateTexts(): Promise<string[]> {
-    const children = await byTag(tags.ringkasan.emptyState).$$(
-      'android=new UiSelector().className("android.widget.TextView")',
-    )
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(byTag(tags.ringkasan.emptyState))
   }
 
   /**
    * Bar-fill fraction of one breakdown row: the row's untagged trailing Views
    * are [bar container, bar fill] (verified live — at 80% the fill is 712 px
    * of a 890 px container), so fill.width / container.width is the share.
+   * Exactly two Views are required — a different count means the layout
+   * drifted (e.g. a wrapper View appeared), and failing loudly beats
+   * silently reading the wrong pair.
+   *
+   * @param categoryId Category id of the row's test tag — see
+   * tags.ringkasan.categoryItem.
+   * @returns The bar-fill share (fill width / container width) of the row;
+   * throws when no attempt yields exactly two measurable bar Views.
    */
   async breakdownBarRatio(categoryId: string): Promise<number> {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const item = await scrollToTag(tags.ringkasan.categoryItem(categoryId))
-        const views = await item.$$('android=new UiSelector().className("android.view.View")')
-        const viewList = (await views) as unknown as Element[]
-        if (viewList.length < 2) continue
-        const container = await viewList[viewList.length - 2].getSize()
-        const fill = await viewList[viewList.length - 1].getSize()
-        if (container.width > 0) return fill.width / container.width
+        // UiScrollable can resolve a ghost reference when the row never
+        // composes — confirm existence for a clear failure instead of an
+        // opaque child-enumeration error.
+        await item.waitForExist({ timeout: 10_000 })
+        // WDIO v9 types the `$$` chainable's `length` as Promise<number>;
+        // spread the awaited result into a real array before indexing.
+        const viewList = [
+          ...(await item.$$('android=new UiSelector().className("android.view.View")')),
+        ]
+        if (viewList.length !== 2) continue
+        const container = await viewList[0].getSize()
+        const fill = await viewList[1].getSize()
+        return barFillRatio(container.width, fill.width)
       } catch {
-        // stale element — re-scroll and retry
+        // Stale element or mid-recompose ghost — back off before the fresh
+        // re-query (same error-path pause as DaftarPage.tapRowAction).
+        await driver.pause(500)
       }
     }
     throw new Error(`Breakdown item ${categoryId} has no measurable bar views`)
@@ -177,12 +201,20 @@ export class RingkasanPage extends BasePage {
   /**
    * Month switching with a verify-retry (same as the Daftar list): the arrow
    * click can race recomposition and silently not register.
+   *
+   * @param arrow Test tag of the switcher arrow to tap —
+   * tags.ringkasan.monthPrev or tags.ringkasan.monthNext.
    */
   private async switchMonth(arrow: string): Promise<void> {
     const before = await this.monthLabel()
     for (let attempt = 0; attempt < 3; attempt++) {
       await byTag(arrow).click()
-      const after = await this.monthLabel().catch(() => before)
+      // Recomposition is not instantaneous: a label read immediately after
+      // the click returns the old value, and re-clicking on it steps two
+      // months. Settle first, then let a failed read surface instead of
+      // masking it as "unchanged".
+      await driver.pause(300)
+      const after = await this.monthLabel()
       if (after !== before) return
     }
     throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)

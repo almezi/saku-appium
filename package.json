@@ -4,8 +4,18 @@
   "description": "Appium + WebdriverIO + TypeScript E2E automation for Saku (Simple Money Tracker, Android)",
   "license": "MIT",
   "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "wdio run ./wdio.conf.ts",
+    "test:unit": "node --test -r ts-node/register/transpile-only \"src/helpers/__tests__/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "test:sanity": "TEST_GREP=@sanity wdio run ./wdio.conf.ts",
+    "test:regression": "TEST_GREP=@regression wdio run ./wdio.conf.ts",
+    "test:integration": "TEST_GREP=@integration wdio run ./wdio.conf.ts",
+    "test:emulator": "wdio run ./wdio.conf.ts",
+    "test:parallel": "REAL_DEVICE_UDID=${REAL_DEVICE_UDID:?\\\"export REAL_DEVICE_UDID=<udid> to enable parallel\\\"} wdio run ./wdio.conf.ts",
     "test:navigasi": "wdio run ./wdio.conf.ts --spec ./src/tests/navigasi/*.spec.ts",
     "test:tambah": "wdio run ./wdio.conf.ts --spec ./src/tests/tambah/*.spec.ts",
     "test:transaksi": "wdio run ./wdio.conf.ts --spec ./src/tests/transaksi/*.spec.ts",

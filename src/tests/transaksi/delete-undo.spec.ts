@@ -1,4 +1,4 @@
-import { byTag } from '../../helpers/locators'
+import { byTag, allByTag, allByTagMatches } from '../../helpers/locators'
 import { tags } from '../../config/tags'
 import { categories } from '../../config/categories'
 import { createTransaction, tapUndoAction, uniqueNote } from '../../helpers/transactions'
@@ -8,7 +8,7 @@ import { formatRp } from '../../helpers/money'
 
 const AMOUNT = 111_000
 
-describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1)', () => {
+describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1) @integration', () => {
   const daftar = new DaftarPage()
 
   async function openDeleteSheet(): Promise<void> {
@@ -67,12 +67,12 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1)', () 
     // With no transactions left the list swaps to its empty state and the
     // summary cards leave the hierarchy entirely (verified live).
     await byTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
-    const rows = await $$('android=new UiSelector().resourceIdMatches("daftar_item_\\d+$")')
+    const rows = await allByTagMatches('daftar_item_\\d+$')
     expect(rows.length).toBe(0)
   })
 })
 
-describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1)', () => {
+describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @integration', () => {
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
 
@@ -121,9 +121,7 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1)',
 
   it('TC-DEL-06 deleting removes the stale breakdown entry', async () => {
     await ringkasan.open()
-    const foodItems = await $$(
-      `android=new UiSelector().resourceId("ringkasan_category_item_${categories.expense.dailyFood}")`,
-    )
+    const foodItems = await allByTag(tags.ringkasan.categoryItem(categories.expense.dailyFood))
     expect(foodItems.length).toBe(0)
     // The remaining income category is untouched.
     const texts = await ringkasan.breakdownItemTexts(categories.income.sales)
@@ -157,12 +155,12 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1)',
     // Second undo window (5 s) — pause past it; the following assertions
     // prove both deletions stuck.
     await driver.pause(6_500)
-    const bonusRows = await $$(
-      `android=new UiSelector().resourceIdMatches("daftar_item_.*_delete_${categories.income.bonusThr}")`,
+    const bonusRows = await allByTagMatches(
+      `daftar_item_.*_delete_${categories.income.bonusThr}`,
     )
     expect(bonusRows.length).toBe(0)
-    const otherRows = await $$(
-      `android=new UiSelector().resourceIdMatches("daftar_item_.*_delete_${categories.income.other}")`,
+    const otherRows = await allByTagMatches(
+      `daftar_item_.*_delete_${categories.income.other}`,
     )
     expect(otherRows.length).toBe(0)
     expect(await daftar.summaryIncome()).toBe(SALES_INCOME)
@@ -172,7 +170,7 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1)',
     await daftar.tapDelete(categories.income.sales)
     await confirmPermanentDelete()
     await byTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
-    const rows = await $$('android=new UiSelector().resourceIdMatches("daftar_item_\\d+$")')
+    const rows = await allByTagMatches('daftar_item_\\d+$')
     expect(rows.length).toBe(0)
   })
 })

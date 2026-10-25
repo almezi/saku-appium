@@ -11,7 +11,7 @@ import { formatRp } from '../../helpers/money'
 const AMOUNT = 250_000
 const NOTE = uniqueNote('inc')
 
-describe('TC-INC — add income (Phase 1)', () => {
+describe('TC-INC — add income (Phase 1) @regression', () => {
   const tambah = new TambahPage()
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()

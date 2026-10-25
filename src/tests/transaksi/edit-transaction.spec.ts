@@ -1,4 +1,4 @@
-import { byTag } from '../../helpers/locators'
+import { byTag, allByTag } from '../../helpers/locators'
 import { tags } from '../../config/tags'
 import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
@@ -11,7 +11,7 @@ import { formatRp } from '../../helpers/money'
 const AMOUNT = 123_000
 const NEW_AMOUNT = 456_000
 
-describe('TC-EDIT — edit transaction (Phase 1)', () => {
+describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
   const daftar = new DaftarPage()
   const ringkasan = new RingkasanPage()
   const ubah = new UbahPage()
@@ -67,8 +67,10 @@ describe('TC-EDIT — edit transaction (Phase 1)', () => {
     await ubah.save()
     expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
     expect(await daftar.summaryIncome()).toBe(NEW_AMOUNT)
-    const stale = await $$(`android=new UiSelector().textContains("${formatRp(AMOUNT)}")`)
-    expect(stale.length).toBe(0)
+    // Rendered-text lookup, deliberately outside the tag contract: the stale
+    // amount must be gone from the screen entirely, wherever it might render.
+    const staleAmountTexts = await $$(`android=new UiSelector().textContains("${formatRp(AMOUNT)}")`)
+    expect(staleAmountTexts.length).toBe(0)
   })
 
   it('TC-EDIT-03 changing the category recalculates the Ringkasan breakdown', async () => {
@@ -78,9 +80,7 @@ describe('TC-EDIT — edit transaction (Phase 1)', () => {
     await ringkasan.open()
     const salaryRow = await ringkasan.breakdownItemTexts(categories.income.salary)
     expect(salaryRow).toContain(formatRp(NEW_AMOUNT))
-    const refundItems = await $$(
-      `android=new UiSelector().resourceId("ringkasan_category_item_${categories.income.refund}")`,
-    )
+    const refundItems = await allByTag(tags.ringkasan.categoryItem(categories.income.refund))
     expect(refundItems.length).toBe(0)
   })
 
