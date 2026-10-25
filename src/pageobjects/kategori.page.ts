@@ -50,6 +50,29 @@ export class KategoriPage extends BasePage {
     return byTag(kategoriTags.row(categoryId))
   }
 
+  /** The row's color mark square (verified live: a 32×32 px child of the row). */
+  mark(categoryId: string): ChainablePromiseElement {
+    return byTag(`mark_${categoryId}`)
+  }
+
+  /** "Ubah kategori" dialog name field (dialog is fully tagged on build v2.2). */
+  get formName(): ChainablePromiseElement {
+    return byTag(kategoriTags.formName)
+  }
+
+  get formSave(): ChainablePromiseElement {
+    return byTag(kategoriTags.formSave)
+  }
+
+  get formCancel(): ChainablePromiseElement {
+    return byTag(kategoriTags.formCancel)
+  }
+
+  /** Scrolls a category row into view (LazyColumn rows recompose off-screen). */
+  async scrollToRow(categoryId: string): Promise<void> {
+    await scrollToTag(kategoriTags.row(categoryId))
+  }
+
   async openFromRingkasan(): Promise<void> {
     await byTag(tags.ringkasan.kelolaButton).click()
     await this.waitForScreen()

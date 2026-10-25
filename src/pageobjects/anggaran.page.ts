@@ -6,40 +6,37 @@ import type { ChainablePromiseElement } from '../types'
 
 /**
  * Test tags for the Anggaran (budget) screen and form, from TESTABILITY.md
- * ("Anggaran" section). They live here instead of config/tags.ts only because
- * that file is frozen for Phase 1; the values mirror TestTags.kt exactly.
- * The trailing shared-form tags exist in no catalogue at all (TESTABILITY.md
- * omits them) — verified live on the budget form, kept here under the same
- * frozen-tags.ts rule.
+ * ("Anggaran" section). Re-verified live against app build v2.2 (2026-10-25,
+ * see progress.md 2.A): the form exposes its own `anggaran_form_*` tags —
+ * the shared `component_input_amount` / `component_button_primary` /
+ * `component_button_text_danger` tags from the earlier draft do NOT exist on
+ * this build. The category picker sheet rows are untagged (documented text
+ * fallback), while the per-row "Ubah"/"Hapus" actions ARE tagged.
  */
 export const anggaranTags = {
   screen: 'anggaran_screen',
   totalCard: 'anggaran_total_card',
   list: 'anggaran_list',
   row: (categoryId: string) => `anggaran_row_${categoryId}`,
+  rowEdit: (categoryId: string) => `anggaran_row_${categoryId}_edit_${categoryId}`,
+  rowDelete: (categoryId: string) => `anggaran_row_${categoryId}_delete_${categoryId}`,
   addButton: 'anggaran_add_button',
   emptyState: 'anggaran_empty_state',
+  formScreen: 'anggaran_form_screen',
   formCategory: 'anggaran_form_category',
+  formLimit: 'anggaran_form_limit',
+  formNote: 'anggaran_form_note',
+  formSwitch: 'anggaran_form_switch',
+  formSave: 'anggaran_form_save',
+  formDelete: 'anggaran_form_delete',
   deleteSheet: 'anggaran_delete_sheet',
-  // Shared budget-form component tags, absent from every catalogue.
-  sheetPicker: 'component_sheet_picker',
-  categoryChip: (categoryId: string) => `component_row_category_chip_${categoryId}`,
-  inputAmount: 'component_input_amount',
 } as const
 
 /**
  * Anggaran (budget) screen. Opened from Ringkasan via
  * `ringkasan_anggaran_button`; it has no bottom bar, only a back button.
- *
- * The budget form reuses shared design-system tags: `component_input_amount`
- * for "Batas bulanan", `component_button_primary` for "Simpan anggaran",
- * `component_button_text_danger` for "Hapus anggaran" (edit mode only). All
- * but `component_input_amount` live in tags.component; it and the category
- * picker-sheet tags are absent from TESTABILITY.md and are catalogued in
- * anggaranTags above (tags.ts is frozen for Phase 1).
- *
- * The per-row "Ubah"/"Hapus" buttons are not in the tag contract, so those two
- * fall back to text locators scoped to the row (UI_SPEC.md 6.6 names them).
+ * Note the entry button itself is hidden while the month has no
+ * transactions (UI_SPEC 6.3) — seed data before openFromRingkasan.
  */
 export class AnggaranPage extends BasePage {
   constructor() {
@@ -62,6 +59,10 @@ export class AnggaranPage extends BasePage {
     return byTag(anggaranTags.formCategory)
   }
 
+  get formSave(): ChainablePromiseElement {
+    return byTag(anggaranTags.formSave)
+  }
+
   row(categoryId: string): ChainablePromiseElement {
     return byTag(anggaranTags.row(categoryId))
   }
@@ -77,45 +78,45 @@ export class AnggaranPage extends BasePage {
     await this.formCategory.waitForDisplayed({ timeout: 10_000 })
   }
 
-  /** Picks the budgeted category in the form's category picker sheet. */
-  async selectFormCategory(categoryId: string): Promise<void> {
+  /**
+   * Picks `displayName` in the form's category picker sheet. The sheet's
+   * rows carry no test tags on build v2.2 (verified live) — the documented
+   * text fallback applies; display names are stable app copy, not test data.
+   */
+  async selectFormCategory(displayName: string): Promise<void> {
     await this.formCategory.click()
-    const sheet = byTag(anggaranTags.sheetPicker)
-    await sheet.waitForDisplayed({ timeout: 10_000 })
-    const chip = byTag(anggaranTags.categoryChip(categoryId))
+    const chip = $(`android=new UiSelector().text("${displayName}")`)
     await chip.waitForDisplayed({ timeout: 10_000 })
     await chip.click()
-    await sheet.waitForDisplayed({ reverse: true })
+    await chip.waitForDisplayed({ reverse: true, timeout: 10_000 })
   }
 
   /** Fills "Batas bulanan" on the open budget form. */
   async fillLimit(amount: number): Promise<void> {
     // 'digits': currency-formatted field, same as tambah.fillAmount.
     await typeIntoTaggedField(
-      byTag(anggaranTags.inputAmount),
+      byTag(anggaranTags.formLimit),
       String(amount),
-      'budget limit',
+      anggaranTags.formLimit,
       'digits',
     )
   }
 
-  /** "Simpan anggaran" on the open budget form. */
+  /** "Simpan anggaran" on the open budget form; waits for the form to close. */
   async saveForm(): Promise<void> {
-    await byTag(tags.component.buttonPrimary).click()
-    await byTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 })
-    await byTag(tags.component.toast).waitForDisplayed({ reverse: true, timeout: 10_000 })
+    await this.formSave.click()
+    await this.formSave.waitForDisplayed({ reverse: true, timeout: 10_000 })
   }
 
-  /** "Ubah" button on the budget row for `categoryId` (text locator, see class doc). */
+  /** "Ubah" button on the budget row for `categoryId` (tag verified live). */
   async tapRowEdit(categoryId: string): Promise<void> {
-    const edit = await this.row(categoryId).$('android=new UiSelector().text("Ubah")')
-    await edit.click()
+    await byTag(anggaranTags.rowEdit(categoryId)).click()
     await this.formCategory.waitForDisplayed({ timeout: 10_000 })
   }
 
   /** "Hapus anggaran" danger button, shown on the form in edit mode. */
   async deleteFromForm(): Promise<void> {
-    await byTag(tags.component.buttonTextDanger).click()
+    await byTag(anggaranTags.formDelete).click()
     await byTag(anggaranTags.deleteSheet).waitForDisplayed({ timeout: 10_000 })
     await byTag(tags.component.sheetConfirm).click()
     await byTag(anggaranTags.deleteSheet).waitForDisplayed({ reverse: true })

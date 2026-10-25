@@ -181,4 +181,11 @@ export class DaftarPage extends BasePage {
     }
     return amounts
   }
+
+  /** Confirms the open delete sheet ("Hapus transaksi?") and waits for it to close. */
+  async confirmDeleteSheet(): Promise<void> {
+    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: 10_000 })
+    await byTag(tags.component.sheetConfirm).click()
+    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ reverse: true, timeout: 10_000 })
+  }
 }

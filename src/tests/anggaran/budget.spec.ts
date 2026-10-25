@@ -10,13 +10,18 @@ import { formatRp } from '../../helpers/money'
  * TC-BUD — Anggaran / budget limits and status indicators (Phase 2).
  * Cases picked from Phase 2.A in progress.md / test-cases-simple-money-tracker.md.
  *
- * Budget rows expose no raw-status tag, so status labels ("Aman", "Lewat
- * batas") and the "Rp X dari Rp Y" / "Sisa Rp Z" strings are asserted on the
- * row's rendered text — rendered-output assertions, not locators.
+ * Verified live (2026-10-25, see progress.md 2.A): the Ringkasan Anggaran and
+ * Kelola buttons are HIDDEN while the month has no transactions (UI_SPEC 6.3),
+ * so `before` seeds one income first — income spends no budget, which keeps
+ * the "Aman" math below intact. Budget rows expose no raw-status tag, so
+ * status labels ("Aman", "Lewat batas") and the "Rp X dari Rp Y" / "Sisa Rp Z"
+ * strings are asserted on the row's rendered text — rendered-output
+ * assertions, not locators.
  */
 const BUDGET_LIMIT = 500_000
 const FIRST_EXPENSE = 100_000 // 20% of the limit -> "Aman"
 const SECOND_EXPENSE = 450_000 // total 550.000 -> 110% -> "Lewat batas"
+const FOOD = 'Makanan & Minuman' // display name of categories.expense.dailyFood
 
 describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
   const ringkasan = new RingkasanPage()
@@ -24,6 +29,12 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
 
   before(async () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await createTransaction({
+      type: 'pemasukan',
+      amount: 50_000,
+      categoryId: categories.income.salary,
+      note: uniqueNote('bud-seed'),
+    })
     await ringkasan.open()
   })
 
@@ -45,7 +56,7 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
 
   it('TC-BUD-03/07 "Atur anggaran baru" saves a budget and shows its row', async () => {
     await anggaran.openForm()
-    await anggaran.selectFormCategory(categories.expense.dailyFood)
+    await anggaran.selectFormCategory(FOOD)
     await anggaran.fillLimit(BUDGET_LIMIT)
     await anggaran.saveForm()
     expect(await anggaran.row(categories.expense.dailyFood).isDisplayed()).toBe(true)
