@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import type { Capabilities, Options } from '@wdio/types'
 
@@ -21,17 +21,47 @@ if (!process.env.ANDROID_HOME && !process.env.ANDROID_SDK_ROOT) {
 const DEFAULT_APK = path.resolve(__dirname, 'resources', 'SimpleMoneyTrackerKT-v2.2.apk')
 const APK_PATH = process.env.SAKU_APK ?? DEFAULT_APK
 
-// The emulator/device under test. Override for another device.
+/**
+ * Device list resolution, in precedence order:
+ *
+ * 1. `SAKU_DEVICES="udid1,udid2,..."` — comma-separated UDIDs, any number of
+ *    devices (`adb devices -l` lists them). Each device gets its own
+ *    uiautomator2 systemPort (8200 + index) so parallel sessions never
+ *    collide.
+ * 2. Legacy pair: `ANDROID_UDID` (defaults to the emulator) plus optional
+ *    `REAL_DEVICE_UDID` for a second device — still honored for backwards
+ *    compatibility.
+ * 3. Fallback: `emulator-5554` alone.
+ */
+const SAKU_DEVICES = process.env.SAKU_DEVICES
 const DEVICE_UDID = process.env.ANDROID_UDID ?? 'emulator-5554'
+const REAL_DEVICE_UDID = process.env.REAL_DEVICE_UDID
+
+function resolveDeviceUdids(): string[] {
+  const fromSakuDevices = (SAKU_DEVICES ?? '')
+    .split(',')
+    .map((udid) => udid.trim())
+    .filter(Boolean)
+  if (fromSakuDevices.length > 0) return fromSakuDevices
+  const legacy = [DEVICE_UDID]
+  if (REAL_DEVICE_UDID) legacy.push(REAL_DEVICE_UDID)
+  return legacy
+}
 
 /**
- * Real device under test (opt-in). Set REAL_DEVICE_UDID (e.g. via `adb
- * devices | awk 'NR==2{print $1}'`) to run in parallel against one real
- * device AND one emulator: `REAL_DEVICE_UDID=<udid> npm test`. Leave unset
- * for the default single-run on the emulator. Each device gets its own
- * uiautomator2 systemPort so the two sessions never collide.
+ * External Appium servers (optional). Set SAKU_APPIUM_PORTS="4723,4725" to
+ * connect to servers you started yourself — one per device, e.g.
+ * `npm run appium:server1` and `npm run appium:server2` in two terminals —
+ * instead of letting the runner spawn a single shared server. Device N talks
+ * to server N: each capability carries its own hostname/port/path connection
+ * override, which the WDIO runner explicitly supports. The servers must use
+ * `--base-path=/wd/hub` (the npm scripts do). Unset => the @wdio/appium-service
+ * spawns one shared server on port 4725 for all devices.
  */
-const REAL_DEVICE_UDID = process.env.REAL_DEVICE_UDID
+const SAKU_APPIUM_PORTS = (process.env.SAKU_APPIUM_PORTS ?? '')
+  .split(',')
+  .map((port) => port.trim())
+  .filter(Boolean)
 
 interface SakuDevice {
   capability: Record<string, unknown>
@@ -46,6 +76,11 @@ const BASE_CAPABILITY = {
   'appium:appActivity': '.MainActivity',
   // Fresh app data per session => every spec file starts from a clean DB.
   'appium:noReset': false,
+  // Real devices with system animations can freeze the uiautomator2
+  // instrumentation on element-visibility checks (seen on HiOS/Android 16);
+  // skip window animations inside the session as belt-and-braces alongside
+  // zeroing the device's animation scales.
+  'appium:disableWindowAnimation': true,
   'appium:newCommandTimeout': 240,
   'appium:uiautomator2ServerLaunchTimeout': 120_000,
   'appium:uiautomator2ServerInstallTimeout': 120_000,
@@ -53,7 +88,13 @@ const BASE_CAPABILITY = {
   'appium:printPageSourceOnFindFailure': false,
 }
 
-function makeSaku(udid: string, systemPort: number): SakuDevice {
+function makeSaku(opts: {
+  udid: string
+  systemPort: number
+  specs?: string[]
+  appiumPort?: number
+}): SakuDevice {
+  const { udid, systemPort, specs, appiumPort } = opts
   return {
     capability: {
       ...BASE_CAPABILITY,
@@ -62,15 +103,80 @@ function makeSaku(udid: string, systemPort: number): SakuDevice {
       // Each parallel device gets its own uiautomator2 systemPort so two
       // sessions' automation servers never collide.
       'appium:systemPort': systemPort,
+      ...(specs ? { 'wdio:specs': specs } : {}),
+      // Per-capability connection override: when external servers are used,
+      // device N talks to server N. The runner merges these over the global
+      // config when creating the session.
+      ...(appiumPort
+        ? { hostname: '127.0.0.1', protocol: 'http', path: '/wd/hub', port: appiumPort }
+        : {}),
     },
     udid,
   }
 }
 
+/**
+ * Shard mode (`SAKU_SHARD=1`): split the spec files round-robin across the
+ * devices so the suite finishes in roughly wallTime/deviceCount instead of
+ * running the full suite on every device (the default "matrix" behavior).
+ * Specs are assigned as a flat `'wdio:specs'` array on purpose — a nested
+ * array would group files into one worker per device, sharing a single
+ * session and losing the clean-app-data isolation every spec file relies on.
+ */
+const SHARD = process.env.SAKU_SHARD === '1'
+
+const deviceUdids = resolveDeviceUdids()
+
+// `test:parallel` and shard mode only make sense with more than one device;
+// fail fast with instructions instead of silently running single-device.
+const parallelRequested = SHARD || process.env.SAKU_PARALLEL === '1'
+if (parallelRequested && deviceUdids.length < 2) {
+  throw new Error(
+    `Parallel run requested but only ${deviceUdids.length} device(s) resolved: ` +
+      `${deviceUdids.join(', ')}. Set SAKU_DEVICES="udid1,udid2" (or legacy ` +
+      'REAL_DEVICE_UDID=<udid>; `adb devices -l` lists the UDIDs) to run ' +
+      'against multiple devices.',
+  )
+}
+if (SAKU_APPIUM_PORTS.length > 0 && SAKU_APPIUM_PORTS.length < deviceUdids.length) {
+  throw new Error(
+    `${deviceUdids.length} devices requested but SAKU_APPIUM_PORTS only lists ` +
+      `${SAKU_APPIUM_PORTS.length} server port(s): ${SAKU_APPIUM_PORTS.join(', ')}. ` +
+      'Start one Appium server per device and list its port, e.g. ' +
+      'SAKU_APPIUM_PORTS="4723,4725".',
+  )
+}
+
+function collectSpecFiles(dir: string): string[] {
+  const found: string[] = []
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) found.push(...collectSpecFiles(full))
+    else if (entry.name.endsWith('.spec.ts')) found.push(full)
+  }
+  return found
+}
+
+function roundRobin<T>(items: T[], buckets: number): T[][] {
+  const parts: T[][] = Array.from({ length: buckets }, () => [])
+  items.forEach((item, index) => parts[index % buckets].push(item))
+  return parts
+}
+
+const specShards = SHARD
+  ? roundRobin(collectSpecFiles(path.resolve(__dirname, 'src', 'tests')).sort(), deviceUdids.length)
+  : undefined
+
 // The appium:* vendor prefixes and platformName ride on W3C capabilities but
 // are not part of the strict W3C type, so cast through unknown.
-const sakuDevices: SakuDevice[] = [makeSaku(DEVICE_UDID, 8200)]
-if (REAL_DEVICE_UDID) sakuDevices.push(makeSaku(REAL_DEVICE_UDID, 8201))
+const sakuDevices: SakuDevice[] = deviceUdids.map((udid, index) =>
+  makeSaku({
+    udid,
+    systemPort: 8200 + index,
+    specs: specShards?.[index],
+    appiumPort: SAKU_APPIUM_PORTS[index] ? Number(SAKU_APPIUM_PORTS[index]) : undefined,
+  }),
+)
 
 const capabilities = sakuDevices.map(
   (device) => device.capability,
@@ -91,19 +197,21 @@ export const config: TestrunnerConfig = {
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 3,
 
-  services: [
-    [
-      'appium',
-      {
-        // Port 4725 leaves 4723 free for the Appium MCP session.
-        args: {
-          port: 4725,
-          log: path.resolve(__dirname, 'reports', 'appium.log'),
-          'log-level': 'info',
-        },
-      },
-    ],
-  ],
+  services: SAKU_APPIUM_PORTS.length > 0
+    ? [] // External servers: nothing to spawn.
+    : [
+        [
+          'appium',
+          {
+            // Port 4725 leaves 4723 free for the Appium MCP session.
+            args: {
+              port: 4725,
+              log: path.resolve(__dirname, 'reports', 'appium.log'),
+              'log-level': 'info',
+            },
+          },
+        ],
+      ],
 
   framework: 'mocha',
   reporters: [['spec', { outputDir: './reports' }]],

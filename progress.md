@@ -30,6 +30,10 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 **Spec:** `src/tests/navigasi/navigation.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
 
+> ~[BUG] 2026-10-25: real-device re-runs of TC-NAV on TECNO CM7 (HiOS/Android 16) are
+> blocked — uiautomator2 instrumentation deadlocks when the app is foreground (3
+> consecutive failures, retry limit reached). See `BUG_FOUND.md`. Emulator passes 8/8.
+
 ### 1.B — Add Income (TC-INC) — 9 tasks
 
 - [x] TC-INC-01: Income + amount + category → save enabled → save succeeds

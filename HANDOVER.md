@@ -60,7 +60,11 @@ APK path is wrong. See §8 (Debugging).
 ### Environment overrides (when you need them)
 | Variable | Default | Use |
 |---|---|---|
-| `ANDROID_UDID` | `emulator-5554` | Point at a different device/emulator. |
+| `SAKU_DEVICES` | unset | Comma-separated UDIDs, e.g. `"emulator-5554,140892554V003873"` — enables parallel runs (any device count, each gets its own systemPort). Takes precedence over the vars below. |
+| `ANDROID_UDID` | `emulator-5554` | Point at a different device/emulator (legacy single-device selection). |
+| `REAL_DEVICE_UDID` | unset | Second device for parallel runs (legacy two-slot selection). |
+| `SAKU_SHARD` | unset | `1` = shard mode: split spec files across devices instead of running the full suite on each. |
+| `SAKU_APPIUM_PORTS` | unset | e.g. `"4723,4725"` — connect to self-started Appium servers (one per device, `npm run appium:server1` / `appium:server2`) instead of the runner-spawned shared server on 4725. |
 | `SAKU_APK` | `resources/...v2.2.apk` | Use a different build (e.g. a debug APK). |
 | `ANDROID_HOME` | auto | Override the SDK location. |
 
@@ -79,6 +83,10 @@ npm run test:kategori                      # category management flows
 
 # Run a single file:
 npx wdio run ./wdio.conf.ts --spec ./src/tests/ringkasan/summary.spec.ts
+
+# Parallel across devices (export SAKU_DEVICES first, needs ≥ 2 devices):
+npm run test:shard                         # split spec files across devices — ~2x faster
+npm run test:parallel                      # every spec on every device — coverage
 
 # Pure unit tests (no emulator needed!) for the money/element helpers:
 npm run test:unit
@@ -376,6 +384,31 @@ categories have `countsInTotals = false` (e.g. `inc_transfer_in`, `exp_finance_i
   `scrollContentDown` (raw touch actions).
 - **Negative balance shows `Rp -` in your assertion but `−Rp` in the app** → you're
   comparing formatted strings; use `formatNegativeRp` / `readAmount` consistently.
+
+### Real-device prerequisites (TECNO CM7 & other OEM phones)
+
+Run these once per device before pointing the suite at a real phone:
+
+```bash
+# 1. Allow the Appium helper APK install (Play Protect blocks it otherwise):
+adb -s <udid> shell settings put global verifier_verify_adb_installs 0
+# 2. Keep the screen awake while plugged in (60 s screen timeout kills sessions):
+adb -s <udid> shell svc power stayon true
+# 3. Disable system animations (UiAutomator-friendly, standard CI device setup):
+adb -s <udid> shell settings put global window_animation_scale 0
+adb -s <udid> shell settings put global transition_animation_scale 0
+adb -s <udid> shell settings put global animator_duration_scale 0
+# 4. Exempt the test servers from battery optimization (HiOS is aggressive):
+adb -s <udid> shell dumpsys deviceidle whitelist +io.appium.uiautomator2.server
+adb -s <udid> shell dumpsys deviceidle whitelist +io.appium.uiautomator2.server.test
+adb -s <udid> shell dumpsys deviceidle whitelist +id.almezi.simplemoneytracker_kt
+```
+
+**Known blocker (BUG_FOUND.md):** on the TECNO CM7 (HiOS, Android 16) the
+uiautomator2 instrumentation deadlocks whenever the Saku app is foreground — the
+first hierarchy command hangs, then the instrumentation "crashes". The app works
+fine manually and the same APK passes on the Android 16 emulator, so treat real-device
+runs on this phone as blocked until the bug is resolved; use `emulator-5554` for now.
 
 ---
 
