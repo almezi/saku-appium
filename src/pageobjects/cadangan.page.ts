@@ -1,6 +1,6 @@
 import { byTag } from '../helpers/locators'
 import { BasePage } from './base.page'
-import type { ChainablePromiseElement } from 'webdriverio'
+import type { ChainablePromiseElement } from '../types'
 
 /**
  * Test tags for the Cadangan (backup/export) screen, from TESTABILITY.md

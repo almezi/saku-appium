@@ -1,7 +1,7 @@
 import { byTag, allByTagMatches, scrollToTag } from '../helpers/locators'
 import { BasePage } from './base.page'
 import { typeIntoTaggedField, fieldText } from '../helpers/input'
-import type { ChainablePromiseElement } from 'webdriverio'
+import type { ChainablePromiseElement } from '../types'
 
 /**
  * Test tags for the Kelola kategori screen, from TESTABILITY.md ("Kelola

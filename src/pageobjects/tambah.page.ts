@@ -2,7 +2,7 @@ import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { accounts, type TransactionType } from '../config/categories'
 import { BasePage } from './base.page'
-import type { ChainablePromiseElement } from 'webdriverio'
+import type { ChainablePromiseElement } from '../types'
 
 export interface TransactionFormInput {
   type?: TransactionType

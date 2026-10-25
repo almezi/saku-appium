@@ -8,7 +8,12 @@
 import { $, $$ } from '@wdio/globals'
 import type { ChainablePromiseElement, ChainablePromiseArray } from '../types'
 
-/** Exact tag match, e.g. byTag(tags.tambah.buttonSave) */
+/**
+ * Exact tag match, e.g. byTag(tags.tambah.buttonSave). Chain the result
+ * directly (`.click()`, `.getText()`) or pass it straight to a helper that
+ * accepts a ChainablePromiseElement — await only when a statement needs the
+ * resolved value.
+ */
 export const byTag = (tag: string): ChainablePromiseElement =>
   $(`android=new UiSelector().resourceId("${tag}")`)
 

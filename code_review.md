@@ -106,6 +106,8 @@ The project's `types.ts` (lines 5-8) documents that WDIO v9 exposes `ChainablePr
 
 **Fix:** Use `WebdriverIO.Element` or import from `@wdio/globals`.
 
+> ✅ **Resolved 2026-10-25** — resolved beyond the suggested fix: the `Element` import was removed from `ringkasan.page.ts` entirely (the spread idiom that replaced the cast needs no `Element` type), and the underlying v8/v9 exposure was fixed repo-wide: `tambah`, `kategori`, `anggaran` and `cadangan` page objects imported `ChainablePromiseElement` directly from `'webdriverio'`, bypassing the sanctioned `src/types.ts` re-export — all four now import from `'types'`, leaving `src/types.ts` as the single import point (verified by grep: it is the only file importing from `'webdriverio'`). If the export shape shifts across WDIO majors, exactly one file adapts.
+
 #### 7. `comparisonTexts()` and `emptyStateTexts()` don't scroll
 
 **Lines:** 66-76, 78-89
@@ -113,6 +115,8 @@ The project's `types.ts` (lines 5-8) documents that WDIO v9 exposes `ChainablePr
 Unlike `breakdownItemTexts()` which calls `scrollToTag`, these methods use `byTag(...)` directly. If the element is below the fold, they fail with no-element-found.
 
 **Fix:** Use `scrollToTag` for consistency, or document explicitly why not.
+
+> ✅ **Resolved 2026-10-25** — the review's "or document explicitly why not" branch, applied per method: `comparisonTexts()` now scrolls (`extractChildTexts(scrollToTag(tags.ringkasan.comparison))`) since the card can sit below the fold in the summary LazyColumn; `emptyStateTexts()` deliberately keeps `byTag`, with the reason documented in-method — the empty state replaces the whole content area when a month has no data, so no scrollable container exists for UiScrollable to attach to, and the state always renders at the top of the screen. Same resolution as P2 Step 7 above.
 
 ### 🟢 LOW
 
@@ -125,6 +129,8 @@ return byTag(tags.ringkasan.balanceValue).getText()
 ```
 
 `byTag(...)` returns a `ChainablePromiseElement` (a `$()` result). The `await` on `byTag(...)` in line 18 (`readAmount(byTag(...))`) is implicit through the `$` promise. But in lines 22, 34, 38, `.getText()` is called without `await` on the `$` — this is correct (WDIO chains), but stylistically inconsistent with line 18 where `readAmount` receives an awaited `ChainablePromiseElement`.
+
+> ✅ **Resolved 2026-10-25 (verified consistent; convention documented)** — an audit of every `await` in the current `ringkasan.page.ts` found no redundant ones: each is load-bearing (statement sequencing like `click()` → settle → label read, or resolving a chainable to a handle for spread/indexing in `breakdownBarRatio`). The file's style is now uniform — chainables are returned directly (`return byTag(...).getText()`), passed straight to helpers that accept them (`readAmount(byTag(...))`, `extractChildTexts(scrollToTag(...))`), or awaited only when a statement needs the resolved value. To keep the convention from drifting again, it is documented on `byTag`'s JSDoc in `helpers/locators.ts`.
 
 ---
 
