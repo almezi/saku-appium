@@ -10,9 +10,6 @@
  * Keep this file in sync with TestTags.kt only; never invent tags here.
  */
 export const tags = {
-  // App shell
-  loadingScreen: 'loading_screen',
-
   // Bottom navigation
   navBottom: 'component_nav_bottom',
   navTambah: 'component_nav_bottom_tambah',
@@ -59,8 +56,6 @@ export const tags = {
     monthPrev: 'daftar_month_switcher_prev',
     monthLabel: 'daftar_month_switcher_label',
     monthNext: 'daftar_month_switcher_next',
-    monthPicker: 'daftar_month_picker',
-    backupButton: 'daftar_backup_button',
     // Root of the delete-confirmation sheet (verified live: the shared
     // `component_sheet_bottom` root claimed by TESTABILITY.md does not exist
     // in the v2.2 APK — each screen scopes its own sheet root).
@@ -68,9 +63,6 @@ export const tags = {
     summaryMasuk: 'daftar_summary_masuk',
     summaryKeluar: 'daftar_summary_keluar',
     item: (transactionId: string) => `daftar_item_${transactionId}`,
-    /** Any transaction row, matched by regex. */
-    itemAny: 'daftar_item_*',
-    dayHeaderAny: 'daftar_day_header_*',
     emptyState: 'daftar_empty_state',
   },
 
@@ -108,7 +100,6 @@ export const tags = {
 
   // Shared components
   component: {
-    sheetBottom: 'component_sheet_bottom',
     sheetConfirm: 'component_sheet_button_confirm',
     sheetCancel: 'component_sheet_button_cancel',
     buttonPrimary: 'component_button_primary',

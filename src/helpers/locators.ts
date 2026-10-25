@@ -17,10 +17,6 @@ import type { ChainablePromiseElement, ChainablePromiseArray } from '../types'
 export const byTag = (tag: string): ChainablePromiseElement =>
   $(`android=new UiSelector().resourceId("${tag}")`)
 
-/** Java-regex tag match, e.g. byTagMatches('daftar_item_.*') */
-export const byTagMatches = (pattern: string): ChainablePromiseElement =>
-  $(`android=new UiSelector().resourceIdMatches("${pattern}")`)
-
 /** All elements whose tag matches an exact string. */
 export const allByTag = (tag: string): ChainablePromiseArray =>
   $$(`android=new UiSelector().resourceId("${tag}")`)

@@ -53,6 +53,16 @@ export class RingkasanPage extends BasePage {
     return byTag(tags.ringkasan.monthLabel).getText()
   }
 
+  // Click-wait audit (code review Step 10): openAnggaran() and
+  // openKelolaKategori() click targets that belong to the Ringkasan screen
+  // this page is already on — open() ends in waitForScreen(), and WDIO's
+  // command auto-wait (waitforTimeout 15 s) bridges any remaining
+  // post-transition composition lag, so an explicit waitForExist guard
+  // would be redundant. Same verdict for open() (nav bar of the source
+  // screen, arrival verified by waitForScreen) and switchMonth() (arrows
+  // of the current screen; a missed click is caught by its label retry).
+  // Arrival on the target screen is asserted by the calling spec, matching
+  // openFromRingkasan() in the anggaran/kategori page objects.
   async openAnggaran(): Promise<void> {
     await byTag(tags.ringkasan.anggaranButton).click()
   }
@@ -70,6 +80,11 @@ export class RingkasanPage extends BasePage {
    * between find and read under WebdriverIO — three element-read runs
    * failed. The dump is atomic, so the row's children are parsed from the
    * XML directly; a scrollGesture retry covers rows not yet composed.
+   *
+   * @param categoryId Category id of the row's test tag — see
+   * tags.ringkasan.categoryItem.
+   * @returns The row's child texts in render order; throws naming the
+   * category when it never appears in the page source.
    */
   async breakdownItemTexts(categoryId: string): Promise<string[]> {
     const tag = tags.ringkasan.categoryItem(categoryId)
@@ -113,6 +128,11 @@ export class RingkasanPage extends BasePage {
    * Exactly two Views are required — a different count means the layout
    * drifted (e.g. a wrapper View appeared), and failing loudly beats
    * silently reading the wrong pair.
+   *
+   * @param categoryId Category id of the row's test tag — see
+   * tags.ringkasan.categoryItem.
+   * @returns The bar-fill share (fill width / container width) of the row;
+   * throws when no attempt yields exactly two measurable bar Views.
    */
   async breakdownBarRatio(categoryId: string): Promise<number> {
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -181,6 +201,9 @@ export class RingkasanPage extends BasePage {
   /**
    * Month switching with a verify-retry (same as the Daftar list): the arrow
    * click can race recomposition and silently not register.
+   *
+   * @param arrow Test tag of the switcher arrow to tap —
+   * tags.ringkasan.monthPrev or tags.ringkasan.monthNext.
    */
   private async switchMonth(arrow: string): Promise<void> {
     const before = await this.monthLabel()

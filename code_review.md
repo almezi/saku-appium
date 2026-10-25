@@ -234,17 +234,19 @@ return byTag(tags.ringkasan.balanceValue).getText()
 
 ### Priority 3 (P3) — Nice-to-Have
 
-- [ ] **Step 9:** Add JSDoc `@param` / `@returns` to public methods
+- [x] **Step 9:** Add JSDoc `@param` / `@returns` to public methods
   - **Location:** All public methods missing explicit param docs
   - **Files affected:** `ringkasan.page.ts` only
   - **Effort:** 20 min
   - **Risk reduction:** IDE tooltips for callers
+  - ✅ **Done 2026-10-25:** `@param`/`@returns` added to `breakdownItemTexts`, `breakdownBarRatio`, and private `switchMonth` (the only param-bearing methods); no-parameter methods were left prose-only to avoid bloat; all live-verified measurement notes preserved verbatim.
 
-- [ ] **Step 10:** Audit all `chainable.click()` calls for missing `waitForExist` before click
+- [x] **Step 10:** Audit all `chainable.click()` calls for missing `waitForExist` before click
   - **Location:** `open()`, `openAnggaran()`, `openKelolaKategori()`, `switchMonth()`
   - **Files affected:** `ringkasan.page.ts` only
   - **Effort:** 15 min
   - **Risk reduction:** Catches element-not-interactable failures
+  - ✅ **Done 2026-10-25:** audit verdict — no explicit guards needed; WDIO auto-wait (15 s `waitforTimeout`) covers existence in all four cases, `open()` already ends in `waitForScreen()`, and `switchMonth`'s verify-retry covers its real race. Rationale recorded as a comment block above `openAnggaran()`; `waitForClickable` deliberately rejected (would convert coordinate taps into timeouts in the LazyColumn). Note: `openAnggaran`/`openKelolaKategori` are currently dead code (specs use the sibling page objects' entry methods) — if ever wired up, the remedy for a below-fold button is `scrollToTag`, not a wait guard.
 
 ---
 
@@ -417,30 +419,30 @@ A single `childTexts(el)` + verified `typeIntoTaggedField(el, text)` in `helpers
 
 ### P0 — Before next Phase 2 run (blockers)
 
-- [ ] **Fix TC-BUD-08/09 navigation** (C1): `anggaran.tapBack()` before `createTransaction`; re-enter Anggaran before `rowText()`
-- [ ] **Fix TC-KAT-11** (C2): clear search filter, navigate via `tapBack()` (no bottom bar on kategori), dismiss sheet before reverse-wait
-- [ ] **Make the screenshot hook work** (C3): `mkdirSync('reports/screenshots', { recursive: true })` in `onPrepare` + log the catch — restores all failure evidence the AGENTS.md bug protocol depends on
-- [ ] **Pin `appium-mcp`** in `opencode.json` to an exact version (supply-chain fix, 1-line)
+- [x] **Fix TC-BUD-08/09 navigation** (C1): `anggaran.tapBack()` before `createTransaction`; re-enter Anggaran before `rowText()` — ✅ done 2026-10-25: `anggaran.tapBack()` added before each `createTransaction`; after seeding, `ringkasan.open()` + `anggaran.openFromRingkasan()` (the pattern TC-BUD-01/11 already use) before `rowText()`
+- [x] **Fix TC-KAT-11** (C2): clear search filter, navigate via `tapBack()` (no bottom bar on kategori), dismiss sheet before reverse-wait — ✅ done 2026-10-25: `kategori.search('')` clears the filter, `kategori.tapBack()` → `tambah.open()`, `driver.back()` dismisses the sheet before the reverse wait. Bonus finding fixed: **TC-KAT-02 had the same no-bottom-bar bug** (tambah.open() from kategori) — same `tapBack()` fix applied
+- [x] **Make the screenshot hook work** (C3): `mkdirSync('reports/screenshots', { recursive: true })` in `onPrepare` + log the catch — ✅ done 2026-10-25: directory created in `onPrepare` after the APK check; silent catch replaced with `console.warn('screenshot failed', e.message)`
+- [x] **Pin `appium-mcp`** in `opencode.json` to an exact version (supply-chain fix, 1-line) — ✅ done 2026-10-25: pinned to `appium-mcp@1.97.1` (registry-verified current)
 
 ### P1 — Quality debt with compounding interest
 
-- [ ] **Harden `switchMonth`** against the double-step race in BOTH `daftar.page.ts:76-84` and `ringkasan.page.ts` (R1 + prior review #5): settle-wait before reading the label; assert the *target* label, not merely "changed"; stop masking read errors via `.catch(() => before)` — *partially done 2026-10-25: `ringkasan.page.ts` has the settle wait and no longer masks read errors (ringkasan review P1 Step 5); `daftar.page.ts`'s copy and the target-label assertion remain*
-- [ ] **Consolidate helpers** (R2/R3 + duplication table): one verified-retrying `typeIntoTaggedField` and one `childTexts(el)` in `helpers/`, deleting 3 typing copies and 7 text-loop copies — *partially done 2026-10-25: `extractChildTexts` exists in `helpers/elements.ts` and the ringkasan copies use it; the daftar/spec copies and the `typeIntoTaggedField` consolidation remain*
+- [ ] **Harden `switchMonth`** against the double-step race in BOTH `daftar.page.ts:76-84` and `ringkasan.page.ts` (R1 + prior review #5): settle-wait before reading the label; assert the *target* label, not merely "changed"; stop masking read errors via `.catch(() => before)` — *mostly done 2026-10-25: both files now have the 300 ms settle wait and neither masks read errors (the twins are byte-identical again); only the "assert the target label" enhancement remains open*
+- [ ] **Consolidate helpers** (R2/R3 + duplication table): one verified-retrying `typeIntoTaggedField` and one `childTexts(el)` in `helpers/`, deleting 3 typing copies and 7 text-loop copies — *mostly done 2026-10-25: typing consolidation complete (3 copies → 1 verified-retrying `typeIntoTaggedField` in `helpers/input.ts`; `renameInDialog` routed through it, R3 throw added); `extractChildTexts` covers ringkasan + `readAmount`; remaining: daftar's in-method child-text loops (`emptyStateTexts`, `rowTexts`, `firstDayHeaderTexts`, `rowAmountTextsInOrder`)*
 - [x] **Move `readAmount` out of `daftar.page.ts`** into `helpers/` (prior review Step 2 — done 2026-10-25, see ringkasan review P0 Step 2)
-- [ ] **Wrap `daftar.rowTexts` in the `tapRowAction` retry pattern** (R7) and replace 10+ raw `$$` selectors in specs with locator helpers
+- [x] **Wrap `daftar.rowTexts` in the `tapRowAction` retry pattern** (R7) and replace 10+ raw `$$` selectors in specs with locator helpers — ✅ done 2026-10-25: `rowTexts` wrapped in the 3-attempt fresh-requery loop (500 ms backoff); 7 raw `$$` converted to `allByTag`/`allByTagMatches` (behavior-identical selectors); 4 left raw with written rationale (textContains probes for stale-text/NaN assertions and one element-handles-only child enumeration in a skipped test — tag-contract helpers don't cover rendered-text lookup)
 
 ### P2 — Hygiene
 
-- [ ] Delete dead code: `cadangan.page.ts` (or test it), unused helpers/methods/constants (R5/R6)
-- [ ] Replace magic tag strings with `tags.*` constants; catalogue the 3 uncatalogued component tags (R4)
-- [ ] Drop mocha timeout to ~120–180 s now that the 100-tx seed test is skipped (R8)
-- [ ] Fix the latent `parseAmountText` sign bug (R9)
-- [ ] `git rm --cached resources/*.idsig` + ignore `*.idsig`; add `engines`/`.nvmrc`
-- [ ] Add `"typecheck": "tsc --noEmit"` script (O1) and a junit reporter (O2)
+- [x] Delete dead code: `cadangan.page.ts` (or test it), unused helpers/methods/constants (R5/R6) — ✅ done 2026-10-25: `cadangan.page.ts` deleted (grep-verified unreferenced); `byTagMatches`, `hasRowText`, `firstRow`, `cancelDialog` and 6 dead `tags.ts` constants removed — each grep-verified first. `allByTag` was KEPT: the review's dead list was stale — the R7 conversions made it live again
+- [x] Replace magic tag strings with `tags.*` constants; catalogue the 3 uncatalogued component tags (R4) — ✅ done 2026-10-25: 12 strings converted across `kategori`/`anggaran` page objects + `budget.spec.ts`; the 3 uncatalogued tags (`sheetPicker`, `categoryChip(id)`, `inputAmount`) added to `anggaran`'s local tag map per the frozen-tags.ts pattern
+- [x] Drop mocha timeout to ~120–180 s now that the 100-tx seed test is skipped (R8) — ✅ done 2026-10-25: 20 min → 180 s, with a comment noting to re-raise if TC-LIST-08 is revived
+- [x] Fix the latent `parseAmountText` sign bug (R9) — ✅ done 2026-10-25: sign now derived from the gap immediately preceding the LAST numeric run (the review's literal adjacent-char suggestion was insufficient — in "−Rp 50.000" the char adjacent to the digits is a space; the gap-slice generalization fixes mixed-sign while preserving all 8 legacy behaviors). Unit tests: 11/11 pass, the R9 skip removed
+- [x] `git rm --cached resources/*.idsig` + ignore `*.idsig`; add `engines`/`.nvmrc` — ✅ done 2026-10-25: deletion staged, `*.idsig` ignored, `engines: { node: ">=20" }`, `.nvmrc` = 24
+- [x] Add `"typecheck": "tsc --noEmit"` script (O1) — ✅ done 2026-10-25. **O2 junit reporter deferred by decision:** needs installing `@wdio/junit-reporter` (a dependency change); one-line reporters addition once dependency use is approved — not installed unilaterally given this review's supply-chain posture
 
 ### P3 — Track / deferred
 
-- [ ] Dependency re-audit each release; document shell-quote/sharp deferrals with a review date (B.3) — **never** `npm audit fix --force`
+- [x] Dependency re-audit each release; document shell-quote/sharp deferrals with a review date (B.3) — **never** `npm audit fix --force` — *deferral documented 2026-10-25: shell-quote (appium) and sharp (uiautomator2-driver) accepted as low-reachability in this localhost harness per B.3's triage; re-audit on every appium/driver upgrade; next scheduled review 2027-01-25*
 - [x] Unit tests for `parseAmountText` + extraction helpers (prior review Step 3 — done 2026-10-25, see ringkasan review P1 Step 3; run with `npm run test:unit`)
 - [ ] Optional/nit items O3–O6, N1–N4 at author discretion
 
@@ -448,3 +450,17 @@ A single `childTexts(el)` + verified `typeIntoTaggedField(el, text)` in `helpers
 
 - **Quality:** Request changes — C1/C2 make Phase 2 specs unrunnable as written; C3 has been silently losing failure evidence across ~20 recorded runs.
 - **Security:** Approve with conditions — no secrets, no dangerous APIs, clean history; conditions are the version pin (P0) and documented dependency-deferral policy (P3). Do not run forced audit fixes.
+
+---
+
+## Remediation Status (2026-10-25, orchestrated parallel pass)
+
+All actionable findings above were worked in two dependency-ordered waves of parallel senior-QA tasks (file-ownership partitioned to prevent edit collisions), followed by a full-tree verification pass.
+
+**Completed this pass:** Part C P0 in full (C1, C2, C3, appium-mcp pin @ 1.97.1); R7 (rowTexts retry + 7 raw-`$$` conversions); R2/R3 (typing consolidation into verified-retrying `typeIntoTaggedField`); R4/R5/R6 (magic strings, dead code — `allByTag` correctly kept live); R8/R9 (timeout, sign bug — unit tests 11/11, no skips); O1, engines/.nvmrc, idsig untracked; ringkasan P3 Steps 9–10.
+
+**New finding fixed during remediation:** TC-KAT-02 carried the same deterministic no-bottom-bar navigation failure as C2(b) — `tambah.open()` from the kategori screen. Same `tapBack()` fix applied.
+
+**Still open (tracked above):** switchMonth target-label assertion; daftar's in-method child-text loops; O2 junit (awaiting dependency approval); optional nits O3–O6, N1–N4.
+
+**Verification state — static only:** `tsc --noEmit` clean, `npm run typecheck` and `npm run test:unit` green. **No device run was performed** (no emulator available during the pass): the Phase 2 specs (budget, category-management) remain never-executed, and the C1/C2/TC-KAT-02 navigation fixes plus the exact-2 bar-view guard (TC-SUM-09) are the first things a `test:anggaran`/`test:kategori`/`test:ringkasan` run must confirm.

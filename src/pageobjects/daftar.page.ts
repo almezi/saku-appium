@@ -56,7 +56,12 @@ export class DaftarPage extends BasePage {
     const before = await this.monthLabel()
     for (let attempt = 0; attempt < 3; attempt++) {
       await byTag(arrow).click()
-      const after = await this.monthLabel().catch(() => before)
+      // Recomposition is not instantaneous: a label read immediately after
+      // the click returns the old value, and re-clicking on it steps two
+      // months. Settle first, then let a failed read surface instead of
+      // masking it as "unchanged".
+      await driver.pause(300)
+      const after = await this.monthLabel()
       if (after !== before) return
     }
     throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
@@ -80,13 +85,6 @@ export class DaftarPage extends BasePage {
       `android=new UiScrollable(new UiSelector().scrollable(true))` +
         `.scrollIntoView(new UiSelector().textContains("${snippet}"))`,
     )
-  }
-
-  /** True when a row rendering `snippet` exists without scrolling the list. */
-  async hasRowText(snippet: string): Promise<boolean> {
-    return $(
-      `android=new UiSelector().textContains("${snippet}")`,
-    ).isDisplayed()
   }
 
   /**
@@ -117,30 +115,34 @@ export class DaftarPage extends BasePage {
     await this.tapRowAction(`daftar_item_.*_delete_${categoryId}`)
   }
 
-  /** Any rendered transaction row. */
-  async firstRow(): Promise<ChainablePromiseElement> {
-    return scrollToTagMatches('daftar_item_.*')
-  }
-
   /**
    * Child texts of the transaction row whose rendered text contains
    * `snippet` — category, type label, amount. findRowText resolves the
    * matching TEXT node, so the row container is reached via the nearest
    * daftar_item ancestor (XPath); a scroll-to-top first keeps top rows
-   * composed even when a previous test scrolled the list.
+   * composed even when a previous test scrolled the list. Like tapRowAction,
+   * the whole scroll-find-enumerate is retried on a fresh query — Compose
+   * recomposition can stale the row between find and enumeration.
    */
   async rowTexts(snippet: string): Promise<string[]> {
-    await scrollToTagMatches('daftar_item_.*')
-    const row = await $(
-      `//android.widget.TextView[contains(@text, "${snippet}")]/ancestor::*[starts-with(@resource-id, "daftar_item_")][1]`,
-    )
-    const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await scrollToTagMatches('daftar_item_.*')
+        const row = await $(
+          `//android.widget.TextView[contains(@text, "${snippet}")]/ancestor::*[starts-with(@resource-id, "daftar_item_")][1]`,
+        )
+        const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
+        const texts: string[] = []
+        for (const child of children) {
+          const text = ((await child.getText()) || '').trim()
+          if (text) texts.push(text)
+        }
+        return texts
+      } catch {
+        await driver.pause(500)
+      }
     }
-    return texts
+    throw new Error(`Row texts for "${snippet}" could not be read`)
   }
 
   async dayHeaderCount(): Promise<number> {

@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import type { Capabilities, Options } from '@wdio/types'
 
@@ -79,16 +79,19 @@ export const config: TestrunnerConfig = {
 
   mochaOpts: {
     ui: 'bdd',
-    // Long enough for UI-heavy tests (e.g. seeding 100 transactions, ~10 min).
+    // 180 s per test: the former 20-minute ceiling only existed for the
+    // 100-transaction seed test, which is now it.skip-ped (TC-LIST-08).
     // WDIO's mocha wrapper does not forward `this` into hooks/tests, so
     // per-test this.timeout() cannot be relied on; true hangs are still
     // bounded by appium:newCommandTimeout (240 s without a driver command).
-    timeout: 1_200_000,
+    timeout: 180_000,
   },
 
   /**
    * Fail fast and loud when the APK is missing, instead of letting every
-   * spec time out inside Appium session creation.
+   * spec time out inside Appium session creation. Also ensure the
+   * screenshots directory exists up front: saveScreenshot does not create
+   * parent directories, so every afterTest write would fail with ENOENT.
    */
   onPrepare: function () {
     if (!existsSync(APK_PATH)) {
@@ -97,6 +100,7 @@ export const config: TestrunnerConfig = {
           'or set SAKU_APK to an existing APK.',
       )
     }
+    mkdirSync(path.join('reports', 'screenshots'), { recursive: true })
   },
 
   /**
@@ -106,6 +110,6 @@ export const config: TestrunnerConfig = {
     if (results.passed) return
     const safeTitle = test.title.replace(/[^a-z0-9]+/gi, '_').slice(0, 80)
     const file = path.join('reports', 'screenshots', `${Date.now()}-${safeTitle}.png`)
-    await browser.saveScreenshot(file).catch(() => undefined)
+    await browser.saveScreenshot(file).catch((e: Error) => console.warn('screenshot failed', e.message))
   },
 }

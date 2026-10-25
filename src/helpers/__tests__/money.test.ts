@@ -47,10 +47,12 @@ test('parseAmountText throws when no numeric run exists', () => {
   assert.throws(() => parseAmountText(''), /Cannot parse amount/)
 })
 
-// R9 (P2, latent): the sign is tested against the whole string head while
-// the LAST numeric run is taken, so a mixed-sign string such as
-// "−Rp 50.000 … Rp 25.000" currently parses to -25.000. Enable when the
-// R9 fix lands (each run signed by its own preceding minus).
-test.skip('parseAmountText signs mixed-sign runs per run (R9 latent bug)', () => {
+// R9: each numeric run carries the sign of the minus immediately before it
+// (in the gap between runs), so a leading minus on an earlier run cannot
+// leak into the last one — what Ringkasan comparison rows render.
+test('parseAmountText signs mixed-sign runs per run', () => {
   assert.equal(parseAmountText('\u2212Rp 50.000 \u2026 Rp 25.000'), 25_000)
+  assert.equal(parseAmountText('Rp 10.000 \u2026 \u2212Rp 4.000'), -4_000)
+  assert.equal(parseAmountText('\u2212Rp 10.000 \u2026 \u2212Rp 4.000'), -4_000)
+  assert.equal(parseAmountText('Rp 10.000 \u2026 Rp 4.000'), 4_000)
 })

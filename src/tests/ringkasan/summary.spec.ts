@@ -161,7 +161,9 @@ describe('TC-SUM — Ringkasan summary math (Phase 1)', () => {
     expect(await byTag(tags.ringkasan.savingsRow).isExisting()).toBe(false)
     expect(await byTag(tags.ringkasan.breakdownExpense).isExisting()).toBe(false)
     expect(await byTag(tags.ringkasan.balanceCard).isExisting()).toBe(false)
-    // No broken math anywhere on screen.
+    // No broken math anywhere on screen. Rendered-text probes (not the tag
+    // contract): NaN/Infinity would surface as visible text, not as a tag,
+    // so these textContains selectors stay raw by design.
     expect((await $$('android=new UiSelector().textContains("NaN")')).length).toBe(0)
     expect((await $$('android=new UiSelector().textContains("Infinity")')).length).toBe(0)
     await ringkasan.nextMonth()

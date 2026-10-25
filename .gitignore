@@ -14,6 +14,9 @@ build/
 *.apks
 *.aab
 
+# APK v4 signature files (useless without the gitignored APK)
+*.idsig
+
 # Kotlin compiler caches
 **.kotlin/
 **.kotlinc/

@@ -163,7 +163,9 @@ describe('TC-LIST — transaction list (Phase 1)', () => {
     expect(await row.isDisplayed()).toBe(true)
 
     // Layout contract: the (possibly truncated) category text must stay
-    // clear of the amount text — their bounds must not intersect.
+    // clear of the amount text — their bounds must not intersect. Element
+    // handles (not just texts) are needed for the bounds read, so
+    // extractChildTexts cannot replace this raw child enumeration.
     const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
     let name: WebdriverIO.Element | undefined
     let amount: WebdriverIO.Element | undefined

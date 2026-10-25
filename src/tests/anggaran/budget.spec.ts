@@ -1,4 +1,5 @@
 import { byTag } from '../../helpers/locators'
+import { tags } from '../../config/tags'
 import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
 import { RingkasanPage } from '../../pageobjects/ringkasan.page'
@@ -22,7 +23,7 @@ describe('TC-BUD — monthly category budgets (Phase 2)', () => {
   const anggaran = new AnggaranPage()
 
   before(async () => {
-    await byTag('tambah_screen').waitForDisplayed({ timeout: 30_000 })
+    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
     await ringkasan.open()
   })
 
@@ -53,12 +54,18 @@ describe('TC-BUD — monthly category budgets (Phase 2)', () => {
   })
 
   it('TC-BUD-08 progress reflects the month expense total with status Aman', async () => {
+    // Anggaran has no bottom bar (UI_SPEC 4), so seeding via the Tambah form
+    // only works from a bar screen — back to Ringkasan first.
+    await anggaran.tapBack()
     await createTransaction({
       type: 'pengeluaran',
       amount: FIRST_EXPENSE,
       categoryId: categories.expense.dailyFood,
       note: uniqueNote('bud'),
     })
+    // createTransaction leaves the app on Tambah; re-enter Anggaran to read rows.
+    await ringkasan.open()
+    await anggaran.openFromRingkasan()
     const text = await anggaran.rowText(categories.expense.dailyFood)
     expect(text).toContain(formatRp(FIRST_EXPENSE))
     expect(text).toContain(`dari ${formatRp(BUDGET_LIMIT)}`)
@@ -67,12 +74,16 @@ describe('TC-BUD — monthly category budgets (Phase 2)', () => {
   })
 
   it('TC-BUD-09 exceeding the limit shows the warning status', async () => {
+    // Same no-bottom-bar constraint as TC-BUD-08: seed from a bar screen.
+    await anggaran.tapBack()
     await createTransaction({
       type: 'pengeluaran',
       amount: SECOND_EXPENSE,
       categoryId: categories.expense.dailyFood,
       note: uniqueNote('bud'),
     })
+    await ringkasan.open()
+    await anggaran.openFromRingkasan()
     const text = await anggaran.rowText(categories.expense.dailyFood)
     expect(text).toContain('Lewat batas')
     // The bar never fills past 100%: spent shows the real 550.000, capped is
