@@ -156,6 +156,8 @@ return byTag(tags.ringkasan.balanceValue).getText()
 | Fragile element index assumptions | Medium | 99-106 | Assumes last 2 Views are always bar container + fill |
 | Type cast obscures intent | Low | 99 | `as unknown as Element[]` hides a type question |
 
+> ✅ **Gap status (2026-10-25):** all five gaps closed. *Duplicated text extraction loop* — `extractChildTexts` in `helpers/elements.ts` is now the single implementation; the ringkasan copies went first (P0 round), and daftar's `emptyStateTexts`/`rowTexts`/`firstDayHeaderTexts` were consolidated later the same day (its `rowAmountTextsInOrder` keeps an inline enumeration by design — it selects the first Rp-prefixed digit-bearing text per row, not all child texts). *Cross-page import* — `readAmount` lives in `helpers/elements.ts`; no page object imports from another. *No unit tests* — 17 unit tests now cover `parseAmountText`, `barFillRatio`, `extractChildTexts` and `readAmount` (via structural mock elements), run with `npm run test:unit`. *Fragile index assumptions* — exact-2 guard with direct indexing (device-run caveat noted under P2 Step 8). *Type cast* — removed (P1 Step 4).
+
 ### 📊 Maintainability Scorecard
 
 | Dimension | Score (1-5) | Notes |
@@ -165,6 +167,16 @@ return byTag(tags.ringkasan.balanceValue).getText()
 | Testability | 2.5/5 | No unit tests; ratio/text logic only tested via Appium |
 | Robustness | 4/5 | Good retry patterns, but bar-ratio indexing is fragile |
 | Cognitive Complexity | 4/5 | Low — each method does one thing clearly |
+
+> 📊 **Re-assessed scorecard (2026-10-25, after remediation):**
+>
+> | Dimension | Was | Now | Basis |
+> |-----------|-----|-----|-------|
+> | Readability | 4.5 | 4.5 | Unchanged — the documented-assumptions style survived every refactor |
+> | Modifiability | 3.5 | 4.5 | Loops consolidated to one helper (ringkasan + daftar), cross-page import gone, casts gone, tag strings centralized |
+> | Testability | 2.5 | 4.0 | 17 unit tests over money parsing, ratio math, text extraction and `readAmount` selection rules; page-object navigation remains integration-tested by design |
+> | Robustness | 4.0 | 4.5 | Exact-2 bar guard, `waitForExist` guard, retry+backoff parity in both files; held at 4.5 until a device run confirms the strict guard |
+> | Cognitive Complexity | 4.0 | 4.0 | Unchanged |
 
 ---
 
@@ -264,6 +276,8 @@ return byTag(tags.ringkasan.balanceValue).getText()
 ```
 
 **Rationale:** Step 2 (move `readAmount`) should come first because it's a refactor that touches multiple files — do it while the mental model is fresh and nothing else has changed. Then Step 1 (extract helper) naturally uses the relocated import. The unit tests (Step 3) should come early to validate the refactored extraction logic.
+
+> ✅ **Plan executed 2026-10-25 — in exactly this order.** (1-2) `readAmount` moved first into the new `helpers/elements.ts`, and `extractChildTexts` landed in that same file immediately after, consuming the relocated import as predicted. (3-5) cast fixed → unit tests added → `switchMonth` retry hardened. (6-7) `waitForExist` + scroll guards, then (7) the exact-2 bar-view guard. (8) JSDoc + click audit last. One nuance vs. the rationale: the early unit tests (Step 3) validated `parseAmountText` and the extracted `barFillRatio`, while `extractChildTexts` itself got direct mock-element coverage only in the later maintainability pass — same intent, slightly later than the plan envisioned. All ten steps are complete; this section is now a historical record.
 
 ---
 
@@ -427,7 +441,7 @@ A single `childTexts(el)` + verified `typeIntoTaggedField(el, text)` in `helpers
 ### P1 — Quality debt with compounding interest
 
 - [ ] **Harden `switchMonth`** against the double-step race in BOTH `daftar.page.ts:76-84` and `ringkasan.page.ts` (R1 + prior review #5): settle-wait before reading the label; assert the *target* label, not merely "changed"; stop masking read errors via `.catch(() => before)` — *mostly done 2026-10-25: both files now have the 300 ms settle wait and neither masks read errors (the twins are byte-identical again); only the "assert the target label" enhancement remains open*
-- [ ] **Consolidate helpers** (R2/R3 + duplication table): one verified-retrying `typeIntoTaggedField` and one `childTexts(el)` in `helpers/`, deleting 3 typing copies and 7 text-loop copies — *mostly done 2026-10-25: typing consolidation complete (3 copies → 1 verified-retrying `typeIntoTaggedField` in `helpers/input.ts`; `renameInDialog` routed through it, R3 throw added); `extractChildTexts` covers ringkasan + `readAmount`; remaining: daftar's in-method child-text loops (`emptyStateTexts`, `rowTexts`, `firstDayHeaderTexts`, `rowAmountTextsInOrder`)*
+- [x] **Consolidate helpers** (R2/R3 + duplication table): one verified-retrying `typeIntoTaggedField` and one `childTexts(el)` in `helpers/`, deleting 3 typing copies and 7 text-loop copies — ✅ done 2026-10-25: typing 3 copies → 1 verified-retrying `typeIntoTaggedField` (R3 throw included); text loops → 1 `extractChildTexts` covering ringkasan ×2, daftar ×3 (`emptyStateTexts`, `rowTexts`, `firstDayHeaderTexts`) and `readAmount`'s enumeration. Two deliberate exceptions, documented in place: `rowAmountTextsInOrder` (per-row first-Rp-text selection, not a plain child-text loop) and `transaction-list.spec.ts`'s child enumeration in a skipped test (needs element handles for bounds, not texts)
 - [x] **Move `readAmount` out of `daftar.page.ts`** into `helpers/` (prior review Step 2 — done 2026-10-25, see ringkasan review P0 Step 2)
 - [x] **Wrap `daftar.rowTexts` in the `tapRowAction` retry pattern** (R7) and replace 10+ raw `$$` selectors in specs with locator helpers — ✅ done 2026-10-25: `rowTexts` wrapped in the 3-attempt fresh-requery loop (500 ms backoff); 7 raw `$$` converted to `allByTag`/`allByTagMatches` (behavior-identical selectors); 4 left raw with written rationale (textContains probes for stale-text/NaN assertions and one element-handles-only child enumeration in a skipped test — tag-contract helpers don't cover rendered-text lookup)
 

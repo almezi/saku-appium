@@ -1,6 +1,6 @@
 import { byTag, scrollToTagMatches } from '../helpers/locators'
 import { tags } from '../config/tags'
-import { readAmount } from '../helpers/elements'
+import { extractChildTexts, readAmount } from '../helpers/elements'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
 
@@ -24,15 +24,7 @@ export class DaftarPage extends BasePage {
 
   /** Child texts of the empty state (title, hint, actions). */
   async emptyStateTexts(): Promise<string[]> {
-    const children = await this.emptyState.$$(
-      'android=new UiSelector().className("android.widget.TextView")',
-    )
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(this.emptyState)
   }
 
   async summaryIncome(): Promise<number> {
@@ -128,16 +120,12 @@ export class DaftarPage extends BasePage {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         await scrollToTagMatches('daftar_item_.*')
-        const row = await $(
+        const row = $(
           `//android.widget.TextView[contains(@text, "${snippet}")]/ancestor::*[starts-with(@resource-id, "daftar_item_")][1]`,
         )
-        const children = await row.$$('android=new UiSelector().className("android.widget.TextView")')
-        const texts: string[] = []
-        for (const child of children) {
-          const text = ((await child.getText()) || '').trim()
-          if (text) texts.push(text)
-        }
-        return texts
+        // `return await` so a rejection inside the helper is caught by this
+        // retry's catch, not escaped past it.
+        return await extractChildTexts(row)
       } catch {
         await driver.pause(500)
       }
@@ -166,14 +154,9 @@ export class DaftarPage extends BasePage {
    * ("SABTU"), date ("24 Okt 2026") and net total ("Rp …" / "−Rp …").
    */
   async firstDayHeaderTexts(): Promise<string[]> {
-    const header = $(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`)
-    const children = await header.$$('android=new UiSelector().className("android.widget.TextView")')
-    const texts: string[] = []
-    for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) texts.push(text)
-    }
-    return texts
+    return extractChildTexts(
+      $(`android=new UiSelector().resourceIdMatches("daftar_day_header_.*")`),
+    )
   }
 
   /**
