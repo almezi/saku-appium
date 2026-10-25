@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { $ } from '@wdio/globals'
+import { byTag } from '../../helpers/locators'
 import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
 import { DaftarPage } from '../../pageobjects/daftar.page'
@@ -18,11 +19,23 @@ import { CadanganPage } from '../../pageobjects/cadangan.page'
  * `version / transactions[] / categories / budgets / accounts`. Import opens
  * the system SAF picker — the device-dependent surface in this file; the
  * drive below taps the pushed file by name inside the picker.
+ *
+ * Same-session live verification (2026-10-25 evening, emulator-5554 after
+ * cold reboot, app v2.2) added two facts this spec must respect:
+ * ① The SAF picker opens on "Recent files", which is MediaStore-indexed — a
+ *   freshly `adb push`ed file is NOT listed there. The drive must navigate
+ *   Show roots → Downloads (a direct filesystem listing) before the file row
+ *   resolves.
+ * ② "Cadangan terakhir" updates as soon as an export writes the file — the
+ *   share sheet being cancelled does NOT revert it to "belum pernah". The
+ *   backup genuinely exists, so that is correct app behaviour; TC-BACKUP-05
+ *   asserts no-data-change instead of an unchanged timestamp.
  */
 const APP_ID = 'id.almezi.simplemoneytracker_kt'
 const UDID = process.env.ANDROID_UDID ?? 'emulator-5554'
 const CSV_HEADER = 'date,type,amount,category,account,note'
 const IMPORT_FILE_NAME = 'saku-import-test.json'
+const navTag = 'component_nav_bottom_daftar'
 const SEED_AMOUNT = 50_000
 const IMPORT_AMOUNT = 77_000
 const seedNote = uniqueNote('backup')
@@ -62,6 +75,25 @@ function pushImportFile(): void {
   execSync(`adb -s ${UDID} push ${localPath} /sdcard/Download/${IMPORT_FILE_NAME}`)
 }
 
+/**
+ * Taps a node of the system SAF picker (documentsui has no test tags, so
+ * text/description locators are the only option there). Drawer animation
+ * stale-resolves handles, so retry on a fresh query like tapRowAction does.
+ */
+async function tapPickerNode(selector: string, label: string): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const node = $(`android=new UiSelector().${selector}`)
+      await node.waitForDisplayed({ timeout: 5_000 })
+      await node.click()
+      return
+    } catch {
+      await driver.pause(500)
+    }
+  }
+  throw new Error(`SAF picker node "${label}" could not be tapped`)
+}
+
 describe('TC-BACK — backup & export (Phase 2) @regression', () => {
   const daftar = new DaftarPage()
   const cadangan = new CadanganPage()
@@ -79,6 +111,9 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
   })
 
   it('TC-BACKUP-01 tapping the daftar backup button opens the Cadangan screen', async () => {
+    // The seed's save leaves the app on Tambah; the backup button lives on
+    // the Transaksi screen, so navigate there first.
+    await daftar.open()
     await cadangan.openFromDaftar()
     expect(await cadangan.isDisplayed()).toBe(true)
     const status = (await cadangan.statusTexts()).join(' ')
@@ -118,28 +153,37 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
     await driver.back()
     expect(await cadangan.isDisplayed()).toBe(true)
+    // Cancelling the share must not touch data: the transaction count is
+    // unchanged and no import result/error surfaced. "Cadangan terakhir" is
+    // NOT asserted here — the export already wrote the backup file, so the
+    // app correctly reports a backup date instead of "belum pernah"
+    // (verified live, see the header note).
     const status = (await cadangan.statusTexts()).join(' ')
     expect(status).toContain('1 transaksi tersimpan')
-    expect(status).toContain('belum pernah')
+    expect(await cadangan.importResult.isExisting()).toBe(false)
+    expect(await cadangan.importError.isExisting()).toBe(false)
   })
 
   it('TC-BACKUP-04 importing a backup restores its transactions', async () => {
     pushImportFile()
     await cadangan.importButton.click()
 
-    // SAF picker: wait for the documents UI or the file row, then tap it.
+    // SAF picker: it opens on "Recent files", which is MediaStore-indexed and
+    // does not list a freshly pushed file — navigate to the Downloads root
+    // (a direct filesystem listing) where the pushed file is always visible.
     await driver.waitUntil(
-      async () =>
-        (await driver.getCurrentPackage()).includes('documentsui') ||
-        (await $('android=new UiSelector().textContains("saku-import-test")')
-          .isExisting()
-          .catch(() => false)),
+      async () => (await driver.getCurrentPackage()).includes('documentsui'),
       { timeout: 15_000 },
     )
-    const fileRow = $(
-      `android=new UiScrollable(new UiSelector().scrollable(true))` +
-        `.scrollIntoView(new UiSelector().textContains("${IMPORT_FILE_NAME}"))`,
-    )
+    await tapPickerNode('description("Show roots")', 'Show roots')
+    await tapPickerNode('text("Downloads")', 'Downloads root')
+    // Resolve the file row with a plain text query: the roots drawer is also
+    // scrollable, so a UiScrollable here can race the drawer closing and
+    // scroll the drawer instead of the file list. The Downloads listing is
+    // short; a settle wait plus waitForDisplayed is enough (verified live).
+    await driver.pause(800)
+    const fileRow = $(`android=new UiSelector().textContains("${IMPORT_FILE_NAME}")`)
+    await fileRow.waitForDisplayed({ timeout: 10_000 })
     await fileRow.click()
 
     await cadangan.importResult.waitForDisplayed({ timeout: 20_000 })
@@ -151,8 +195,15 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
   })
 
   it('TC-BACKUP-06 exporting with zero transactions produces a valid empty file', async () => {
-    // Remove both transactions (seed + import) to reach the empty state.
+    // TC-BACKUP-04 can leave the SAF picker foregrounded, and a successful
+    // import still leaves the app on Cadangan — a pushed screen with a back
+    // button and NO bottom bar. Back out (bounded) until the bottom
+    // navigation exists, then go to Daftar.
+    for (let back = 0; back < 3 && !(await byTag(navTag).isExisting()); back++) {
+      await driver.back()
+    }
     await daftar.open()
+    // Remove both transactions (seed + import) to reach the empty state.
     for (let i = 0; i < 2; i++) {
       await daftar.tapDelete(categories.income.salary)
       await daftar.confirmDeleteSheet()

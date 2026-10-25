@@ -252,6 +252,13 @@ Locate by text/content-desc only:
 - TC-BACKUP-05 Cancel export → no side effects
 - TC-BACKUP-06 Export with zero transactions → valid empty file or blocked
 
+> Execution log 2026-10-25 (`src/tests/transaksi/backup.spec.ts`, emulator-5554, app v2.2):
+> TC-BACKUP-01/02/03/05 PASS. TC-BACKUP-04 FAIL ×3 (retry limit) — app import verified working
+> live via Appium MCP; the scripted DocumentsUI drive misfires (Recents hides freshly pushed
+> files; roots-drawer taps flake under WDIO) — see `BUG_Found_02.md`. TC-BACKUP-06 FAIL ×3 —
+> seed transaction committed (app-acknowledged) then vanished from the DB mid-session; 2nd
+> occurrence today, matching the 2.B WAL-loss incident — see `BUG_Found_03.md`.
+
 ### Q. Budget / Anggaran (TC-BUDGET)
 - TC-BUDGET-01 Tap `ringkasan_anggaran_button` → budget screen opens
 - TC-BUDGET-02 Title "Anggaran", month label "Oktober 2026"

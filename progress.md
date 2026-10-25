@@ -7,11 +7,11 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
 | Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 64 | 3 |
-| Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 26 | 6 |
+| Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 30 | 2 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 0 | 47 |
-| **All** | **17** | **146** | **90** | **56** |
+| **All** | **17** | **146** | **94** | **52** |
 
-> Note: 3 tasks in 1.D are marked **SKIPPED** (repeat failures, see the 1.D section) and stay counted in "Remaining" until unblocked.
+> Note: 3 tasks in 1.D are marked **SKIPPED** (repeat failures, see the 1.D section) and stay counted in "Remaining" until unblocked. Same for TC-BACKUP-04/06 in 2.C (see `BUG_Found_02.md` / `BUG_Found_03.md`).
 
 ---
 
@@ -211,22 +211,16 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 ### 2.C — Backup & Export (TC-BACKUP) — 6 tasks
 
-- [ ] TC-BACKUP-01: Tap `daftar_backup_button` → backup/export UI opens
-- [ ] TC-BACKUP-02: Export creates file / share sheet opens
-- [ ] TC-BACKUP-03: Exported file contains current transactions
-- [ ] TC-BACKUP-04: Import backup restores data (if exists)
-- [ ] TC-BACKUP-05: Cancel export → no side effects
-- [ ] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked
+- [x] TC-BACKUP-01: Tap `daftar_backup_button` → backup/export UI opens
+- [x] TC-BACKUP-02: Export creates file / share sheet opens
+- [x] TC-BACKUP-03: Exported file contains current transactions
+- [ ] TC-BACKUP-04: Import backup restores data (if exists) — ~[BUG]~ **SKIPPED** (3× 2026-10-25): the app's import works (verified live via MCP end-to-end) but the scripted drive of the system DocumentsUI picker misfires — Recents is MediaStore-indexed and hides freshly pushed files, and the roots-drawer taps flake under WDIO. See `BUG_Found_02.md`
+- [x] TC-BACKUP-05: Cancel export → no side effects
+- [ ] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked — ~[BUG]~ **SKIPPED** (3× 2026-10-25): blocked by a committed-then-vanished seed transaction (app counted it at TC-05, DB reads 0 minutes later; 2nd occurrence today, matches the 2.B morning incident). See `BUG_Found_03.md`
 
-**Spec:** *planned: `src/tests/transaksi/backup.spec.ts`* | **Agent:** ___________
+**Spec:** `src/tests/transaksi/backup.spec.ts` (executed 2026-10-25: 4/6 passing, 2 blocked per retry policy) | **Agent:** ZCode (GLM-5.3) — live MCP verification + scripted wdio execution
 
-> Probe 2026-10-25 (Senior QA, Appium MCP): the Cadangan screen is **implemented and fully tagged** —
-> `cadangan_screen`, `cadangan_status_card` (renders "N transaksi tersimpan" + "Cadangan terakhir:
-> belum pernah"), `cadangan_export_csv`, `cadangan_export_json`, `cadangan_import_button`,
-> `cadangan_warning` all match TESTABILITY.md. Entry via `daftar_backup_button` ("Cadangan & ekspor
-> data") on the Transaksi screen works. 2.C is executable as-is; note export opens the system share/
-> SAF surface and import needs a device-side file + SAF picker — plan for both when authoring the
-> spec.
+> Executed 2026-10-25 (emulator-5554 Pixel_10 API 37, cold-booted after a mid-boot wedge; app v2.2; wdio-managed Appium @ :4725): TC-BACKUP-01/02/03/05 pass; 04/06 hit the 3-failure retry limit (see BUG_Found_02/03). Live-MCP-verified facts baked into the spec: ① export writes `cache/backups/saku-cadangan.csv|.json` and opens the system share sheet (`com.android.intentresolver`); the file survives while the sheet is up and is readable via `adb shell run-as`. ② CSV = UTF-8 BOM + header `date,type,amount,category,account,note` (notes and empty notes round-trip; `,50000,` style amounts). ③ "Cadangan terakhir" updates the moment the export writes the file — cancelling the share sheet does NOT revert it to "belum pernah" (correct: the backup exists), so TC-BACKUP-05 asserts no-data-change instead of the timestamp. ④ Import (Saku JSON only) returns "1 transaksi ditambahkan, 0 dilewati karena sudah ada." and bumps "N transaksi tersimpan" — import restores data without counting as a backup. ⑤ The SAF picker opens on MediaStore-indexed "Recent" (freshly pushed files invisible) — navigate Show roots → Downloads for a filesystem listing. Harness fixes en route: `typeIntoTaggedField` now waits for field composition (cold-start race), TC-01 navigates to Daftar before the backup button, TC-06 backs out of the picker/Cadangan (no bottom bar there) before opening Daftar. Environment incidents this session: emulator wedged mid-boot (`settings` service gone — restarted clean) and the unmanaged :4725 server died mid-repro (replaced by the wdio-managed server).
 
 
 ---

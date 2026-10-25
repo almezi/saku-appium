@@ -1,0 +1,7 @@
+{
+  "plugins": {
+    "enabledPlugins": {
+      "jev-decisions@zcode-plugins-official": false
+    }
+  }
+}
