@@ -151,9 +151,10 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 > Verified live (emulator-5554, Appium 3.8.0 @ :4725, app v2.2): ① On an **empty month** Ringkasan
 > hides the Anggaran/Kelola buttons entirely (only `ringkasan_empty_state` + `ringkasan_empty_action`
-> render) per UI_SPEC 6.3 — TC-BUDGET-01 therefore requires a seeded transaction first, so
-> `budget.spec.ts` TC-BUD-01 will fail deterministically as written (its `before` hook seeds nothing);
-> harness-side fix needed, not an app bug. ② Build-v2.2 tag drift vs `anggaran.page.ts`: the budget
+> render) per UI_SPEC 6.3 — TC-BUDGET-01 therefore requires a seeded transaction first. This was
+> fixed on this branch (2026-10-25): `budget.spec.ts`'s `before` hook now seeds one income, so the
+> earlier "fails deterministically as written (hook seeds nothing)" note is resolved — no app bug;
+> not yet re-validated under wdio. ② Build-v2.2 tag drift vs `anggaran.page.ts`: the budget
 > form exposes its own tags `anggaran_form_screen/category/limit/note/save/switch/delete` (the page
 > object's `component_input_amount`, `component_button_primary`, `component_button_text_danger` do not
 > exist here), the category picker sheet rows are **untagged** (text fallback needed for the chip),
