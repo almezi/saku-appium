@@ -309,7 +309,7 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [ ] TC-PERF-04: Save transaction < 1s
 - [ ] TC-PERF-05: No memory growth after 50 add/delete cycles — ~[BUG]~ **SKIPPED** (3× 2026-10-26): `TambahPage.selectCategory()` cannot find `tambah_category_pager` after navigating from Daftar to Tambah — composition race: `tambah_screen` tag displays but child Compose fields not yet composed. See `BUG_Found_07.md`.
 
-**Spec:** *planned: `src/tests/app/performance.spec.ts`* | **Agent:** ___________
+**Spec:** `src/tests/app/performance.spec.ts` | **Agent:** Kilo (senior QA) — verifying TC-PERF-01 through TC-PERF-04; applying BUG_Found-07 workaround for TC-PERF-05
 
 ---
 

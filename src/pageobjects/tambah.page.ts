@@ -60,20 +60,26 @@ export class TambahPage extends BasePage {
     await typeIntoTaggedField(this.noteInput, note, tags.tambah.inputNote)
   }
 
-  /**
-   * Opens the category sheet and taps the category; the sheet closes itself
-   * on select. The click can race the keyboard-dismiss animation, so the
-   * sheet wait retries the tap once before giving up. Long lists (27 expense
-   * categories) scroll via mobile: scrollGesture inside the sheet.
-   */
-  async selectCategory(categoryId: string): Promise<void> {
-    const itemTag = tags.tambah.categoryItem(categoryId)
-    const sheet = byTag(tags.tambah.categorySheetRoot)
+   /**
+    * Opens the category sheet and taps the category; the sheet closes itself
+    * on select. The click can race the keyboard-dismiss animation, so the
+    * sheet wait retries the tap once before giving up. Long lists (27 expense
+    * categories) scroll via mobile: scrollGesture inside the sheet.
+    *
+    * On screen transitions (e.g. Daftar → Tambah), the `tambah_screen` tag can
+    * display before child Compose nodes compose — wait for the pager element
+    * to exist before clicking to avoid a stale-not-found race (BUG_Found-07).
+    */
+   async selectCategory(categoryId: string): Promise<void> {
+     const itemTag = tags.tambah.categoryItem(categoryId)
+     const sheet = byTag(tags.tambah.categorySheetRoot)
 
-    for (let attempt = 0; attempt < 2; attempt++) {
-      await byTag(tags.tambah.categoryPager).click()
-      if (await sheet.waitForDisplayed({ timeout: 5_000 }).catch(() => false)) break
-    }
+     for (let attempt = 0; attempt < 2; attempt++) {
+       const pager = byTag(tags.tambah.categoryPager)
+       await pager.waitForExist({ timeout: 10_000 })
+       await pager.click()
+       if (await sheet.waitForDisplayed({ timeout: 5_000 }).catch(() => false)) break
+     }
     await sheet.waitForDisplayed({ timeout: 10_000 })
 
     const item = byTag(itemTag)
