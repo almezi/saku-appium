@@ -8,8 +8,8 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 |-------|-----------|-------------|-----------|-----------|
 | Phase 1 — Core Flows | 8 (1.A–1.H) | 67 | 64 | 3 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 28 | 4 |
-| Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 38 | 9 |
-| **All** | **17** | **146** | **130** | **16** |
+| Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 45 | 2 |
+| **All** | **17** | **146** | **137** | **9** |
 
 > Note: 3 tasks in 1.D, TC-KAT-08/10 in 2.B, and TC-BACKUP-04/06 in 2.C are marked **SKIPPED**
 > (3-failure rule) and stay counted in "Remaining" until unblocked. Fix ownership per bug file:
@@ -258,15 +258,25 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 ### 3.B — Amount Input Behavior (TC-AMT) — 7 tasks
 
-- [ ] TC-AMT-01: Tap amount → numeric keyboard appears
-- [ ] TC-AMT-02: Typed digits format live as `Rp X.XXX`
-- [ ] TC-AMT-03: Backspace to empty → helper state returns
-- [ ] TC-AMT-04: Clear field → save re-disables
-- [ ] TC-AMT-05: Thousand separator auto-inserted
-- [ ] TC-AMT-06: Cursor position stable during formatting
-- [ ] TC-AMT-07: Max digits limit → no crash
+- [x] TC-AMT-01: Tap amount → numeric keyboard appears
+- [x] TC-AMT-02: Typed digits format live as `Rp X.XXX`
+- [x] TC-AMT-03: Backspace to empty → helper state returns
+- [x] TC-AMT-04: Clear field → save re-disables
+- [x] TC-AMT-05: Thousand separator auto-inserted
+- [x] TC-AMT-06: Cursor position stable during formatting
+- [x] TC-AMT-07: Max digits limit → no crash
 
-**Spec:** *planned: `src/tests/tambah/amount-input.spec.ts`* | **Agent:** ___________
+**Spec:** `src/tests/tambah/amount-input.spec.ts` | **Agent:** Flint (senior QA) — **7/7 passing** 2026-10-26 (run 2; run 1: 6/7, TC-AMT-01 failed on harness assertion type — `focused` attribute returns `"true"` string; `Boolean()` coercion fixed; no app defect)
+
+> Executed 2026-10-26 via Appium/WDIO (emulator-5554, Android 37, Appium 3.8.0 @ :4725, APK v2.2): all 7
+> TC-AMT tests green. Spec created this session following `validation.spec.ts` helper pattern
+> (`editorOf` / `setDirect` / `clearByBackspace` / `typeKeys`). Encoded verified behaviors: tap opens
+> numeric keyboard (focus assert), live `Rp X.XXX` formatting (`250000` → `Rp 250.000`), backspace-to-empty
+> restores helper + save re-disables, clear re-disables save, thousand-separator grouping
+> (`1234567` → `Rp 1.234.567`), end-of-input cursor stability (DEL drops last digit, retype appends),
+> 12-digit clamp (`999999999999999999` → `Rp 999.999.999.999`). `hideKeyboard` WARNs seen in run 2 are
+> pre-existing harness noise (helper catches and proceeds). Remaining Phase 3 blockers: TC-ROT-06,
+> TC-PERF-05.
 
 ### 3.C — Persistence (TC-PERS) — 5 tasks
 
