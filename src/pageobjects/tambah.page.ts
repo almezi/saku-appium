@@ -2,6 +2,7 @@ import { byTag } from '../helpers/locators'
 import { typeIntoTaggedField, fieldText } from '../helpers/input'
 import { tags } from '../config/tags'
 import { accounts, type TransactionType } from '../config/categories'
+import { categoryLabels } from '../config/category-labels'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
 
@@ -60,35 +61,44 @@ export class TambahPage extends BasePage {
     await typeIntoTaggedField(this.noteInput, note, tags.tambah.inputNote)
   }
 
-  /**
-   * Opens the category sheet and taps the category; the sheet closes itself
-   * on select. The click can race the keyboard-dismiss animation, so the
-   * sheet wait retries the tap once before giving up. Long lists (27 expense
-   * categories) scroll via mobile: scrollGesture inside the sheet.
-   */
-  async selectCategory(categoryId: string): Promise<void> {
-    const itemTag = tags.tambah.categoryItem(categoryId)
-    const sheet = byTag(tags.tambah.categorySheetRoot)
+   /**
+    * Opens the category sheet and taps the category; the sheet closes itself
+    * on select.
+    *
+    * Release APK v2.2: the Tambah category sheet rows carry NO resource-ids —
+    * `tambah_category_item_<id>` tags are absent from the accessibility tree
+    * (BUG_Found-07). The only stable locator signal is the row's Indonesian
+    * display-label text, so we scroll the sheet's LazyColumn via UiScrollable
+    * and match by text. Long lists scroll inside the sheet.
+    *
+    * On screen transitions (Daftar → Tambah) the `tambah_screen` tag can
+    * display before child Compose nodes compose — wait for the pager to exist
+    * before clicking to avoid a stale-not-found race.
+    */
+   async selectCategory(categoryId: string): Promise<void> {
+     const label = categoryLabels[categoryId]
+     if (!label) {
+       throw new Error(`No display-label mapping for category "${categoryId}"`)
+     }
 
-    for (let attempt = 0; attempt < 2; attempt++) {
-      await byTag(tags.tambah.categoryPager).click()
-      if (await sheet.waitForDisplayed({ timeout: 5_000 }).catch(() => false)) break
-    }
-    await sheet.waitForDisplayed({ timeout: 10_000 })
+     const pager = byTag(tags.tambah.categoryPager)
+     await pager.waitForExist({ timeout: 15_000 })
+     await pager.click()
 
-    const item = byTag(itemTag)
-    const sheetId = await sheet.elementId
-    for (let scroll = 0; scroll < 8 && !(await item.isExisting().catch(() => false)); scroll++) {
-      await driver.execute('mobile: scrollGesture', {
-        elementId: sheetId,
-        direction: 'down',
-        percent: 45,
-      })
-    }
-    await item.waitForDisplayed({ timeout: 5_000 })
-    await item.click()
-    await sheet.waitForDisplayed({ reverse: true })
-  }
+     // UiScrollable finds the row whether it's already visible or below the
+     // fold; `text()` is an exact match on the TextView label.
+     const item = $(
+       `android=new UiScrollable(new UiSelector().scrollable(true))` +
+         `.scrollIntoView(new UiSelector().text("${label}"))`,
+     )
+     await item.waitForDisplayed({ timeout: 10_000 })
+     await item.click()
+
+     // The sheet closes on selection. The label text also renders in the form's
+     // category pager afterwards, so a reverse-wait on the text node is
+     // unreliable — a short settle pause lets the dismiss animation finish.
+     await driver.pause(500)
+   }
 
   async selectAccount(accountId: string): Promise<void> {
     await byTag(tags.tambah.selectAccount).click()
