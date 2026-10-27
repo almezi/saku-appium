@@ -39,6 +39,10 @@ export const anggaranTags = {
   // anggaran_form_delete_sheet — the documented anggaran_delete_sheet does
   // not exist on build v2.2. Confirm/cancel are the shared component tags.
   deleteSheet: 'anggaran_form_delete_sheet',
+  // The row "Hapus" action opens a screen-level confirmation instead of the
+  // form one; that root IS tagged anggaran_delete_sheet (verified live on
+  // iOS 2026-10-27; ConfirmDeleteSheet in AnggaranScreen.kt).
+  screenDeleteSheet: 'anggaran_delete_sheet',
 } as const
 
 /**

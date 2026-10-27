@@ -1,7 +1,6 @@
 /**
- * UiAutomator XML tree analysis for the TC-A11Y structural checks.
- * Dependency-free: scans <node>/<​/node> tags in document order with a
- * stack, which is exactly the order accessibility services traverse.
+ * UiAutomator XML tree analysis for the TC-A11Y checks. Dependency-free;
+ * parses any element tag name (wdio returns <node>, MCP dumps class names).
  */
 const PX_PER_DP = 2.625 // 420dpi profile; recalc via `adb shell wm density` if it changes
 const MIN_TAP_DP = 48

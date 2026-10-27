@@ -1,21 +1,8 @@
 /**
- * TC-ROT — rotation & config change (Phase 3.D), distilled from the
- * MCP-verified run on 2026-10-26 (see progress.md). Verified app behavior:
- *
- * - Form values (amount, category, note) survive a full landscape round
- *   trip. Caveat (BUG_Found_05): in landscape the note field and save button
- *   are NOT composed at all — the form is unsavable until portrait returns.
- * - Daftar keeps its exact scroll position across rotation (top visible row
- *   unchanged).
- * - Ringkasan lays out in landscape without crashing; balance stays correct.
- * - Dark mode (`cmd uimode night yes`) renders every checked screen readable.
- * - Backgrounding the app and resuming keeps the unsaved form intact.
- * - 200% font scale renders the whole form; the bottom-nav labels clip
- *   mid-word without ellipsis (BUG_Found_06), so this spec only asserts the
- *   form body.
- *
- * System settings (uimode, font_scale) are reset in after() so later suites
- * inherit defaults.
+ * TC-ROT — rotation & config change (Phase 3.D). Run notes in progress.md;
+ * known defects in BUG_Found_05 (landscape Tambah has no note/save) and
+ * BUG_Found_06 (200% font clips nav labels). This spec asserts only the
+ * passing behavior; system settings are reset in after().
  */
 import { execSync } from 'node:child_process'
 import { categories } from '../../config/categories'
@@ -56,7 +43,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     await driver.setOrientation('PORTRAIT')
   })
 
-  it('TC-ROT-01 rotating on a filled Tambah form retains amount, category and note', async () => {
+  it('TC-ROT-01 rotating on a filled Tambah form retains amount, category and note @regression', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',
@@ -74,7 +61,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     expect(await tambah.getNoteText()).toBe('rotasi')
   })
 
-  it('TC-ROT-02 rotating on Transaksi retains the exact scroll position', async () => {
+  it('TC-ROT-02 rotating on Transaksi retains the exact scroll position @regression', async () => {
     // Enough rows to make the list scrollable.
     for (let i = 0; i < 12; i++) {
       await createTransaction({
@@ -96,7 +83,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     expect(after).toBe(before)
   })
 
-  it('TC-ROT-03 rotating on Ringkasan renders without crash and keeps the balance', async () => {
+  it('TC-ROT-03 rotating on Ringkasan renders without crash and keeps the balance @regression', async () => {
     await ringkasan.open()
     const balance = await ringkasan.balanceValue()
     await driver.setOrientation('LANDSCAPE')
@@ -107,7 +94,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     await driver.pause(1_000)
   })
 
-  it('TC-ROT-04 dark mode keeps the summary and form readable', async () => {
+  it('TC-ROT-04 dark mode keeps the summary and form readable @regression', async () => {
     adb('cmd uimode night yes')
     await driver.pause(1_500)
     await ringkasan.open()
@@ -119,7 +106,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     await driver.pause(1_500)
   })
 
-  it('TC-ROT-05 backgrounding and resuming keeps the unsaved form intact', async () => {
+  it('TC-ROT-05 backgrounding and resuming keeps the unsaved form intact @regression', async () => {
     await tambah.fillForm({
       type: 'pemasukan',
       amount: 9_911,
@@ -130,7 +117,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     expect(await tambah.getAmountText()).toBe('Rp 9.911')
   })
 
-  it('TC-ROT-06 200% font scale renders the form without clipped fields', async () => {
+  it('TC-ROT-06 200% font scale renders the form without clipped fields @regression', async () => {
     adb('settings put system font_scale 2.0')
     await driver.pause(2_000)
     await tambah.open()

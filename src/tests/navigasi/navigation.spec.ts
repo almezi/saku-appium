@@ -8,11 +8,11 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
   })
 
-  it('TC-NAV-01 app launches on the Tambah screen', async () => {
+  it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => {
     expect(await byTag(tags.tambah.screen).isDisplayed()).toBe(true)
   })
 
-  it('TC-NAV-02 Tambah tab shows tambah_screen', async () => {
+  it('TC-NAV-02 Tambah tab shows tambah_screen @sanity', async () => {
     // The bottom bar renders all three tabs and tapping Tambah (re)shows its
     // screen — it is the start tab, so this also covers the re-tap case.
     expect(await byTag(tags.navBottom).isDisplayed()).toBe(true)
@@ -24,17 +24,17 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
     expect(await byTag(tags.tambah.screen).isDisplayed()).toBe(true)
   })
 
-  it('TC-NAV-03 Transaksi tab opens daftar_screen', async () => {
+  it('TC-NAV-03 Transaksi tab opens daftar_screen @sanity', async () => {
     await byTag(tags.navDaftar).click()
     await byTag(tags.daftar.screen).waitForDisplayed()
   })
 
-  it('TC-NAV-04 Ringkasan tab opens ringkasan_screen', async () => {
+  it('TC-NAV-04 Ringkasan tab opens ringkasan_screen @sanity', async () => {
     await byTag(tags.navRingkasan).click()
     await byTag(tags.ringkasan.screen).waitForDisplayed()
   })
 
-  it('TC-NAV-05 round-trip across all tabs without crashing', async () => {
+  it('TC-NAV-05 round-trip across all tabs without crashing @sanity', async () => {
     await byTag(tags.navTambah).click()
     await byTag(tags.tambah.screen).waitForDisplayed()
     await byTag(tags.navDaftar).click()
@@ -45,7 +45,7 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
     await byTag(tags.tambah.screen).waitForDisplayed()
   })
 
-  it('TC-NAV-06 back button on each tab does not crash', async () => {
+  it('TC-NAV-06 back button on each tab does not crash @sanity', async () => {
     // On Daftar and Ringkasan, BACK pops to the start tab (verified: the app
     // stays foreground and lands on tambah_screen).
     await byTag(tags.navDaftar).click()
@@ -64,7 +64,7 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
   })
 
-  it('TC-NAV-07 selected tab state persists on re-tap', async () => {
+  it('TC-NAV-07 selected tab state persists on re-tap @sanity', async () => {
     // Compose's selected semantics do not surface through UiAutomator2
     // (verified: `selected` is false on every tab item), so assert
     // behaviorally — re-tapping the active tab keeps its screen and does not
@@ -82,7 +82,7 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
     expect(await byTag(tags.tambah.screen).isExisting()).toBe(false)
   })
 
-  it('TC-NAV-08 20 rapid tab switches cause no ANR', async () => {
+  it('TC-NAV-08 20 rapid tab switches cause no ANR @sanity', async () => {
     const cycle = [tags.navDaftar, tags.navTambah, tags.navRingkasan]
     for (const tab of Array.from({ length: 20 }, (_, i) => cycle[i % cycle.length])) {
       await byTag(tab).click()

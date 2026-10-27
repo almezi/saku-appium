@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-# TC-PERF-05: N add/delete cycles to observe memory behavior.
+# TC-PERF-05: N add/delete cycles; capture `dumpsys meminfo` before/after.
 # Usage: perf_memcycles.sh <cycles> [udid]
-# Each cycle: add an income through the real form (fixed adb taps, same
-# coordinates as seed_transactions.sh), then delete it from Daftar (top-row
-# delete affordance (767,1120) + confirm "Ya, hapus" (788,2161) — both
-# captured live; the sheet window exposes no test tags on this build).
-# Prints one line per cycle; caller captures `dumpsys meminfo` before/after.
+# Same fixed taps as seed_transactions.sh; delete = top-row affordance
+# (767,1120) + confirm "Ya, hapus" (788,2161) — the sheet exposes no tags.
 set -euo pipefail
 
 N="${1:?usage: perf_memcycles.sh <cycles> [udid]}"

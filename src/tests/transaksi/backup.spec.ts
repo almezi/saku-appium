@@ -124,7 +124,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     })
   })
 
-  it('TC-BACKUP-01 tapping the daftar backup button opens the Cadangan screen', async () => {
+  it('TC-BACKUP-01 tapping the daftar backup button opens the Cadangan screen @regression', async () => {
     // The seed's save leaves the app on Tambah; the backup button lives on
     // the Transaksi screen, so navigate there first.
     await daftar.open()
@@ -136,7 +136,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     expect(await cadangan.warningCard.isDisplayed()).toBe(true)
   })
 
-  it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file', async () => {
+  it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file @regression', async () => {
     await cadangan.exportJsonButton.click()
     await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
     const fileName = $('android=new UiSelector().textContains("saku-cadangan.json")')
@@ -145,7 +145,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     expect(await cadangan.isDisplayed()).toBe(true)
   })
 
-  it('TC-BACKUP-03 the exported files contain the current transaction', async () => {
+  it('TC-BACKUP-03 the exported files contain the current transaction @regression', async () => {
     const json = JSON.parse(await readExportedFile('cache/backups/saku-cadangan.json')) as {
       transactions: Array<{ amount: number; note: string | null }>
     }
@@ -162,7 +162,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     expect(csv).toContain(`,${SEED_AMOUNT},`)
   })
 
-  it('TC-BACKUP-05 cancelling the export leaves no side effects', async () => {
+  it('TC-BACKUP-05 cancelling the export leaves no side effects @regression', async () => {
     await cadangan.exportCsvButton.click()
     await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
     await driver.back()
@@ -178,7 +178,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     expect(await cadangan.importError.isExisting()).toBe(false)
   })
 
-  it('TC-BACKUP-04 importing a backup restores its transactions', async () => {
+  it('TC-BACKUP-04 importing a backup restores its transactions @regression', async () => {
     await pushImportFile()
     await cadangan.importButton.click()
 
@@ -208,7 +208,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     await adbShell(`rm -f /sdcard/Download/${IMPORT_FILE_NAME}`)
   })
 
-  it('TC-BACKUP-06 exporting with zero transactions produces a valid empty file', async () => {
+  it('TC-BACKUP-06 exporting with zero transactions produces a valid empty file @regression', async () => {
     // TC-BACKUP-04 can leave the SAF picker foregrounded, and a successful
     // import still leaves the app on Cadangan — a pushed screen with a back
     // button and NO bottom bar. Back out (bounded) until the bottom

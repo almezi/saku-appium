@@ -185,7 +185,9 @@ const capabilities = sakuDevices.map(
 export const config: TestrunnerConfig = {
   runner: 'local',
   specs: ['./src/tests/**/*.spec.ts'],
-  exclude: [],
+  // iOS spec files (*.ios.spec.ts) are driven by wdio.ios.conf.ts with
+  // XCUITest capabilities — never let this Android config pick them up.
+  exclude: ['./src/tests/**/*.ios.spec.ts'],
   maxInstances: sakuDevices.length,
   maxInstancesPerCapability: 1,
 

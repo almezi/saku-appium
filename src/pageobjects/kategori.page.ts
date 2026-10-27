@@ -2,7 +2,7 @@ import { byTag, allByTagMatches } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { extractChildTexts } from '../helpers/elements'
 import { BasePage } from './base.page'
-import { typeIntoTaggedField } from '../helpers/input'
+import { typeIntoTaggedField, setValueIntoTaggedField } from '../helpers/input'
 import type { ChainablePromiseElement } from '../types'
 
 /**
@@ -26,6 +26,9 @@ export const kategoriTags = {
   rowDelete: (categoryId: string) => `kategori_row_delete_${categoryId}`,
   addButton: 'kategori_add_button',
   deleteSheet: 'kategori_delete_sheet',
+  // "Tambah kategori" (new-category) screen; the rename dialog shares the
+  // form name/save/cancel tags but not this root.
+  formScreen: 'kategori_form_screen',
   // Rename dialog (verified live): tagged field and buttons, no text
   // fallbacks needed despite being a Compose dialog.
   formName: 'kategori_form_name',
@@ -169,20 +172,22 @@ export class KategoriPage extends BasePage {
   }
 
   /**
-   * Renames the category in the open dialog via the shared verified typing
-   * helper. The keyboard resize shifts the dialog, so a cached-bounds click
-   * on the field wrapper can land on the scrim and dismiss the dialog — the
-   * helper clicks the field's inner node, verifies the text landed and
-   * retries, and throws if it never does, so Save below only runs with the
-   * intended content. If the dialog was dismissed before typing starts, it
-   * is reopened first.
+   * Renames the category in the open dialog. The write goes through
+   * setValueIntoTaggedField — keyboard-free instrumentation setText —
+   * because click-to-focus typing opened the keyboard, and the resulting
+   * keyboard-resize recomposition dismissed the dialog mid-interaction on
+   * every WDIO attempt (BUG_Found_04, 8 historical failures); the
+   * keyboard-free write is the flow that works live via Appium MCP
+   * set_value. The verify step throws if the text never lands, so Save
+   * below only runs with the intended content. If the dialog was dismissed
+   * before typing starts, it is reopened first.
    */
   async renameInDialog(categoryId: string, newName: string): Promise<void> {
     const field = byTag(kategoriTags.formName)
     if (!(await field.isExisting().catch(() => false))) {
       await this.openEditDialog(categoryId)
     }
-    await typeIntoTaggedField(field, newName, kategoriTags.formName)
+    await setValueIntoTaggedField(field, newName, kategoriTags.formName)
     const save = byTag(kategoriTags.formSave)
     await save.waitForDisplayed({ timeout: 5_000 })
     await save.click()

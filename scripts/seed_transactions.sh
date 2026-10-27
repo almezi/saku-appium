@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# Seed N income transactions through the real Tambah form using fixed adb taps.
+# Seed N income transactions via fixed adb taps on the real Tambah form.
 # Usage: scripts/seed_transactions.sh <count> [udid]
-# Portrait coordinates from the v2.2 APK's stable layout (nav Tambah 212,2162 ·
-# amount 540,500 · category pager 540,848 · sheet "Gaji" 563,1887 · save
-# 540,1557). Clears the amount via DEL keycodes before typing because adb
-# input text appends, and waits out the keyboard-resize race before tapping
-# the sheet (the sheet shifts while the keyboard animates away — live-verified
-# failure mode). The uiautomator CLI is unusable for lookups while the appium
-# uiautomator2 server holds the instrumentation, hence fixed taps.
+# Fixed taps (v2.2 layout; save at y=1514, NOT the stale 1557 — the button
+# moved) because the uiautomator CLI can't do lookups while the appium
+# uiautomator2 server holds the instrumentation. DEL keycodes clear the
+# amount (input text appends); post-keyboard sleeps absorb the sheet shift.
 set -euo pipefail
 
 COUNT="${1:?usage: seed_transactions.sh <count> [udid]}"

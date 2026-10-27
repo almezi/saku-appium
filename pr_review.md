@@ -7,6 +7,25 @@
   `src/tests/transaksi/backup.spec.ts` executed 2026-10-25 (4/6 passing, 2 failures
   bug-filed per the AGENTS.md retry protocol)
 
+> **Historical record.** This is the review of PR #3 as it stood on 2026-10-25. It is kept
+> verbatim — the findings below are a snapshot, not open work. Status since then
+> (re-verified against the tree on 2026-10-27):
+>
+> | # | Finding | Status |
+> |---|---|---|
+> | 1 | `.zcode/config.json` committed | ✅ **fixed** — `.zcode/` is now in `.gitignore` (line 186) and is no longer tracked |
+> | 2 | `backup.spec.ts` uses a hardcoded UDID instead of the live session | ✅ **fixed** — the spec now reads the device from the live session capability (`caps['appium:udid']`), with the env var only as a fallback (`backup.spec.ts:39,54`) |
+> | 3 | `progress.md:155` contradicts the PR's own fix | ✅ **fixed** — the note is now in past tense |
+> | 4 | `backup.spec.ts` leaves the import file behind on failure | 🔴 **still open** — the `rm -f` still runs as the last statement of the test body (`backup.spec.ts:208`), so a failing assertion skips it. There is no `after()` hook in the file. |
+> | 5 | `wdio.conf.ts` duplicates the spec-path glob | ✅ **fixed** — the runner now assigns specs as a flat `'wdio:specs'` array (`wdio.conf.ts:187`) with the rationale documented in the file header |
+> | 6 | `backup.spec.ts` duplicates a tag literal | 🔴 **still open** — `navTag` is still a local literal (`backup.spec.ts:42`), not `tags.navDaftar` |
+> | 7 | PR title is the branch name | ✅ **fixed** |
+>
+> The remaining open engineering debt from this review is tracked in `code_review.md`
+> (findings **S1**–**S22** and **M1**–**M14**), and the two backup cases that failed here
+> are still tracked as `BUG_Found_02.md` (SAF picker drive) and `BUG_Found_03.md`
+> (vanishing committed transaction).
+
 ## Verdict
 
 **Request changes** — one must-fix, one real correctness bug, one stale doc; the rest

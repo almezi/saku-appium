@@ -1,4 +1,8 @@
-# BUG_Found.md — Bug Report
+# BUG_Found_07.md — Bug Report 07
+
+## Status
+- **State:** Fixed
+- **Summary:** The category sheet does not set test tags on its rows in v2.2. Fixed via a text-label lookup, with the exception documented in `src/config/category-labels.ts`.
 
 ## Identity
 - **Reported by:** Kilo (senior QA agent)

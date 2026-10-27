@@ -1,6 +1,6 @@
 # Simple Money Tracker — E2E Test Cases
 
-App: `id.almezi.simplemoneytracker_kt` | Platform: Android (UiAutomator2) | Date: 2026-10-23
+App: `id.almezi.simplemoneytracker_kt` | Platforms: Android (UiAutomator2) + iOS (XCUITest) | Date: 2026-10-23 (catalogue), last updated 2026-10-27
 
 ## Screens & locator map
 
@@ -190,7 +190,9 @@ Locate by text/content-desc only:
 - TC-LIST-08 Scroll 100+ items, no crash
 - TC-LIST-09 `daftar_summary_masuk` = sum income in month
 - TC-LIST-10 `daftar_summary_keluar` = sum expense in month
-- TC-LIST-11 Pull-to-refresh → data still correct
+- ~~TC-LIST-11 Pull-to-refresh~~ — **retired 2026-10-27**: pull-to-refresh is
+  out of scope in the app's `UI_SPEC.md` §7 (the list is a reactive local
+  query, so there is nothing to re-fetch). See `BUG_Found_09.md`.
 
 ### K. Edit transaction (TC-EDIT)
 - TC-EDIT-01 Tap `Ubah` → form opens prefilled
@@ -260,16 +262,6 @@ Locate by text/content-desc only:
 > occurrence today, matching the 2.B WAL-loss incident — see `BUG_Found_03.md`.
 
 ### Q. Budget / Anggaran (TC-BUDGET) — wdio-executed 2026-10-25
-- `budget.spec.ts`: first-ever wdio run 3/7 → fixes (before-seed, tag-based sheet selection,
-  child-text row reads, `anggaran_form_delete_sheet`) → **final run 7/7 PASSING**.
-
-### R. Category management (TC-KAT) — wdio-executed 2026-10-25
-- `category-management.spec.ts`: run 1 0/13 (empty-month cascade — no seed), run 2 3/13
-  (UiScrollable scrollIntoView unreliable on the LazyColumn), run 3 9/13, final (dialog-typing
-  tests skipped per the 3-failure rule) **11/13 PASSING, 2 SKIPPED** — TC-KAT-08/10 hit the
-  TC-LIST-07 dialog self-dismiss flake (`BUG_Found_04.md`).
-
-### Q. Budget / Anggaran (TC-BUDGET)
 - TC-BUDGET-01 Tap `ringkasan_anggaran_button` → budget screen opens
 - TC-BUDGET-02 Title "Anggaran", month label "Oktober 2026"
 - TC-BUDGET-03 Total card shows "ANGGARAN", amount, "Rp X dari Rp Y", progress bar
@@ -282,7 +274,11 @@ Locate by text/content-desc only:
 - TC-BUDGET-10 Edit/remove budget works
 - TC-BUDGET-11 Back button returns to Ringkasan
 
-### R. Category management (TC-KAT)
+> **Execution (2026-10-25):** `budget.spec.ts`: first-ever wdio run 3/7 → fixes (before-seed,
+> tag-based sheet selection, child-text row reads, `anggaran_form_delete_sheet`) →
+> **final run 7/7 PASSING**.
+
+### R. Category management (TC-KAT) — wdio-executed 2026-10-25
 - TC-KAT-01 Tap `ringkasan_kelola_button` → `kategori_screen` opens
 - TC-KAT-02 Tap `tambah_link_kelola_kategori` → `kategori_screen` opens
 - TC-KAT-03 Type toggle switches income/expense category lists
@@ -298,6 +294,11 @@ Locate by text/content-desc only:
 - TC-KAT-13 Category shows "Bawaan · N transaksi" count
 - TC-KAT-14 Category mark color renders
 - TC-KAT-15 Back button returns to previous screen
+
+> **Execution (2026-10-25):** `category-management.spec.ts`: run 1 0/13 (empty-month cascade —
+> no seed), run 2 3/13 (UiScrollable scrollIntoView unreliable on the LazyColumn), run 3 9/13,
+> final (dialog-typing tests skipped per the 3-failure rule) **11/13 PASSING, 2 SKIPPED** —
+> TC-KAT-08/10 hit the TC-LIST-07 dialog self-dismiss flake (`BUG_Found_04.md`).
 
 ### S. Persistence (TC-PERS)
 - TC-PERS-01 Kill app, relaunch → transactions persist
@@ -349,7 +350,14 @@ Locate by text/content-desc only:
 
 ---
 
-Total: ~140 test cases across 25 areas. Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
+Total: **195 catalogue test cases across 25 areas.** Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
+
+> **Catalogue vs. implemented.** This file is the **catalogue** — the full designed scope.
+> The **implemented** suite in `src/tests/` covers 148 of these ids (254 test cases across
+> 30 spec files, Android + iOS twins). The gap is deliberate: `TC-SEED` waits on app-side
+> intent extras that do not exist yet, and `TC-CAT` / `TC-ACC` / `TC-DATE` / `TC-SAVE` /
+> `TC-MON` / `TC-CONS` / `TC-EXC` are covered as behaviour inside other cases rather than
+> as standalone ids. See `progress.md` for per-case execution status.
 
 ---
 
@@ -364,6 +372,16 @@ Total: ~140 test cases across 25 areas. Locators verified via live page source (
 - Run 1 (4/8 failed): (a) TC-EDIT-01 — `ubah_header` node's own text is empty (Compose container pattern); header title lives in a child TextView → added `UbahPage.headerLabel()`. (b) TC-EDIT-06/07/08 — row-action taps (`daftar_item_*_edit_*`) stopped registering from the previous-month view after the date move + date-picker usage; verified the exact UiScrollable selector and click work via MCP, so it is a WDIO window/timing quirk, not app logic → reordered the spec so TC-EDIT-05 (date move) runs last and every row tap happens from the current-month view, and hardened `tapRowAction` to 3 attempts with 500 ms backoff.
 - Live findings recorded in tags.ts: edit-screen type toggle is `component_toggle_segmented_0/1` (not `tambah_toggle_type_*`); categories render inline in the edit pager with `mark_<id>` selection markers; amount field prefills as formatted "Rp 123.000"; empty amount shows "Rp 0" placeholder and disables save.
 - Run 2: 8/8 passing.
+
+### 2026-10-27 — Phase 3 iOS port (Qoder automation agent, iPhone 18 Pro sim / iOS 27.0)
+- 3.A TC-VAL (17/17 passing, `npm run test:val:ios`): run 1 failed on the harness, not the app — iOS `setValue` APPENDS instead of replacing, so every write first clears the field with a backspace burst; the note field caps at 60 characters exactly like Android; the save button sits UNDER the software keyboard (no system BACK on iOS), so the save flow dismisses the keyboard first (TC-VAL-16/17); the category sheet has no in-app "clear" affordance, so the "nothing selected" state is reached by restarting the app.
+- 3.B TC-AMT (7/7 passing, `npm run test:amt:ios`): run 1 failed TC-AMT-06 — the numeric keypad's "Delete" key does nothing because the app DISMISSES the software keyboard when the category sheet closes, and the dismissed keyboard stays in the tree with `visible="false"` (measured live: the Keyboard node at y=891 on an 874-pt screen), so a WDA tap on its Delete key is a silent no-op. Fix: the hardware BACKSPACE (U+E003), the twin of Android's native DEL keycode 67 (`BUG_Found_14.md`).
+- 3.C TC-PERS (5/5 passing, `npm run test:pers:ios`): "kill" is `mobile: terminateApp` + `mobile: activateApp`; "reinstall" is `xcrun simctl uninstall/install`; the EMPTY Transaksi list renders NO summary strip on iOS (the header is replaced by the empty state), so a cleared database reads as 0 rather than "Rp 0".
+- 3.D TC-ROT (6/6 passing, `npm run test:rot:ios`): the app is PORTRAIT-ONLY (`UISupportedInterfaceOrientations`) and WDA cannot rotate an iOS simulator at all (the W3C orientation endpoint answers "Unable To Rotate Device"; `mobile: rotate` is not implemented by appium-xcuitest-driver 12.21), so the cases are driven through the configuration changes iOS actually delivers — the APPEARANCE change (`mobile: setAppearance`, live), the CONTENT-SIZE change (`mobile: setContentSize`, picked up by the Compose tree only on the next launch, so the font case restarts the app) and `mobile: backgroundApp` (`driver.background()` is not implemented for XCUITest). The two known Android defects (BUG_Found_05 landscape, BUG_Found_06 nav-label clipping at 200%) have no iOS counterpart.
+- 3.E TC-A11Y (7/7 passing, `npm run test:a11y:ios`): the XCUITest tree exposes the test tag in `name`, the spoken label in `label`, interactivity in `traits` and geometry in POINTS; the tap-target floor is Apple's 44 pt (HIG) instead of Android's 48 dp; WDIO's `isClickable()` THROWS in a mobile native context ("Method not supported in mobile native environment"), so the disabled-state check uses the `hittable` attribute plus the "Button" trait.
+- 3.F TC-PERF (4/4 running cases passing, TC-PERF-05 skipped like on Android, `npm run test:perf:ios`): measured on the simulator — tab switch 716 ms, save 714 ms, eight scroll sweeps 22.7 s, cold start min-of-3 4317 ms. iOS has no `component_toast` tag (the save is confirmed by the FORM RESET), `mobile: scrollGesture` is not implemented by appium-xcuitest-driver 12.21 (a sweep uses `mobile: scroll`), and `dumpsys meminfo` has no simulator counterpart. The budgets sit at ~2× Android's because every interaction crosses the WDA boundary (a tap alone costs ~0.4 s) — the iOS budgets are 1.5 s / 2 s / 8 s.
+- Cross-cutting iOS findings that also broke the Phase 1 specs and were fixed at the root cause (not skipped): (a) the Material3 date picker labels its day cells in the DEVICE's day-first order ("Monday, 26 October 2026"), so `Intl.DateTimeFormat('en-US')` never matched — the helper now matches both renderings (`BUG_Found_11.md`); (b) Compose renders a tagged container's strings as SIBLINGS on iOS — the tagged node is an EMPTY `Other`, so tree-only child queries return nothing and the texts must be recovered by GEOMETRY from one page-source dump; the dump order is also not the visual one (a day header dumps weekday → total → date), so a column split restores the Android reading order (`BUG_Found_13.md`).
+- Combined re-run: all six Phase 3 iOS specs in ONE invocation — 6/6 spec files, 46 passing + 1 skipped in 13m 14s (2026-10-27). An earlier invocation of the same six specs reported "5 passed, 1 failed", but the failing spec's output was lost to a truncated log pipe and the case did NOT reproduce (both candidate specs — TC-VAL and TC-AMT — pass standalone and in the clean re-run); treated as a one-off flake on a simulator that was still shutting down a previous WDA session, not a harness defect.
 
 ### 2026-10-24 — 1.G Delete Transaction (ZCode / GLM-5.3)
 - Run 1: TC-DEL-04–07 added as a second describe (own seeds, runs after the undo describe which ends on Daftar — its before-hook must tap `component_nav_bottom_tambah` explicitly). Run 2: TC-DEL-07 called `tapDelete` while the app was still on the Tambah form after `createTransaction` (save never navigates) → added `daftar.open()` after seeding. Run 2 also hit a degraded-emulator stale-element storm (6m47s); the emulator was restarted headless. Runs 2–3: waiting for the toast node to disappear (`waitForDisplayed reverse`) is unreliable — the Compose toast can linger composed after its 5 s expiry → replaced with a plain `driver.pause(6_000)`; the following state assertions prove permanence. Run 4: 9/9 passing.

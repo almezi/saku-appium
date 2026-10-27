@@ -3,7 +3,15 @@
 Purpose: turn Saku into a dual-platform (Android + iOS) app using Kotlin
 Multiplatform and Compose Multiplatform, and give you an executable to-do list.
 
-**Nothing in this document has been implemented yet.** This is a plan.
+> **Status: partially implemented.** The plan was written 2026-10-12 as a forward-looking
+> document; it is kept here as the record of how the migration was sequenced. Since then
+> **45 of its 74 checklist items are done** and 29 remain. This document is *not* the
+> live status — the app repository is authoritative for what is actually merged.
+>
+> **This document is about the app, not the test harness.** The harness in this repo has
+> already been ported to iOS independently: 14 iOS spec files and 8 iOS page objects run
+> against the iPhone 18 Pro simulator via `wdio.ios.conf.ts` (`npm run test:ios`). See
+> `README.md` § Run — iOS and `IOS_PHASE1_HANDOFF.md`.
 
 Written 2026-10-12 against branch `feature/improve-design-2.0`, HEAD `8c7dc3a`.
 External versions verified against JetBrains and Google documentation on
@@ -455,7 +463,8 @@ The real `ui/designsystem/` was copied into the spike's `commonMain`
 (`SakuColor.kt`, `SakuDimens.kt`, `SakuType.kt`, the 6 bundled DM fonts) along
 with the real `TransactionCard`, `CategoryAvatar`, buttons, and a
 reconstruction of the Transaksi/Daftar screen. Result on iPhone 18 Pro,
-iOS 27.0 — see `docs/screenshots/saku-ios-real.png`.
+iOS 27.0 — screenshot held in the app repository at
+`docs/screenshots/saku-ios-real.png` (not carried into this test-harness repo).
 
 **It works.** DM Sans and DM Mono render correctly with tabular figures, all
 colour tokens resolve, all 18 text styles resolve, `formatRupiah` produces

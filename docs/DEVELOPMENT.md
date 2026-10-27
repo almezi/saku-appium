@@ -537,9 +537,9 @@ generated.
 | Change money or date behavior | `ui/designsystem/SakuFormat.kt` — the single source for parsing, formatting, month math |
 | Change a color, font, spacing, radius, duration | `ui/designsystem/SakuColor.kt` / `SakuType.kt` / `SakuDimens.kt` |
 | Add a DB column | Entity file, then a new `Migration(n-1, n)` in `AppDatabase.kt`, registered in `ALL_MIGRATIONS`, and bump `version` |
-| Add a category | `CATEGORIES.md` first, then `CategorySeed.kt`, then `CategoryUiMapper.kt`, then `strings.xml`. Tests reference categories by ID, never by name |
+| Add a category | `TESTABILITY.md` § CATEGORIES (merged) first, then `CategorySeed.kt`, then `CategoryUiMapper.kt`, then `strings.xml`. Tests reference categories by ID, never by name |
 | Add a testable element | Add the `const val` to `TestTags.kt`, then `Modifier.testTag()` at the usage site |
-| Change the database schema shape | Check `CATEGORIES.md` rules: `countsInTotals`, `isDefault`, `isHidden`, `customName` |
+| Change the database schema shape | Check the `TESTABILITY.md` § CATEGORIES rules: `countsInTotals`, `isDefault`, `isHidden`, `customName` |
 
 ---
 
@@ -1096,8 +1096,7 @@ The APK is unsigned because `app/build.gradle.kts` declares no
 SimpleMoneyTracker-KT/
 ├── AGENTS.md                    Standing rules for AI coding tools
 ├── UI_SPEC.md                   What the app does. Authoritative for scope
-├── CATEGORIES.md                Category IDs, columns, countsInTotals rules
-├── TESTABILITY.md               Test-tag contract, debug hooks, seed sets
+├── TESTABILITY.md               Test-tag contract, debug hooks, seed sets, § CATEGORIES
 ├── README.md                    Build commands, key files, APK download
 │
 ├── build.gradle.kts             Plugin aliases, apply false

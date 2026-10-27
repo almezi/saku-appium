@@ -1,4 +1,8 @@
-# BUG_Found_03.md — Bug Report
+# BUG_Found_03.md — Bug Report 03
+
+## Status
+- **State:** Open
+- **Summary:** A committed transaction silently vanishes from the DB on the next clean reopen. Root cause confirmed by experiment (WAL loss).
 
 ## Identity
 - **Reported by:** ZCode automation agent (GLM-5.3, 2.C execution session)

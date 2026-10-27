@@ -2,15 +2,26 @@
 
 Consolidated test data, execution plan, examples, and results template.
 
-> **Status note (2026-10-25):** this is the original **manual/MCP execution
+> **Status note (2026-10-27):** this is the original **manual/MCP execution
 > plan**. The `test-data/` files and helper scripts it describes
 > (`schema-validator.py`, `duplicate-checker.py`, …) are illustrative — they
 > were never committed to this repo. The **executable source of truth** is the
-> WebdriverIO suite in `src/` (run via `npm test`, see `HANDOVER.md` §3);
-> live per-sub-phase status is in `progress.md`, and known issues are in the
-> `BUG_FOUND*.md` / `BUG_Found_*.md` files.
+> WebdriverIO suite in `src/` (Android: `npm test`; iOS: `npm run test:ios` —
+> see `HANDOVER.md` §3 and `README.md`); live per-sub-phase status is in
+> `progress.md`, the full catalogue of designed cases is in
+> `test-cases-simple-money-tracker.md`, and known issues are indexed in
+> `BUGS.md` (details in the `BUG_FOUND*.md` / `BUG_Found_*.md` files).
+>
+> **Current scale:** 30 spec files (16 Android + 14 iOS), 254 test cases
+> (137 + 117), 148 unique test-case ids, 195 cases in the catalogue, and
+> 18 unit tests for the pure helpers and the test-type guardrail
+> (`npm run test:unit`).
+>
+> The sections below are kept as the record of the original plan. Where they
+> describe files that were never committed, read them as *illustrative* rather
+> than actionable.
 
-## utest data specification
+## Unit test data specification
 
 
 This document defines the test data requirements for automated testing of the Simple Money Tracker mobile app.
@@ -642,7 +653,7 @@ This document provides a comprehensive guide to managing test data for Simple Mo
 
 ---
 
-## utest execution plan
+## Unit test execution plan
 
 
 This directory contains the test artifacts for vibe (automated) testing of the Simple Money Tracker mobile app using Appium MCP.
@@ -1019,7 +1030,7 @@ if __name__ == "__main__":
 
 ---
 
-## utest examples
+## Unit test examples
 
 
 This document provides concrete examples of how to write and execute tests for the Simple Money Tracker mobile app using Appium MCP.
@@ -1772,7 +1783,7 @@ This comprehensive testing approach ensures the Simple Money Tracker app is thor
 
 ---
 
-## utest results template
+## Unit test results template
 
 
 This document defines the template and format for reporting test results in the Simple Money Tracker automation testing.
@@ -1889,6 +1900,13 @@ Test results are collected during automated test execution and reported in a str
 - TC-SAVE-06: Tap disabled button → no action  
 
 #### J. Transaction List (TC-LIST) - [11/11 PASSED]
+
+> Historical: this section keeps the original manual-plan numbering, which
+> differs from the live catalog. TC-LIST-11 here ("No stale or duplicate
+> items") is not the catalogued TC-LIST-11, and "TC-LIST-10: Pull-to-refresh
+> works" predates the retirement — pull-to-refresh is out of scope in
+> `UI_SPEC.md` §7 (see `BUG_Found_09.md`). Authoritative list:
+> `test-cases-simple-money-tracker.md` §J.
 - TC-LIST-01: Empty month handled  
 - TC-LIST-02: Day header with weekday + date + total  
 - TC-LIST-03: Items grouped by day header  

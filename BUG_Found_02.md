@@ -1,4 +1,8 @@
-# BUG_Found_02.md — Bug Report
+# BUG_Found_02.md — Bug Report 02
+
+## Status
+- **State:** Open
+- **Summary:** The app is not at fault — TC-BACKUP-04 blocks on system-surface automation (SAF picker drive), not on the import feature. Import verified working via live MCP.
 
 ## Identity
 - **Reported by:** ZCode automation agent (GLM-5.3, 2.C execution session)

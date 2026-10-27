@@ -1,4 +1,8 @@
-# BUG_Found.md — Bug Report
+# BUG_FOUND.md — Bug Report 01
+
+## Status
+- **State:** Open
+- **Summary:** TECNO real-device deadlock under uiautomator2 — no confirmed fix path on either side; workaround is emulator-only runs.
 
 ## Identity
 - **Reported by:** ZCode automation agent (GLM-5.3 Flash, parallel-harness session)
