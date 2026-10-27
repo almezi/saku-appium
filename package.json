@@ -30,6 +30,14 @@
     "test:kategori": "wdio run ./wdio.conf.ts --spec ./src/tests/kategori/*.spec.ts",
     "test:kategori:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/kategori/category-management.ios.spec.ts",
     "test:backup:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/backup.ios.spec.ts",
+    "test:val:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/tambah/validation.ios.spec.ts",
+    "test:amt:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/tambah/amount-input.ios.spec.ts",
+    "test:pers:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/persistence.ios.spec.ts",
+    "test:rot:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/rotation.ios.spec.ts",
+    "test:perf:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/performance.ios.spec.ts",
+    "test:a11y:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/accessibility.ios.spec.ts",
+    "test:list:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/transaction-list.ios.spec.ts",
+    "test:edit:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/edit-transaction.ios.spec.ts",
     "wdio": "wdio run ./wdio.conf.ts"
   },
   "devDependencies": {

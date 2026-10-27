@@ -1,4 +1,5 @@
 import { iosByTag } from '../helpers/locators'
+import { iosPageNodes, iosStaticTexts, iosTextsInRect } from '../helpers/elements'
 import { tags } from '../config/tags'
 import { BaseIosPage } from './base.ios.page'
 import type { DaftarIosPage } from './daftar.ios.page'
@@ -26,8 +27,20 @@ export class UbahIosPage extends BaseIosPage {
     return iosByTag(tags.ubah.buttonDelete)
   }
 
+  /**
+   * Header title.
+   *
+   * The tagged header node is an empty `Other` — Compose renders the title
+   * ("Ubah transaksi") as a SIBLING of it, so the text is read from the
+   * header's frame (measured 2026-10-27).
+   */
   async headerLabel(): Promise<string> {
-    return ((await iosByTag(tags.ubah.header).getText()) || '').trim()
+    const own = ((await iosByTag(tags.ubah.header).getText()) || '').trim()
+    if (own) return own
+    const nodes = await iosPageNodes()
+    const header = nodes.find((node) => node.name === tags.ubah.header)
+    if (!header) return ''
+    return iosTextsInRect(header, iosStaticTexts(nodes))[0] ?? ''
   }
 
   /** Opens the edit screen from the Transaksi list via the row's edit affordance. */

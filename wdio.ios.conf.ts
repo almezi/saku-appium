@@ -1,34 +1,13 @@
 import { existsSync, mkdirSync } from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import type { Capabilities, Options } from '@wdio/types'
+import { IOS_APP_PATH } from './src/helpers/ios-app'
 
 // `capabilities` is missing from Options.Testrunner in this @wdio/types
 // version, so add it back explicitly.
 type TestrunnerConfig = Omit<Options.Testrunner, 'capabilities'> & {
   capabilities: Capabilities.RequestedStandaloneCapabilities | Capabilities.RequestedMultiremoteCapabilities
 }
-
-/**
- * The XCUITest driver shells out to `xcrun` for every simulator operation.
- * This machine's xcode-select points at CommandLineTools, which ships no iOS
- * SDK (same quirk iosApp/build-app.sh in the app repo works around), so
- * point DEVELOPER_DIR at a full Xcode unless the caller already did.
- */
-const XCODE_APP = '/Applications/Xcode.app/Contents/Developer'
-if (process.platform === 'darwin' && !process.env.DEVELOPER_DIR && existsSync(XCODE_APP)) {
-  process.env.DEVELOPER_DIR = XCODE_APP
-}
-
-/**
- * .app bundle used by the iOS suite — the Compose Multiplatform build from
- * the app repo (`iosApp/build-app.sh`). Override with SAKU_IOS_APP.
- */
-const DEFAULT_IOS_APP = path.resolve(
-  os.homedir(),
-  'AndroidStudioProjects/SimpleMoneyTrackerKT/iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/Saku.app',
-)
-const IOS_APP_PATH = process.env.SAKU_IOS_APP ?? DEFAULT_IOS_APP
 
 /**
  * Simulator list. `SAKU_IOS_DEVICES="udid1,udid2"` enables parallel runs

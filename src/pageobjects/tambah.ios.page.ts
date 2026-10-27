@@ -114,20 +114,32 @@ export class TambahIosPage extends BaseIosPage {
    * "Today, ". Off-screen month pages stay composed in the tree, so the
    * match is filtered by isDisplayed and the picker steps back a month when
    * the wanted day is not on the visible page (covers yesterday on the 1st).
+   *
+   * The cell label follows the DEVICE's day/month order, which is not the
+   * one `Intl` produces for en-US: the simulator renders "Monday, 26
+   * October 2026" (day first), so the en-GB rendering is matched as well.
    */
   async selectDate(date: Date): Promise<void> {
-    const label = new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(date)
+    const label = [
+      new Intl.DateTimeFormat('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(date),
+      new Intl.DateTimeFormat('en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(date),
+    ]
     await iosByTag(tags.tambah.selectDate).click()
     await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: 10_000 })
     for (let attempt = 0; attempt < 3; attempt++) {
       const cells = await $$(
         `-ios predicate string: type == "XCUIElementTypeButton" AND ` +
-          `(label == "${label}" OR label == "Today, ${label}")`,
+          `(${label.map((l) => `(label == "${l}" OR label == "Today, ${l}")`).join(' OR ')})`,
       )
       for (const cell of cells) {
         if (await cell.isDisplayed()) {
@@ -143,7 +155,7 @@ export class TambahIosPage extends BaseIosPage {
       await prev[0].click()
       await driver.pause(400)
     }
-    throw new Error(`Date cell "${label}" never became visible in the iOS date picker`)
+    throw new Error(`Date cell "${label[0]}" never became visible in the iOS date picker`)
   }
 
   async fillForm(input: TransactionFormInput): Promise<void> {

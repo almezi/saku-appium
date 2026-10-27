@@ -224,18 +224,117 @@ export async function iosDismissKeyboard(): Promise<void> {
   // The dead-zone tap does not always clear focus (measured on the Tambah
   // amount field, which keeps focus across the category sheet). The Return
   // IME action does close the Compose keyboard; currency editors filter the
-  // newline out.
+  // newline out. The W3C Enter code point (U+E007) is the canonical key
+  // value — a literal "\n" reaches WDA as an EMPTY key value and is
+  // rejected ("Key value must be present...", measured 2026-10-27).
   await driver.performActions([
     {
       type: 'key',
       id: 'keyboard1',
       actions: [
-        { type: 'keyDown', value: '\n' },
-        { type: 'keyUp', value: '\n' },
+        { type: 'keyDown', value: '\uE007' },
+        { type: 'keyUp', value: '\uE007' },
       ],
     },
   ])
   await driver.pause(400)
+}
+
+/**
+ * Empties a tagged iOS field.
+ *
+ * The field is focused first (the backspace fallback only lands on the
+ * focused editor), then the editor's clearValue() takes the fast path and a
+ * burst of WDA backspace keys (\uE003) clears whatever survived it —
+ * verified live on the Tambah note field, where a 60-key burst emptied a
+ * 60-character value. Throws when text survives, so a caller never writes
+ * into a field that still holds the previous test's data.
+ */
+export async function iosClearField(field: ChainablePromiseElement): Promise<void> {
+  await field.click()
+  const editor = await iosFieldEditor(field)
+  await editor?.clearValue().catch(() => undefined)
+  if ((await iosFieldText(field).catch(() => '')).length > 0) {
+    await field.addValue('\uE003'.repeat(64))
+    await driver.pause(300)
+  }
+  const left = await iosFieldText(field).catch(() => '')
+  if (left.length > 0) {
+    throw new Error(`iosClearField: "${left}" survived the clear`)
+  }
+}
+
+/**
+ * Writes raw text into a tagged iOS field and returns the RENDERED text.
+ *
+ * The iOS twin of the Android spec's `typeKeys`/`setDirect` pair: it injects
+ * characters WITHOUT asserting that they survive, because on the amount field
+ * they legitimately do not — the InputFilter drops every non-digit ('abc'
+ * renders an empty field) — so the raw input and the rendered value differ
+ * on purpose.
+ *
+ * The field is cleared first (iOS setValue/addValue APPENDS instead of
+ * replacing) and the keyboard is left up: dismissing it is the caller's
+ * decision (the save button sits under the keyboard, so most flows want it
+ * gone).
+ */
+export async function iosWriteRaw(
+  field: ChainablePromiseElement,
+  text: string,
+  label = 'tagged field',
+): Promise<string> {
+  const selector = String(await Promise.resolve(field.selector))
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const lazy = $(selector)
+      await lazy.waitForExist({ timeout: 15_000 })
+      await iosClearField(lazy)
+      await lazy.addValue(text)
+      await driver.pause(300)
+      return await iosFieldText(lazy)
+    } catch {
+      // Transient interaction failure — settle, then retry on a fresh query.
+      await driver.pause(500)
+    }
+  }
+  throw new Error(`iosWriteRaw: could not write "${text}" into "${label}" after 3 attempts`)
+}
+
+/**
+ * Writes text into a tagged iOS field straight through its editor node
+ * (setValue) instead of the keyboard (typeText), and returns the rendered
+ * text.
+ *
+ * The iOS keyboard simulation cannot produce emoji or CJK glyphs — the typed
+ * path drops them silently — while the value-set path delivers them verbatim
+ * (verified live 2026-10-27: "🎈🎉💰" survives save + reopen on the Ubah
+ * screen). The field is cleared first because setValue APPENDS on this
+ * build.
+ */
+export async function iosWriteNote(
+  field: ChainablePromiseElement,
+  text: string,
+  label = 'tagged field',
+): Promise<string> {
+  const selector = String(await Promise.resolve(field.selector))
+  let lastError: unknown = null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const lazy = $(selector)
+      await lazy.waitForExist({ timeout: 15_000 })
+      await iosClearField(lazy)
+      const editor = await iosFieldEditor(lazy)
+      if (!editor) throw new Error(`No editor node behind "${label}"`)
+      await editor.setValue(text)
+      await driver.pause(300)
+      return await iosFieldText(lazy)
+    } catch (e) {
+      lastError = e
+      await driver.pause(500)
+    }
+  }
+  const detail = lastError instanceof Error ? ` (${lastError.message})` : ''
+  throw new Error(`iosWriteNote: could not write "${text}" into "${label}" after 3 attempts${detail}`)
 }
 
 /**
