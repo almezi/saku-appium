@@ -343,6 +343,7 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [x] TC-PERF-03: List scroll completes without freeze (timing budget < 60s)
 - [x] TC-PERF-04: Save transaction < 1s
 - [ ] TC-PERF-05: No memory growth after 50 add/delete cycles — **SKIPPED** (2026-10-26): BUG_Found-07 fixed (selectCategory now uses text-label lookup), but 50 UI-driven add/delete cycles exceed the 180s mocha timeout, and the `test_seed` intent is debug-only. See `BUG_Found_07.md`.
+  - Out-of-band attempt (scripts/perf_memcycles.sh, ZCode agent): baseline PSS 112480 kB captured, ~30/50 cycles completed across two runs — cut short by three emulator crashes (host-GPU ColorBuffer hang x2, then an adb drop on swiftshader). Re-run when a stable emulator is available; no app-side defect observed.
 
 **Spec:** `src/tests/app/performance.spec.ts` | **Agent:** Kilo (senior QA) — TC-PERF-01–04 all passing 2026-10-26 on emulator-5554 (emulator-5554, Android 37, Appium 3.8.0 @ :4725, APK v2.2). BUG_Found-07 fixed via text-label category lookup; `src/config/category-labels.ts` mapping all 36 IDs.
 

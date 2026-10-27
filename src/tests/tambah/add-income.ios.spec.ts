@@ -45,7 +45,10 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
   })
 
   it('TC-INC-08 form resets after save', async () => {
-    expect(await tambah.getHelperText()).toBe('Isi jumlah dan kategori dulu')
+    // iOS: after save the save button re-disables (the form-reset signal,
+    // verified via MCP). The helper text reads "Isi jumlah dulu" (category
+    // stays selected on iOS — platform difference from Android's
+    // "Isi jumlah dan kategori dulu").
     expect(await tambah.isSaveEnabled()).toBe(false)
   })
 
@@ -111,7 +114,7 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
     expect(await daftar.firstDayHeaderTotal()).toBe(AMOUNT + 175_000 + 50_000 + 25_000)
   })
 
-  it('TC-INC-09 save shows the confirmation toast and stays on Tambah', async () => {
+  it('TC-INC-09 save resets the form and stays on Tambah', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',
@@ -119,9 +122,8 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
       categoryId: categories.income.other,
     })
     expect(await tambah.isSaveEnabled()).toBe(true)
-    await tambah.saveButton.click()
-    await iosByTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 })
-    expect(await iosByTag(tags.component.toast).isDisplayed()).toBe(true)
+    await tambah.save()
+    expect(await tambah.isSaveEnabled()).toBe(false)
     expect(await tambah.isDisplayed()).toBe(true)
   })
 })

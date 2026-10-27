@@ -161,10 +161,20 @@ export class TambahIosPage extends BaseIosPage {
     return this.saveButton.isEnabled()
   }
 
-  /** Saves and waits for the confirmation toast (the app stays on Tambah). */
+  /**
+   * Saves and waits for the form reset (iOS has no component_toast tag — tag
+   * drift, verified via MCP 2026-10-27: no element with "toast"/"disimpan"
+   * exists in the accessibility tree after save). The app stays on Tambah.
+   * The save confirmation on iOS is the form reset: the save button re-disables
+   * after the amount field returns to its default. Mirrors Android TC-INC-08
+   * which asserts the same form-reset signal.
+   */
   async save(): Promise<void> {
     await this.saveButton.click()
-    await iosByTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 })
+    // Brief settle so the click is processed; the button's press-state can
+    // flicker disabled for a frame, and we want the post-save disabled state.
+    await driver.pause(500)
+    await this.saveButton.waitForEnabled({ timeout: 10_000, reverse: true })
   }
 
   async getAmountText(): Promise<string> {

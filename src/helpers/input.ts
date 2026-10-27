@@ -14,7 +14,7 @@
  * only, for currency fields the app formats as you type ("254000" renders
  * "Rp 254.000", so exact equality can never hold there).
  */
-import { $ } from '@wdio/globals'
+import { $, $$ } from '@wdio/globals'
 import type { ChainablePromiseElement } from '../types'
 
 export type FieldVerify = 'exact' | 'digits'
@@ -134,23 +134,81 @@ export async function setValueIntoTaggedField(
  * iOS twins — verified live 2026-10-27 (spike, iPhone 18 Pro/iOS 27). *
  * ------------------------------------------------------------------ */
 
+/** Inner editor node of an iOS Compose field (measured: XCUIElementTypeTextView). */
+const IOS_EDITOR_PREDICATE =
+  '-ios predicate string: type == "XCUIElementTypeTextView" OR type == "XCUIElementTypeTextField"'
+
+/** Accessibility identifier carried by the passed field, or null when the selector is not a `~tag`. */
+async function iosTagOf(field: ChainablePromiseElement): Promise<string | null> {
+  const selector = String(await Promise.resolve(field.selector))
+  return selector.startsWith('~') ? selector.slice(1) : null
+}
+
 /**
- * Rendered text of an iOS Compose field. The test tag sits on an
- * accessible=false wrapper (XCUIElementTypeOther) whose own getText() is
- * empty; the value renders on a descendant editor node's `value` attribute —
- * measured as XCUIElementTypeTextView for both the amount and note fields
- * ("Rp 254.000" / "spike-note-1"). Falls back to the wrapper's own text for
- * fields whose tag lands directly on the editor.
+ * Editor node of an iOS Compose field, or null when none is found.
+ *
+ * Two measured layouts (spike XML, 2026-10-27):
+ *  - the tag sits on a container that OWNS the editor as a descendant;
+ *  - the tag sits on an EMPTY self-closing wrapper (`tambah_input_amount`,
+ *    `tambah_input_note`) and the editor is the wrapper's FOLLOWING SIBLING
+ *    — a descendant query 404s there, which is why the sibling XPath
+ *    fallback exists.
+ */
+export async function iosFieldEditor(field: ChainablePromiseElement): Promise<ChainablePromiseElement | null> {
+  const descendant = field.$(IOS_EDITOR_PREDICATE)
+  if (await descendant.isExisting().catch(() => false)) return descendant
+  const tag = await iosTagOf(field)
+  if (!tag) return null
+  // Session-scoped XPath (leading //* so WDIO detects the xpath strategy —
+  // element-scoped queries mangle custom-strategy strings into text matches,
+  // verified in the Appium log). WDA's libxml2 supports following-sibling.
+  const sibling = $$(
+    `(//*[@name="${tag}"]/following-sibling::` +
+      `*[self::XCUIElementTypeTextView or self::XCUIElementTypeTextField])[1]`,
+  )
+  if ((await sibling.length) > 0) return sibling[0]
+  return null
+}
+
+/**
+ * Rendered text of an iOS Compose field: the editor's `value` attribute via
+ * iosFieldEditor ("Rp 254.000" / "spike-note-1"), falling back to the
+ * wrapper's own text for fields whose tag lands directly on the editor.
+ * getText() on the wrapper alone is ALWAYS empty for the measured fields —
+ * it is an accessible=false placeholder node.
  */
 export async function iosFieldText(field: ChainablePromiseElement): Promise<string> {
-  const editor = await field.$(
-    '-ios predicate string: type == "XCUIElementTypeTextView" OR type == "XCUIElementTypeTextField"',
-  )
-  if (await editor.isExisting().catch(() => false)) {
-    const value = ((await editor.getAttribute('value')) || '').trim()
+  const editor = await iosFieldEditor(field)
+  if (editor) {
+    const value = ((await editor.getAttribute('value').catch(() => '')) || '').trim()
     if (value) return value
   }
   return ((await field.getText().catch(() => '')) || '').trim()
+}
+
+/**
+ * Dismisses the iOS software keyboard by tapping the dead zone above the
+ * screen content (inside the status-bar inset, where Saku renders nothing —
+ * every screen reserves that area via safeAreaTop). WDA's own
+ * hideKeyboard CANNOT dismiss a Compose keyboard ("Did not know how to
+ * dismiss the keyboard", ~12 s of internal retries per call — measured), so
+ * it is not attempted.
+ */
+async function iosDismissKeyboard(): Promise<void> {
+  const { width } = await driver.getWindowSize()
+  await driver.performActions([
+    {
+      type: 'pointer',
+      id: 'finger1',
+      parameters: { pointerType: 'touch' },
+      actions: [
+        { type: 'pointerMove', duration: 0, x: Math.floor(width / 2), y: 30 },
+        { type: 'pointerDown', button: 0 },
+        { type: 'pointerUp', button: 0 },
+      ],
+    },
+  ])
+  await driver.pause(400)
 }
 
 /**
@@ -183,26 +241,31 @@ export async function iosTypeIntoTaggedField(
   let lastError: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      await $(selector).waitForExist({ timeout: 15_000 })
-      const fresh = await $(selector)
-      await fresh.click()
-      const editor = await fresh.$(
-        '-ios predicate string: type == "XCUIElementTypeTextView" OR type == "XCUIElementTypeTextField"',
-      )
-      const target = (await editor.isExisting().catch(() => false)) ? editor : fresh
-      const current = await iosFieldText(fresh).catch(() => '')
+      // Keep the chainable LAZY — never pin a resolved element. The focus
+      // click opens the keyboard, which resizes the layout and recomposes
+      // the Compose tree; an elementId captured before the click dies with
+      // it ("No matches found for Identity Binding" law from TC-NAV) and
+      // addValue on the stale handle no-ops silently. Every command below
+      // re-resolves through the chainable, exactly like the working spike.
+      const lazy = $(selector)
+      await lazy.waitForExist({ timeout: 15_000 })
+      await lazy.click()
+      const current = await iosFieldText(lazy).catch(() => '')
       if (current.length > 0) {
-        await target.clearValue().catch(async () => {
-          // clearValue() can race the composition on a just-focused field;
-          // the keyboard backspace key is the fallback (WDA maps \uE003).
-          await fresh.addValue('\uE003'.repeat(current.length + 2))
-        })
+        // Clear the editor node (the wrapper itself is not editable); the
+        // keyboard backspace key is the fallback (WDA maps \uE003).
+        const editor = await iosFieldEditor(lazy)
+        await editor?.clearValue().catch(() => undefined)
+        const afterClear = await iosFieldText(lazy).catch(() => '')
+        if (afterClear.length > 0) {
+          await lazy.addValue('\uE003'.repeat(afterClear.length + 2))
+        }
       }
-      await target.addValue(text)
+      await lazy.addValue(text)
       // Dismiss the keyboard so it cannot cover the save button or sheet
       // taps that follow; iOS has no system back to do it implicitly.
-      await driver.hideKeyboard().catch(() => undefined)
-      landed = await iosFieldText(fresh).catch(() => '')
+      await iosDismissKeyboard()
+      landed = await iosFieldText(lazy).catch(() => '')
       if (landedOk(landed)) return
       lastError = null
     } catch (e) {
