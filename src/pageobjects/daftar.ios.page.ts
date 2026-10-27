@@ -1,6 +1,6 @@
 import { $$ } from '@wdio/globals'
 import { iosByTag } from '../helpers/locators'
-import { iosReadAmount } from '../helpers/elements'
+import { iosExtractChildTexts, iosReadAmount } from '../helpers/elements'
 import { tags } from '../config/tags'
 import { BaseIosPage } from './base.ios.page'
 
@@ -83,25 +83,84 @@ export class DaftarIosPage extends BaseIosPage {
           await driver.pause(500)
         }
       }
-      await this.swipeListUp()
+      await this.swipeList('up')
     }
     throw new Error(`Edit affordance for category "${categoryId}" could not be clicked`)
   }
 
-  /** One raw-touch swipe up over the list (bounded-scroll fallback). */
-  private async swipeListUp(): Promise<void> {
+  async emptyStateTexts(): Promise<string[]> {
+    return iosExtractChildTexts(iosByTag(tags.daftar.emptyState))
+  }
+
+  async monthLabel(): Promise<string> {
+    return iosByTag(tags.daftar.monthLabel).getText()
+  }
+
+  private async switchMonth(arrow: string): Promise<void> {
+    const before = await this.monthLabel()
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await iosByTag(arrow).click()
+      await driver.pause(300)
+      const after = await this.monthLabel()
+      if (after !== before) return
+    }
+    throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
+  }
+
+  async prevMonth(): Promise<void> {
+    await this.switchMonth(tags.daftar.monthPrev)
+  }
+
+  async nextMonth(): Promise<void> {
+    await this.switchMonth(tags.daftar.monthNext)
+  }
+
+  async dayHeaderCount(): Promise<number> {
+    const headers = $$(`-ios predicate string: name MATCHES "daftar_day_header_.+"`)
+    return headers.length
+  }
+
+  async firstDayHeaderTexts(): Promise<string[]> {
+    const headers = $$(`-ios predicate string: name MATCHES "daftar_day_header_.+"`)
+    if ((await headers.length) === 0) throw new Error('No daftar_day_header_* element found')
+    return iosExtractChildTexts(headers[0])
+  }
+
+  async rowTexts(snippet: string): Promise<string[]> {
+    const row = await this.findRowText(snippet)
+    return iosExtractChildTexts(row)
+  }
+
+  async rowAmountTextsInOrder(): Promise<string[]> {
+    const rows = await $$(`-ios predicate string: name MATCHES "daftar_item_.+"`)
+    const amounts: string[] = []
+    for (const row of rows) {
+      const texts = await iosExtractChildTexts(row as any)
+      for (const t of texts) {
+        if (/[\d]/.test(t) && t.startsWith('Rp')) {
+          amounts.push(t)
+          break
+        }
+      }
+    }
+    return amounts
+  }
+
+  async swipeList(direction: 'up' | 'down'): Promise<void> {
     const { width, height } = await driver.getWindowSize()
     const x = Math.floor(width / 2)
+    const yStart = direction === 'up' ? Math.floor(height * 0.7) : Math.floor(height * 0.3)
+    const yEnd = direction === 'up' ? Math.floor(height * 0.3) : Math.floor(height * 0.7)
     await driver.performActions([
       {
         type: 'pointer',
         id: 'finger1',
         parameters: { pointerType: 'touch' },
         actions: [
-          { type: 'pointerMove', duration: 0, x, y: Math.floor(height * 0.7) },
+          { type: 'pointerMove', duration: 0, x, y: yStart },
           { type: 'pointerDown', button: 0 },
           { type: 'pause', duration: 150 },
-          { type: 'pointerMove', duration: 500, x, y: Math.floor(height * 0.35) },
+          { type: 'pointerMove', duration: 500, x, y: yEnd },
           { type: 'pointerUp', button: 0 },
         ],
       },
