@@ -37,23 +37,23 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
     await ringkasan.open()
   })
 
-  it('TC-BUD-01 tapping the Ringkasan budget button opens the Anggaran screen', async () => {
+  it('TC-BUD-01 tapping the Ringkasan budget button opens the Anggaran screen @regression', async () => {
     await anggaran.openFromRingkasan()
     expect(await anggaran.isDisplayed()).toBe(true)
   })
 
-  it('TC-BUD-11 back returns to Ringkasan', async () => {
+  it('TC-BUD-11 back returns to Ringkasan @regression', async () => {
     await anggaran.tapBack()
     expect(await ringkasan.isDisplayed()).toBe(true)
     await anggaran.openFromRingkasan()
   })
 
-  it('TC-BUD-02 with no budgets the empty state shows and the total card is hidden', async () => {
+  it('TC-BUD-02 with no budgets the empty state shows and the total card is hidden @regression', async () => {
     expect(await anggaran.emptyState.isDisplayed()).toBe(true)
     expect(await anggaran.totalCard.isExisting()).toBe(false)
   })
 
-  it('TC-BUD-03/07 "Atur anggaran baru" saves a budget and shows its row', async () => {
+  it('TC-BUD-03/07 "Atur anggaran baru" saves a budget and shows its row @regression', async () => {
     await anggaran.openForm()
     await anggaran.selectFormCategory(categories.expense.dailyFood)
     await anggaran.fillLimit(BUDGET_LIMIT)
@@ -63,7 +63,7 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
     expect(await anggaran.totalCard.isDisplayed()).toBe(true)
   })
 
-  it('TC-BUD-08 progress reflects the month expense total with status Aman', async () => {
+  it('TC-BUD-08 progress reflects the month expense total with status Aman @regression', async () => {
     // Anggaran has no bottom bar (UI_SPEC 4), so seeding via the Tambah form
     // only works from a bar screen — back to Ringkasan first.
     await anggaran.tapBack()
@@ -83,7 +83,7 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
     expect(text).toContain('Aman')
   })
 
-  it('TC-BUD-09 exceeding the limit shows the warning status', async () => {
+  it('TC-BUD-09 exceeding the limit shows the warning status @regression', async () => {
     // Same no-bottom-bar constraint as TC-BUD-08: seed from a bar screen.
     await anggaran.tapBack()
     await createTransaction({
@@ -101,7 +101,7 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
     expect(text).toContain('Lebih')
   })
 
-  it('TC-BUD-10 removing the budget restores the empty state and keeps transactions', async () => {
+  it('TC-BUD-10 removing the budget restores the empty state and keeps transactions @regression', async () => {
     await anggaran.tapRowEdit(categories.expense.dailyFood)
     await anggaran.deleteFromForm()
     expect(await anggaran.emptyState.isDisplayed()).toBe(true)

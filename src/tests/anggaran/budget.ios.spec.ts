@@ -51,31 +51,31 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     await ringkasan.open()
   })
 
-  it('TC-BUDGET-01 tapping the Ringkasan budget button opens the Anggaran screen', async () => {
+  it('TC-BUDGET-01 tapping the Ringkasan budget button opens the Anggaran screen @regression', async () => {
     await anggaran.openFromRingkasan()
     expect(await anggaran.isDisplayed()).toBe(true)
   })
 
-  it('TC-BUDGET-11 back returns to Ringkasan', async () => {
+  it('TC-BUDGET-11 back returns to Ringkasan @regression', async () => {
     await anggaran.tapBack()
     await ringkasan.waitForScreen()
     // Re-enter for the flow that follows.
     await anggaran.openFromRingkasan()
   })
 
-  it('TC-BUDGET-02 title, month label and empty state render; total card is hidden', async () => {
+  it('TC-BUDGET-02 title, month label and empty state render; total card is hidden @regression', async () => {
     expect(await anggaran.screenText()).toContain('Anggaran')
     expect(await anggaran.monthLabel()).toBe(MONTH_LABEL)
     expect(await anggaran.emptyState.isDisplayed()).toBe(true)
     expect(await anggaran.totalCard.isExisting()).toBe(false)
   })
 
-  it('TC-BUDGET-06 "Atur anggaran baru" opens the new-budget form', async () => {
+  it('TC-BUDGET-06 "Atur anggaran baru" opens the new-budget form @regression', async () => {
     await anggaran.openForm()
     expect(await anggaran.isFormDisplayed()).toBe(true)
   })
 
-  it('TC-BUDGET-07 a saved limit is displayed as a row and the total card appears', async () => {
+  it('TC-BUDGET-07 a saved limit is displayed as a row and the total card appears @regression', async () => {
     await anggaran.selectFormCategory(categories.expense.dailyFood)
     await anggaran.fillLimit(BUDGET_LIMIT)
     expect(await anggaran.isFormSaveEnabled()).toBe(true)
@@ -84,7 +84,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     expect(await anggaran.totalCard.isDisplayed()).toBe(true)
   })
 
-  it('TC-BUDGET-03 total card shows ANGGARAN, the amount, "Rp X dari Rp Y" and a bar', async () => {
+  it('TC-BUDGET-03 total card shows ANGGARAN, the amount, "Rp X dari Rp Y" and a bar @regression', async () => {
     const texts = await anggaran.totalCardTexts()
     expect(texts).toContain('ANGGARAN')
     expect(texts).toContain(formatRp(0))
@@ -93,7 +93,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     expect(await anggaran.totalCardBarWidth()).toBeGreaterThan(300)
   })
 
-  it('TC-BUDGET-04 per-category card shows name, Aman, spent-of, remaining and a bar', async () => {
+  it('TC-BUDGET-04 per-category card shows name, Aman, spent-of, remaining and a bar @regression', async () => {
     const text = await anggaran.rowText(categories.expense.dailyFood)
     expect(text).toContain(CATEGORY_NAME)
     expect(text).toContain('Aman')
@@ -102,7 +102,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     expect(await anggaran.rowBarWidth(categories.expense.dailyFood)).toBeGreaterThan(300)
   })
 
-  it('TC-BUDGET-08 progress reflects the month expense total with status Aman', async () => {
+  it('TC-BUDGET-08 progress reflects the month expense total with status Aman @regression', async () => {
     // Anggaran has no bottom bar, so seeding through the Tambah form starts
     // from Ringkasan.
     await anggaran.tapBack()
@@ -123,7 +123,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     expect(await anggaran.totalCardTexts()).toContain(formatRp(FIRST_EXPENSE))
   })
 
-  it('TC-BUDGET-09 exceeding the limit shows the warning status', async () => {
+  it('TC-BUDGET-09 exceeding the limit shows the warning status @regression', async () => {
     await anggaran.tapBack()
     await ringkasan.waitForScreen()
     await createTransactionIos({
@@ -141,7 +141,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     expect(text).toContain(`Lebih ${formatRp(spent - BUDGET_LIMIT)}`)
   })
 
-  it('TC-BUDGET-05 row Ubah opens the prefilled form and row Hapus opens the delete sheet', async () => {
+  it('TC-BUDGET-05 row Ubah opens the prefilled form and row Hapus opens the delete sheet @regression', async () => {
     await anggaran.tapRowEdit(categories.expense.dailyFood)
     expect(await anggaran.isFormDisplayed()).toBe(true)
     expect(await anggaran.getLimitText()).toBe(formatRp(BUDGET_LIMIT))
@@ -154,7 +154,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     expect(await anggaran.row(categories.expense.dailyFood).isDisplayed()).toBe(true)
   })
 
-  it('TC-BUDGET-10 editing then removing the budget works and keeps transactions', async () => {
+  it('TC-BUDGET-10 editing then removing the budget works and keeps transactions @regression', async () => {
     await anggaran.tapRowEdit(categories.expense.dailyFood)
     await anggaran.fillLimit(EDITED_LIMIT)
     await anggaran.saveForm()

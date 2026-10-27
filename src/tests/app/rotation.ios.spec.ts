@@ -81,7 +81,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     }
   })
 
-  it('TC-ROT-01 a configuration change on a filled Tambah form retains amount, category and note', async () => {
+  it('TC-ROT-01 a configuration change on a filled Tambah form retains amount, category and note @regression', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',
@@ -98,7 +98,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     expect(await tambah.getNoteText()).toBe('rotasi')
   })
 
-  it('TC-ROT-02 a configuration change on Transaksi retains the exact scroll position', async () => {
+  it('TC-ROT-02 a configuration change on Transaksi retains the exact scroll position @regression', async () => {
     await daftar.open()
     await daftar.swipeList('up')
     await driver.pause(500)
@@ -110,7 +110,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     expect(after).toBe(before)
   })
 
-  it('TC-ROT-03 a configuration change on Ringkasan renders without crash and keeps the balance', async () => {
+  it('TC-ROT-03 a configuration change on Ringkasan renders without crash and keeps the balance @regression', async () => {
     await ringkasan.open()
     const balance = await ringkasan.balanceValue()
     await setAppearance('dark')
@@ -119,7 +119,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     await setAppearance('light')
   })
 
-  it('TC-ROT-04 dark mode keeps the summary and form readable', async () => {
+  it('TC-ROT-04 dark mode keeps the summary and form readable @regression', async () => {
     // Restart first: iOS never recreates the screen, so the values typed in
     // TC-ROT-01 would still be in the form and keep save enabled. On Android
     // the rotation recreated the activity, which reset the form.
@@ -133,7 +133,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     await setAppearance('light')
   })
 
-  it('TC-ROT-05 backgrounding and resuming keeps the unsaved form intact', async () => {
+  it('TC-ROT-05 backgrounding and resuming keeps the unsaved form intact @regression', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',
@@ -145,7 +145,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     expect(await tambah.getAmountText()).toBe('Rp 9.911')
   })
 
-  it('TC-ROT-06 200% font scale renders the form without clipped fields', async () => {
+  it('TC-ROT-06 200% font scale renders the form without clipped fields @regression', async () => {
     await setContentSize('accessibility-medium')
     await restartApp()
     await tambah.open()

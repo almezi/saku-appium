@@ -38,13 +38,13 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
     })
   })
 
-  it('TC-INC-01 income with amount and category saves and shows the toast', async () => {
+  it('TC-INC-01 income with amount and category saves and shows the toast @regression', async () => {
     // createTransactionIos already waited for the toast; assert we are back
     // on a clean Tambah form (saving never leaves the screen).
     expect(await tambah.isDisplayed()).toBe(true)
   })
 
-  it('TC-INC-08 form resets after save', async () => {
+  it('TC-INC-08 form resets after save @regression', async () => {
     // iOS: after save the save button re-disables (the form-reset signal,
     // verified via MCP). The helper text reads "Isi jumlah dulu" (category
     // stays selected on iOS — platform difference from Android's
@@ -52,26 +52,26 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
     expect(await tambah.isSaveEnabled()).toBe(false)
   })
 
-  it('TC-INC-02 saved income appears in the Transaksi list today', async () => {
+  it('TC-INC-02 saved income appears in the Transaksi list today @regression', async () => {
     await daftar.open()
     // Rows render category, type label and amount, not the note.
     const row = await daftar.findRowText(formatRp(AMOUNT))
     expect(await row.isDisplayed()).toBe(true)
   })
 
-  it('TC-INC-03 list income summary increases to the saved amount', async () => {
+  it('TC-INC-03 list income summary increases to the saved amount @regression', async () => {
     expect(await daftar.summaryIncome()).toBe(AMOUNT)
     expect(await daftar.summaryExpense()).toBe(0)
   })
 
-  it('TC-INC-04 Ringkasan income card and balance reflect the income', async () => {
+  it('TC-INC-04 Ringkasan income card and balance reflect the income @regression', async () => {
     await ringkasan.open()
     expect(await ringkasan.incomeTotal()).toBe(AMOUNT)
     expect(await ringkasan.balanceValue()).toBe(AMOUNT)
     expect(await ringkasan.balanceText()).toBe(formatRp(AMOUNT))
   })
 
-  it('TC-INC-05 note is persisted (verified by reopening in edit)', async () => {
+  it('TC-INC-05 note is persisted (verified by reopening in edit) @regression', async () => {
     await daftar.open()
     await ubah.openFromDaftar(daftar, categories.income.salary)
     expect(await tambah.getNoteText()).toBe(NOTE)
@@ -81,7 +81,7 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
     await daftar.waitForScreen()
   })
 
-  it('TC-INC-06 income on a non-default account is recorded correctly', async () => {
+  it('TC-INC-06 income on a non-default account is recorded correctly @regression', async () => {
     const bankAmount = 175_000
     await createTransactionIos({
       type: 'pemasukan',
@@ -99,7 +99,7 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
     await daftar.waitForScreen()
   })
 
-  it('TC-INC-07 multiple incomes same day sum into the day header total', async () => {
+  it('TC-INC-07 multiple incomes same day sum into the day header total @regression', async () => {
     const extras = [50_000, 25_000]
     const extraCategories = [categories.income.refund, categories.income.gift]
     for (let i = 0; i < extras.length; i++) {
@@ -114,7 +114,7 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
     expect(await daftar.firstDayHeaderTotal()).toBe(AMOUNT + 175_000 + 50_000 + 25_000)
   })
 
-  it('TC-INC-09 save resets the form and stays on Tambah', async () => {
+  it('TC-INC-09 save resets the form and stays on Tambah @regression', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',

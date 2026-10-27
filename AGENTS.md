@@ -10,9 +10,11 @@ lives in a separate repository — there is no `gradlew` here.
 - **Install deps**: `npm install` (Appium is a local dependency; no global install)
 - **Typecheck**: `npm run typecheck` — covers `src/**/*.ts` and `wdio.conf.ts`.
   **`wdio.ios.conf.ts` is NOT included**; see `code_review.md` finding **S1**.
-- **Unit tests**: `npm run test:unit` — 17 tests, no device required
+- **Unit tests**: `npm run test:unit` — 18 tests, no device required
 - **Run tests locally**: `npm test` (Android) / `npm run test:ios` (iOS). Per-area
   scripts are listed in `README.md`; `HANDOVER.md` §3 explains how to run them.
+- **Run one test type**: `npm run test:sanity` / `test:regression` / `test:integration`
+  (and the `:ios` variants) — see **Test Types** below.
 - **Start Appium session (MCP, interactive triage)**:
   `opencode mcp run --session <session> -- npx -y appium-mcp@latest`
 
@@ -155,6 +157,35 @@ Rules:
 - iOS runs through `wdio.ios.conf.ts` (`npm run test:ios`); Android through
   `wdio.conf.ts` (`npm test`).
 
+## Test Types
+
+Every **test case** carries exactly one **test-type tag** at the end of its `it()` title —
+`@sanity`, `@regression` or `@integration`. The vocabulary is `src/config/test-types.ts`;
+the tags are what mocha's `grep` matches, so the type scripts filter on them:
+
+```ts
+it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => { … })
+```
+
+```bash
+npm run test:sanity        npm run test:sanity:ios
+npm run test:regression    npm run test:regression:ios
+npm run test:integration   npm run test:integration:ios
+```
+
+- `@sanity` — the app launches and the core path is intact (fast; runs on every change).
+- `@regression` — every feature behaves as specified.
+- `@integration` — cases spanning several screens or flows at once.
+
+All the cases in a file share one type. Both twins of a spec carry the SAME type.
+
+**When you add a test case, tag it.** An untagged case is not a loud failure — mocha's
+`grep` matches the tag in the test's full title, so the case is silently excluded from
+every filtered run and never executes. `npm run test:unit` fails on it: the guardrail in
+`src/config/__tests__/test-types.test.ts` asserts every case carries exactly one
+recognized type, that a file does not mix types, and that the file's `describe()` agrees
+with its cases.
+
 ## Source-of-truth ordering
 
 When two documents disagree, resolve in this order:
@@ -165,4 +196,6 @@ When two documents disagree, resolve in this order:
 3. **The app repository** (`id.almezi.simplemoneytracker_kt`) — the actual implementation
    wins over any document.
 4. **`src/config/tags.ts`** — the machine-readable mirror of the contract.
-5. Everything else (this file, `README.md`, `progress.md`) is descriptive.
+5. **`src/config/test-types.ts`** — the test-type vocabulary (`@sanity` / `@regression` /
+   `@integration`) and the guardrail that enforces it.
+6. Everything else (this file, `README.md`, `progress.md`) is descriptive.

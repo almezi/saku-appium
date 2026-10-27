@@ -81,13 +81,13 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     await freshForm()
   })
 
-  it('TC-VAL-01 empty amount + empty category keeps save disabled with combined helper', async () => {
+  it('TC-VAL-01 empty amount + empty category keeps save disabled with combined helper @regression', async () => {
     await freshForm()
     expect(await tambah.isSaveEnabled()).toBe(false)
     expect(await tambah.getHelperText()).toBe('Isi jumlah dan kategori dulu')
   })
 
-  it('TC-VAL-02 amount only keeps save disabled, helper asks for the category', async () => {
+  it('TC-VAL-02 amount only keeps save disabled, helper asks for the category @regression', async () => {
     await freshForm()
     await writeAmount('50000')
     expect(await tambah.getAmountText()).toBe('Rp 50.000')
@@ -95,47 +95,47 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     expect(await tambah.getHelperText()).toBe('Pilih kategori dulu')
   })
 
-  it('TC-VAL-03 category only keeps save disabled, helper asks for the amount', async () => {
+  it('TC-VAL-03 category only keeps save disabled, helper asks for the amount @regression', async () => {
     await clearAmount()
     await tambah.selectCategory(categories.income.salary)
     expect(await tambah.isSaveEnabled()).toBe(false)
     expect(await tambah.getHelperText()).toBe('Isi jumlah dulu')
   })
 
-  it('TC-VAL-04 amount 0 renders "Rp 0" but counts as not set', async () => {
+  it('TC-VAL-04 amount 0 renders "Rp 0" but counts as not set @regression', async () => {
     await writeAmount('0')
     expect(await tambah.getAmountText()).toBe('Rp 0')
     expect(await tambah.isSaveEnabled()).toBe(false)
   })
 
-  it('TC-VAL-05 negative input is normalized: minus stripped, save enables', async () => {
+  it('TC-VAL-05 negative input is normalized: minus stripped, save enables @regression', async () => {
     await writeAmount('-5000')
     expect(await tambah.getAmountText()).toBe('Rp 5.000')
     expect(await tambah.isSaveEnabled()).toBe(true)
   })
 
-  it('TC-VAL-06 letters typed on the numeric keyboard are rejected', async () => {
+  it('TC-VAL-06 letters typed on the numeric keyboard are rejected @regression', async () => {
     await writeAmount('abc')
     expect((await tambah.getAmountText()).replace(/\D/g, '')).toBe('')
   })
 
-  it('TC-VAL-07 symbols typed on the numeric keyboard are rejected', async () => {
+  it('TC-VAL-07 symbols typed on the numeric keyboard are rejected @regression', async () => {
     await writeAmount('!@#')
     expect((await tambah.getAmountText()).replace(/\D/g, '')).toBe('')
   })
 
-  it('TC-VAL-08 scientific notation "1e9" lands as literal digits 19', async () => {
+  it('TC-VAL-08 scientific notation "1e9" lands as literal digits 19 @regression', async () => {
     await writeAmount('1e9')
     expect(await tambah.getAmountText()).toBe('Rp 19')
   })
 
-  it('TC-VAL-09 18-digit overflow clamps at 12 digits without crashing', async () => {
+  it('TC-VAL-09 18-digit overflow clamps at 12 digits without crashing @regression', async () => {
     await writeAmount('9'.repeat(18))
     expect(await tambah.getAmountText()).toBe('Rp 999.999.999.999')
     expect(await tambah.isDisplayed()).toBe(true)
   })
 
-  it('TC-VAL-10 leading zeros parse as their numeric value (0005000 -> 5.000)', async () => {
+  it('TC-VAL-10 leading zeros parse as their numeric value (0005000 -> 5.000) @regression', async () => {
     await writeAmount('0005000')
     expect(await tambah.getAmountText()).toBe('Rp 0.005.000')
     await tambah.save()
@@ -147,12 +147,12 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     await tambah.open()
   })
 
-  it('TC-VAL-11 decimal point is rejected; digits concatenate (5000.50 -> 500.050)', async () => {
+  it('TC-VAL-11 decimal point is rejected; digits concatenate (5000.50 -> 500.050) @regression', async () => {
     await writeAmount('5000.50')
     expect(await tambah.getAmountText()).toBe('Rp 500.050')
   })
 
-  it('TC-VAL-12 space-only note saves as empty', async () => {
+  it('TC-VAL-12 space-only note saves as empty @regression', async () => {
     await writeAmount('25000')
     await tambah.selectCategory(categories.income.freelance)
     await writeNote('   ')
@@ -164,14 +164,14 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     await daftar.waitForScreen()
   })
 
-  it('TC-VAL-13 note caps at exactly 60 characters without crashing', async () => {
+  it('TC-VAL-13 note caps at exactly 60 characters without crashing @regression', async () => {
     await tambah.open()
     await writeNote('a'.repeat(70))
     expect((await tambah.getNoteText()).length).toBe(60)
     expect(await tambah.isDisplayed()).toBe(true)
   })
 
-  it('TC-VAL-14 emoji note saves and renders (verified by reopening in edit)', async () => {
+  it('TC-VAL-14 emoji note saves and renders (verified by reopening in edit) @regression', async () => {
     const note = '🎈🎉💰'
     await tambah.open()
     await writeNoteExact(note)
@@ -185,7 +185,7 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     await daftar.waitForScreen()
   })
 
-  it('TC-VAL-15 unicode note saves and renders exactly', async () => {
+  it('TC-VAL-15 unicode note saves and renders exactly @regression', async () => {
     const note = 'Café naïve 日本語 Ελληνικά Жrustum $ ₺ ✓'
     await tambah.open()
     await writeNoteExact(note)
@@ -199,7 +199,7 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     await daftar.waitForScreen()
   })
 
-  it('TC-VAL-16 rapid double-tap on save creates exactly one transaction', async () => {
+  it('TC-VAL-16 rapid double-tap on save creates exactly one transaction @regression', async () => {
     await tambah.open()
     await writeAmount('7777')
     await tambah.selectCategory(categories.income.investment)
@@ -212,7 +212,7 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     expect(await daftar.countTransactionRows(formatRp(7_777))).toBe(1)
   })
 
-  it('TC-VAL-17 saving with the keyboard open works and resets the form', async () => {
+  it('TC-VAL-17 saving with the keyboard open works and resets the form @regression', async () => {
     await tambah.open()
     await writeAmount('3333')
     await tambah.selectCategory(categories.income.refund)

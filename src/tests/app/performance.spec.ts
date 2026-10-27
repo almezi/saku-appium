@@ -47,7 +47,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
     await daftar.open()
   })
 
-  it('TC-PERF-02 tab switch completes in under 500ms', async () => {
+  it('TC-PERF-02 tab switch completes in under 500ms @regression', async () => {
     await tambah.open()
     await driver.pause(500)
     const t0 = Date.now()
@@ -57,7 +57,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
     expect(t).toBeLessThan(500)
   })
 
-  it('TC-PERF-04 saving a transaction completes in under 1s', async () => {
+  it('TC-PERF-04 saving a transaction completes in under 1s @regression', async () => {
     await tambah.open()
     await driver.pause(500) // let Compose finish composing after the nav click
     await tambah.fillForm({
@@ -72,7 +72,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
     expect(t).toBeLessThan(1_000)
   })
 
-  it('TC-PERF-03 list scroll stays fluid with 100+ items', async () => {
+  it('TC-PERF-03 list scroll stays fluid with 100+ items @regression', async () => {
     await daftar.open()
 
     const listEl = await byTag(tags.daftar.screen)
@@ -98,7 +98,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
   })
 
   // Runs LAST: the cold-start force-stop disrupts the Appium session.
-  it('TC-PERF-01 cold start completes in under 3.5s', async () => {
+  it('TC-PERF-01 cold start completes in under 3.5s @regression', async () => {
     // Warmup launch excludes the one-time first-start DB init.
     adb('am start -n id.almezi.simplemoneytracker_kt/.MainActivity')
     await driver.pause(3_000)
@@ -128,7 +128,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
 
   // Skipped in wdio: 50 UI cycles (~10s each) exceed the mocha timeout.
   // scripts/perf_memcycles.sh runs the same loop out-of-band.
-  it.skip('TC-PERF-05 memory stays stable across 50 add/delete cycles', async () => {
+  it.skip('TC-PERF-05 memory stays stable across 50 add/delete cycles @regression', async () => {
     await daftar.open()
     const before = memTotalKb()
     for (let i = 0; i < 50; i++) {

@@ -39,7 +39,7 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     return parseInt(pct, 10)
   }
 
-  it('TC-SUM-05 income 0 renders the savings dash — no divide-by-zero', async () => {
+  it('TC-SUM-05 income 0 renders the savings dash — no divide-by-zero @regression', async () => {
     await ringkasan.open()
     // Verified live: with income 0 the savings value renders "—" (with the
     // hint "Tambah pemasukan…"), never NaN/Infinity.
@@ -49,7 +49,7 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     expect(await byTag(tags.ringkasan.breakdownIncome).isExisting()).toBe(false)
   })
 
-  it('seeds two incomes for the multi-category assertions', async () => {
+  it('seeds two incomes for the multi-category assertions @regression', async () => {
     await createTransaction({
       type: 'pemasukan',
       amount: SALARY,
@@ -64,12 +64,12 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     })
   })
 
-  it('TC-SUM-01 balance value equals income minus expense', async () => {
+  it('TC-SUM-01 balance value equals income minus expense @regression', async () => {
     await ringkasan.open()
     expect(await ringkasan.balanceValue()).toBe(SALARY + SALES - EXPENSE)
   })
 
-  it('TC-SUM-02/03 totals cards match the Transaksi summaries for the same month', async () => {
+  it('TC-SUM-02/03 totals cards match the Transaksi summaries for the same month @regression', async () => {
     const [cardIncome, cardExpense] = await Promise.all([
       ringkasan.incomeTotal(),
       ringkasan.expenseTotal(),
@@ -79,21 +79,21 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     expect(cardExpense).toBe(await daftar.summaryExpense())
   })
 
-  it('TC-SUM-04 savings rate follows (income − expense) / income with one comma decimal', async () => {
+  it('TC-SUM-04 savings rate follows (income − expense) / income with one comma decimal @regression', async () => {
     await ringkasan.open()
     const income = SALARY + SALES
     const expected = ((income - EXPENSE) / income) * 100
     expect(await ringkasan.savingsText()).toBe(formatSavingsRate(expected))
   })
 
-  it('TC-SUM-07 income breakdown percentages sum to 100', async () => {
+  it('TC-SUM-07 income breakdown percentages sum to 100 @regression', async () => {
     await ringkasan.open()
     const salaryShare = percentOf(await ringkasan.breakdownItemTexts(categories.income.salary))
     const salesShare = percentOf(await ringkasan.breakdownItemTexts(categories.income.sales))
     expect(salaryShare + salesShare).toBe(100)
   })
 
-  it('TC-SUM-08 expense breakdown percentages sum to 100', async () => {
+  it('TC-SUM-08 expense breakdown percentages sum to 100 @regression', async () => {
     // The expense card is the last section — scroll it into composition
     // first (its rows stale out from under a bare scrollIntoView).
     await ringkasan.open()
@@ -101,20 +101,20 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     expect(percentOf(await ringkasan.breakdownItemTexts(categories.expense.dailyFood))).toBe(100)
   })
 
-  it('TC-SUM-09 breakdown bar widths match the category shares', async () => {
+  it('TC-SUM-09 breakdown bar widths match the category shares @regression', async () => {
     const salaryRatio = await ringkasan.breakdownBarRatio(categories.income.salary)
     const salesRatio = await ringkasan.breakdownBarRatio(categories.income.sales)
     expect(salaryRatio).toBeCloseTo(SALARY / (SALARY + SALES), 1)
     expect(salesRatio).toBeCloseTo(SALES / (SALARY + SALES), 1)
   })
 
-  it('TC-SUM-06 comparison amounts match the totals cards', async () => {
+  it('TC-SUM-06 comparison amounts match the totals cards @regression', async () => {
     const texts = await ringkasan.comparisonTexts()
     expect(texts).toContain(formatRp(SALARY + SALES))
     expect(texts).toContain(formatRp(EXPENSE))
   })
 
-  it('TC-SUM-12 negative balance renders U+2212Rp, not "Rp -"', async () => {
+  it('TC-SUM-12 negative balance renders U+2212Rp, not "Rp -" @regression', async () => {
     await createTransaction({
       type: 'pengeluaran',
       amount: EXTRA_EXPENSE,
@@ -127,7 +127,7 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     expect(await ringkasan.balanceText()).toBe(formatNegativeRp(balance))
   })
 
-  it('TC-SUM-11 large values format with separators and stay readable', async () => {
+  it('TC-SUM-11 large values format with separators and stay readable @regression', async () => {
     await createTransaction({
       type: 'pemasukan',
       amount: BIG_INCOME,
@@ -140,7 +140,7 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     expect(await byTag(tags.ringkasan.balanceValue).isDisplayed()).toBe(true)
   })
 
-  it('TC-SUM-13 scrolling to the bottom renders every section', async () => {
+  it('TC-SUM-13 scrolling to the bottom renders every section @regression', async () => {
     await ringkasan.open()
     const kelola = await scrollToTag(tags.ringkasan.kelolaButton)
     expect(await kelola.isDisplayed()).toBe(true)
@@ -150,7 +150,7 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     expect(await anggaran.isDisplayed()).toBe(true)
   })
 
-  it('TC-SUM-10 empty month shows the empty state with no NaN/Infinity', async () => {
+  it('TC-SUM-10 empty month shows the empty state with no NaN/Infinity @regression', async () => {
     await ringkasan.prevMonth()
     await byTag(tags.ringkasan.emptyState).waitForDisplayed()
     expect((await ringkasan.emptyStateTexts()).join(' ')).toContain(

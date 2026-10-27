@@ -89,13 +89,13 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     }
   })
 
-  it('TC-PERS-01 kill + relaunch keeps every committed transaction', async () => {
+  it('TC-PERS-01 kill + relaunch keeps every committed transaction @regression', async () => {
     await relaunch()
     await daftar.open()
     expect(await daftar.summaryIncome()).toBe(seededTotal)
   })
 
-  it('TC-PERS-02 relaunch resets the selected tab to Tambah', async () => {
+  it('TC-PERS-02 relaunch resets the selected tab to Tambah @regression', async () => {
     // We are on Daftar right now; kill from here and relaunch.
     await daftar.open()
     await relaunch()
@@ -103,7 +103,7 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     expect(await daftar.isDisplayed()).toBe(false)
   })
 
-  it('TC-PERS-03 relaunch resets the selected month to current', async () => {
+  it('TC-PERS-03 relaunch resets the selected month to current @regression', async () => {
     await daftar.open()
     const current = await daftar.monthLabel()
     await daftar.prevMonth()
@@ -113,7 +113,7 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     expect(await daftar.monthLabel()).toBe(current)
   })
 
-  it('TC-PERS-04 force-stop racing a save leaves the DB readable', async () => {
+  it('TC-PERS-04 force-stop racing a save leaves the DB readable @regression', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',
@@ -133,7 +133,7 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     expect(await daftar.summaryIncome()).toBeGreaterThanOrEqual(seededTotal)
   })
 
-  it('TC-PERS-05 reinstall clears all data', async () => {
+  it('TC-PERS-05 reinstall clears all data @regression', async () => {
     const udid = await deviceUdid()
     simctl(`terminate ${udid} ${IOS_BUNDLE_ID}`)
     simctl(`uninstall ${udid} ${IOS_BUNDLE_ID}`)

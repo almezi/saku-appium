@@ -105,6 +105,14 @@ npm run test:kategori                      # category management flows
 # Run a single file:
 npx wdio run ./wdio.conf.ts --spec ./src/tests/ringkasan/summary.spec.ts
 
+# By test type — every test case's it() title ends with one type tag:
+npm run test:sanity                         # @sanity — the fast always-on set
+npm run test:regression                     # @regression — the functional suite
+npm run test:integration                    # @integration — cross-screen flows
+npm run test:sanity:ios                     # the same three on iOS
+npm run test:regression:ios
+npm run test:integration:ios
+
 # Parallel across devices (export SAKU_DEVICES first, needs ≥ 2 devices):
 npm run test:shard                         # split spec files across devices — ~2x faster
 npm run test:parallel                      # every spec on every device — coverage
@@ -141,7 +149,9 @@ saku-appium/
 │   ├── config/
 │   │   ├── tags.ts              # ★ THE TEST-TAG CONTRACT (read this constantly)
 │   │   ├── categories.ts        # Stable category/account IDs (never use display names)
-│   │   └── category-labels.ts   # The one documented text-lookup exception
+│   │   ├── category-labels.ts   # The one documented text-lookup exception
+│   │   ├── test-types.ts        # The test-type vocabulary (@sanity/@regression/@integration)
+│   │   └── __tests__/           # Guardrail: every test case carries exactly one test type
 │   ├── helpers/
 │   │   ├── locators.ts          # Turn a tag into an Appium selector (byTag, scrollToTag…)
 │   │   ├── elements.ts          # Read text/amounts off already-found elements
@@ -407,6 +417,16 @@ Reference categories/accounts **by ID** (`categories.income.salary` → `'inc_sa
 never by display name ("Gaji"). IDs are stable; names/localization are not. Note some
 categories have `countsInTotals = false` (e.g. `inc_transfer_in`, `exp_finance_investment`)
 — they exist but shouldn't change the summary totals.
+
+### 7.6 `config/test-types.ts` — the test-type vocabulary
+Every **test case** ends its `it()` title with exactly one type tag: `@sanity`,
+`@regression` or `@integration`. The scripts in §3 (`npm run test:sanity` etc.) filter
+on those tags, so a case **must** carry one — an untagged case is silently excluded
+from every filtered run rather than failing loudly. `npm run test:unit` enforces it:
+the guardrail in `src/config/__tests__/test-types.test.ts` parses every spec file and
+asserts each case carries exactly one recognized type, that a file does not mix types,
+and that the file's `describe()` agrees with its cases. Both twins of a spec carry the
+same type.
 
 ---
 

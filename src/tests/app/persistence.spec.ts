@@ -34,14 +34,14 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     }
   })
 
-  it('TC-PERS-01 kill + relaunch keeps every committed transaction', async () => {
+  it('TC-PERS-01 kill + relaunch keeps every committed transaction @regression', async () => {
     await driver.terminateApp(PACKAGE)
     await driver.activateApp(PACKAGE)
     await daftar.open()
     expect(await daftar.summaryIncome()).toBe(seededTotal)
   })
 
-  it('TC-PERS-02 relaunch resets the selected tab to Tambah', async () => {
+  it('TC-PERS-02 relaunch resets the selected tab to Tambah @regression', async () => {
     // We are on Daftar right now; kill from here and relaunch.
     await driver.terminateApp(PACKAGE)
     await driver.activateApp(PACKAGE)
@@ -49,7 +49,7 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     expect(await tambah.isDisplayed()).toBe(true)
   })
 
-  it('TC-PERS-03 relaunch resets the selected month to current', async () => {
+  it('TC-PERS-03 relaunch resets the selected month to current @regression', async () => {
     await daftar.open()
     const current = await daftar.monthLabel()
     await daftar.prevMonth() // verify-retry helper on the page object
@@ -60,7 +60,7 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     expect(await daftar.monthLabel()).toBe(current)
   })
 
-  it('TC-PERS-04 force-stop racing a save leaves the DB readable', async () => {
+  it('TC-PERS-04 force-stop racing a save leaves the DB readable @regression', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',
@@ -76,7 +76,7 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     expect(await daftar.summaryIncome()).toBeGreaterThanOrEqual(seededTotal)
   })
 
-  it('TC-PERS-05 reinstall clears all data', async () => {
+  it('TC-PERS-05 reinstall clears all data @regression', async () => {
     execSync(`adb uninstall ${PACKAGE}`, { stdio: 'inherit' })
     execSync(`adb install ${APK}`, { stdio: 'inherit' })
     await driver.activateApp(PACKAGE)

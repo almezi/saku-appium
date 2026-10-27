@@ -51,7 +51,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
   // the previous month and the taps stopped registering under WebdriverIO
   // (verified clickable there via MCP; a timing/window quirk, not app logic).
 
-  it('TC-EDIT-01 tapping Ubah opens the form prefilled', async () => {
+  it('TC-EDIT-01 tapping Ubah opens the form prefilled @regression', async () => {
     await daftar.open()
     await ubah.openFromDaftar(daftar, categories.income.refund)
     expect(await ubah.isDisplayed()).toBe(true)
@@ -62,7 +62,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     expect(await ubah.isSaveEnabled()).toBe(false)
   })
 
-  it('TC-EDIT-02 changing the amount and saving updates the row and summary', async () => {
+  it('TC-EDIT-02 changing the amount and saving updates the row and summary @regression', async () => {
     await tambah.fillAmount(NEW_AMOUNT)
     await ubah.save()
     expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
@@ -73,7 +73,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     expect(staleAmountTexts.length).toBe(0)
   })
 
-  it('TC-EDIT-03 changing the category recalculates the Ringkasan breakdown', async () => {
+  it('TC-EDIT-03 changing the category recalculates the Ringkasan breakdown @regression', async () => {
     await ubah.openFromDaftar(daftar, categories.income.refund)
     await selectCategoryInline(categories.income.salary)
     await ubah.save()
@@ -84,7 +84,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     expect(refundItems.length).toBe(0)
   })
 
-  it('TC-EDIT-04 switching income to expense swaps the summaries', async () => {
+  it('TC-EDIT-04 switching income to expense swaps the summaries @regression', async () => {
     await daftar.open()
     await ubah.openFromDaftar(daftar, categories.income.salary)
     // The edit screen's type toggle uses the shared segmented ids (verified
@@ -98,7 +98,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     expect(await daftar.firstDayHeaderTotal()).toBe(-NEW_AMOUNT)
   })
 
-  it('TC-EDIT-06 editing only the note keeps amount and category', async () => {
+  it('TC-EDIT-06 editing only the note keeps amount and category @regression', async () => {
     const editedNote = uniqueNote('note')
     await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
     await tambah.fillNote(editedNote)
@@ -112,7 +112,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     await byTag(tags.daftar.screen).waitForDisplayed()
   })
 
-  it('TC-EDIT-07 leaving the edit without saving keeps the data', async () => {
+  it('TC-EDIT-07 leaving the edit without saving keeps the data @regression', async () => {
     await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
     await tambah.fillAmount(999_999)
     await ubah.systemBack()
@@ -122,7 +122,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
   })
 
-  it('TC-EDIT-08 editing to an invalid amount blocks save', async () => {
+  it('TC-EDIT-08 editing to an invalid amount blocks save @regression', async () => {
     // Still on the reopened edit screen from TC-EDIT-07.
     await tambah.fillAmount(0)
     expect(await ubah.isSaveEnabled()).toBe(false)
@@ -130,7 +130,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     await byTag(tags.daftar.screen).waitForDisplayed()
   })
 
-  it('TC-EDIT-05 changing the date moves the item to another month', async () => {
+  it('TC-EDIT-05 changing the date moves the item to another month @regression', async () => {
     await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
     await tambah.selectDate(prevMonthDay)
     await ubah.save()

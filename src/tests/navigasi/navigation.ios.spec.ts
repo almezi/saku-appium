@@ -21,11 +21,11 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 45_000 })
   })
 
-  it('TC-NAV-01 app launches on the Tambah screen', async () => {
+  it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => {
     expect(await iosByTag(tags.tambah.screen).isDisplayed()).toBe(true)
   })
 
-  it('TC-NAV-02 Tambah tab shows tambah_screen', async () => {
+  it('TC-NAV-02 Tambah tab shows tambah_screen @sanity', async () => {
     // The bottom bar renders all three tabs and tapping Tambah (re)shows its
     // screen — it is the start tab, so this also covers the re-tap case.
     expect(await iosByTag(tags.navBottom).isDisplayed()).toBe(true)
@@ -37,17 +37,17 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     expect(await iosByTag(tags.tambah.screen).isDisplayed()).toBe(true)
   })
 
-  it('TC-NAV-03 Transaksi tab opens daftar_screen', async () => {
+  it('TC-NAV-03 Transaksi tab opens daftar_screen @sanity', async () => {
     await iosByTag(tags.navDaftar).click()
     await iosByTag(tags.daftar.screen).waitForDisplayed()
   })
 
-  it('TC-NAV-04 Ringkasan tab opens ringkasan_screen', async () => {
+  it('TC-NAV-04 Ringkasan tab opens ringkasan_screen @sanity', async () => {
     await iosByTag(tags.navRingkasan).click()
     await iosByTag(tags.ringkasan.screen).waitForDisplayed()
   })
 
-  it('TC-NAV-05 round-trip across all tabs without crashing', async () => {
+  it('TC-NAV-05 round-trip across all tabs without crashing @sanity', async () => {
     await iosByTag(tags.navTambah).click()
     await iosByTag(tags.tambah.screen).waitForDisplayed()
     await iosByTag(tags.navDaftar).click()
@@ -58,7 +58,7 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     await iosByTag(tags.tambah.screen).waitForDisplayed()
   })
 
-  it('TC-NAV-06 system navigation on each tab does not crash', async () => {
+  it('TC-NAV-06 system navigation on each tab does not crash @sanity', async () => {
     // iOS has no system BACK button, so the Android spec's driver.back()
     // steps are adapted: the platform way to leave a screen is backgrounding
     // the app and returning. The app must come back alive and functional.
@@ -95,7 +95,7 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
   })
 
-  it('TC-NAV-07 selected tab state persists on re-tap', async () => {
+  it('TC-NAV-07 selected tab state persists on re-tap @sanity', async () => {
     // Re-tapping the active tab must keep its screen and not bounce back to
     // the start tab.
     await iosByTag(tags.navDaftar).click()
@@ -111,7 +111,7 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     expect(await iosByTag(tags.tambah.screen).isExisting()).toBe(false)
   })
 
-  it('TC-NAV-08 20 rapid tab switches cause no freeze', async () => {
+  it('TC-NAV-08 20 rapid tab switches cause no freeze @sanity', async () => {
     const cycle = [tags.navDaftar, tags.navTambah, tags.navRingkasan]
     for (const tab of Array.from({ length: 20 }, (_, i) => cycle[i % cycle.length])) {
       await iosByTag(tab).click()

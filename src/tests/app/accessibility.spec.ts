@@ -25,14 +25,14 @@ const FORM_ORDER = [
 ]
 
 describe('TC-A11Y — accessibility (Phase 3.E) @regression', () => {
-  it('TC-A11Y-01 every clickable element has text, content-desc or a labeled descendant', async () => {
+  it('TC-A11Y-01 every clickable element has text, content-desc or a labeled descendant @regression', async () => {
     await tambah.open()
     expect(unlabeledClickables(await driver.getPageSource())).toEqual([])
     await daftar.open()
     expect(unlabeledClickables(await driver.getPageSource())).toEqual([])
   })
 
-  it('TC-A11Y-02 the disabled save button still exposes its state for announcement', async () => {
+  it('TC-A11Y-02 the disabled save button still exposes its state for announcement @regression', async () => {
     await tambah.open()
     const save = await byTag(tags.tambah.buttonSave)
     expect(await save.isEnabled()).toBe(false)
@@ -40,26 +40,26 @@ describe('TC-A11Y — accessibility (Phase 3.E) @regression', () => {
     expect(await save.isClickable()).toBe(true)
   })
 
-  it('TC-A11Y-03 all tap targets are at least 48dp', async () => {
+  it('TC-A11Y-03 all tap targets are at least 48dp @regression', async () => {
     await tambah.open()
     expect(under48dp(await driver.getPageSource())).toEqual([])
     await daftar.open()
     expect(under48dp(await driver.getPageSource())).toEqual([])
   })
 
-  it('TC-A11Y-04 contrast: measured 6.77-6.85:1 via scripts/contrast_check.py', async () => {
+  it('TC-A11Y-04 contrast: measured 6.77-6.85:1 via scripts/contrast_check.py @regression', async () => {
     // Pixel measurement is environment-dependent (rendered theme), so this
     // spec pins the sanity precondition only: body text exists to sample.
     await tambah.open()
     expect(await tambah.getHelperText()).toContain('Isi jumlah')
   })
 
-  it('TC-A11Y-05 traversal order matches the logical form order', async () => {
+  it('TC-A11Y-05 traversal order matches the logical form order @regression', async () => {
     await tambah.open()
     expect(traversalOrder(await driver.getPageSource(), FORM_ORDER)).toEqual(FORM_ORDER)
   })
 
-  it('TC-A11Y-06 icon-only controls carry their accessibility labels', async () => {
+  it('TC-A11Y-06 icon-only controls carry their accessibility labels @regression', async () => {
     await tambah.open()
     await byTag(tags.tambah.categoryPager).click()
     const sheet = await byTag(tags.tambah.categorySheetRoot)
@@ -72,7 +72,7 @@ describe('TC-A11Y — accessibility (Phase 3.E) @regression', () => {
     expect(xml).toContain('content-desc="Bulan berikutnya"')
   })
 
-  it('TC-A11Y-07 amounts render as currency text ("Rp X.XXX")', async () => {
+  it('TC-A11Y-07 amounts render as currency text ("Rp X.XXX") @regression', async () => {
     await tambah.open()
     expect(await tambah.getAmountText()).toMatch(/^Rp/)
   })

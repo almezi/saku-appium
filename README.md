@@ -22,6 +22,11 @@ npm run test:tambah
 npm run test:transaksi
 npx wdio run ./wdio.conf.ts --spec ./src/tests/tambah/add-income.spec.ts   # single spec
 
+# By test type — see "Test types" below:
+npm run test:sanity
+npm run test:regression
+npm run test:integration
+
 # Parallel across devices (≥ 2 devices required):
 export SAKU_DEVICES="emulator-5554,140892554V003873"   # udids from `adb devices -l`
 npm run test:shard      # speed: split spec files across devices (~2x faster wall time)
@@ -51,6 +56,48 @@ shortcuts exist for `list`, `edit`, `backup`, `val`, `amt`, `pers`, `rot`, `perf
 **`wdio.ios.conf.ts` is not covered by `tsc --noEmit`** — `tsconfig.json` includes only
 `src/**/*.ts` and `wdio.conf.ts`. Run `npm run typecheck` with that file added before
 trusting the iOS config. See `code_review.md` finding **S1**.
+
+### Test types
+
+Every **test case** carries a **type tag** at the end of its `it()` title, so a run can be
+scoped to the kind of test it is — and you can see the type of a single case in the report.
+The vocabulary lives in `src/config/test-types.ts`:
+
+```ts
+it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => { … })
+```
+
+| Tag | Meaning | Where it lives today |
+|---|---|---|
+| `@sanity` | The app launches and the core path is intact — fast enough for every change | `src/tests/navigasi/` |
+| `@regression` | Every feature behaves as specified — a release candidate must pass it | The bulk of the suite |
+| `@integration` | Cases that span screens or flows at once (a delete must move the list, the summary AND the breakdown) | `src/tests/transaksi/delete-undo.spec.ts` |
+
+All the cases in a file share one type, so a file is never half-in and half-out of a
+filtered run. Today that is 262 cases: 16 `@sanity`, 237 `@regression`, 9 `@integration`.
+
+Run one type on either platform — the scripts set `TEST_GREP`, which both runner configs
+pass to mocha's `grep`:
+
+```bash
+npm run test:sanity          # Android, @sanity
+npm run test:regression      # Android, @regression
+npm run test:integration     # Android, @integration
+
+npm run test:sanity:ios      # iOS, @sanity
+npm run test:regression:ios  # iOS, @regression
+npm run test:integration:ios # iOS, @integration
+```
+
+`@integration` is Android-only so far — `delete-undo` has no iOS twin yet, so its iOS
+variant selects nothing.
+
+**A new test case must carry a type tag.** An untagged case is not a loud failure: mocha's
+`grep` matches the tag in the test's full title, so the case is silently excluded from
+every filtered run and never executes. `npm run test:unit` catches that — the guardrail in
+`src/config/__tests__/test-types.test.ts` walks every spec file and asserts each case
+carries exactly one recognized type, that a file does not mix types, and that the file's
+`describe()` agrees with its cases.
 
 ### Parallel runs
 
@@ -104,9 +151,10 @@ They are expected to expose the same public method surface, but today they have 
 method, add it to **both** twins.
 
 Current scale: **30 spec files** (16 Android + 14 iOS), **254 test cases**
-(137 Android + 117 iOS), **16 page objects** (8 screens × 2 platforms), **148 unique
-test-case IDs** across 19 prefixes, **6 helper modules** (+ 2 unit-test files under
-`src/helpers/__tests__/`), and **3 config modules**.
+(137 Android + 117 iOS) plus 8 `it.skip` cases — **262 cases in all**, every one of them
+type-tagged — **16 page objects** (8 screens × 2 platforms), **148 unique
+test-case IDs** across 19 prefixes, **6 helper modules** (+ 3 unit-test files under
+`src/helpers/__tests__/` and `src/config/__tests__/`), and **4 config modules**.
 
 ### Notes
 
@@ -249,6 +297,7 @@ Now you can use the Appium MCP tools to drive the simulator:
 | `HANDOVER.md` | Guided onboarding for a new SDET/QA engineer | Your first day on the project |
 | `AGENTS.md` | Operating rules for AI coding agents | An agent is about to edit this repo |
 | `TESTABILITY.md` | **The test-tag contract** — source of truth for locators | Before writing any locator |
+| `src/config/test-types.ts` | The test-type taxonomy (`@sanity` / `@regression` / `@integration`) | Before adding a test case |
 | `UI_SPEC.md` | Screen-by-screen behaviour of the app | Before asserting on the UI |
 | `test-cases-simple-money-tracker.md` | Catalogue of 195 designed test cases | Planning coverage |
 | `TESTING.md` | Test data, execution procedure, recorded results | Running or triaging a suite |

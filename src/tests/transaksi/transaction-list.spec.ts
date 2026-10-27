@@ -37,7 +37,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
   })
 
-  it('seeds three transactions across two days', async () => {
+  it('seeds three transactions across two days @regression', async () => {
     await createTransaction({
       type: 'pemasukan',
       amount: A_YESTERDAY_INCOME,
@@ -63,7 +63,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     expect(await daftar.dayHeaderCount()).toBe(2)
   })
 
-  it('TC-LIST-01 empty month shows the empty state', async () => {
+  it('TC-LIST-01 empty month shows the empty state @regression', async () => {
     await daftar.open()
     await daftar.prevMonth()
     try {
@@ -83,7 +83,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     expect(await daftar.dayHeaderCount()).toBeGreaterThanOrEqual(1)
   })
 
-  it('TC-LIST-02 day header shows weekday, date and net total', async () => {
+  it('TC-LIST-02 day header shows weekday, date and net total @regression', async () => {
     // The today header is the first (newest) one; its net is negative, so
     // this also pins the −Rp rendering of an expense-heavy day.
     const texts = await daftar.firstDayHeaderTexts()
@@ -92,7 +92,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     expect(texts[2]).toBe(formatNegativeRp(Math.abs(TODAY_NET)))
   })
 
-  it('TC-LIST-04 items sort newest first (days and within a day)', async () => {
+  it('TC-LIST-04 items sort newest first (days and within a day) @regression', async () => {
     // Runs while the list is still at the top: C (created last) before B
     // under today's header, and the yesterday header comes after today's.
     const amounts = await daftar.rowAmountTextsInOrder()
@@ -101,7 +101,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     expect(amounts[2]).toBe(formatRp(A_YESTERDAY_INCOME))
   })
 
-  it('TC-LIST-06 income rows carry no minus; expense-heavy day total does', async () => {
+  it('TC-LIST-06 income rows carry no minus; expense-heavy day total does @regression', async () => {
     const amounts = await daftar.rowAmountTextsInOrder()
     const incomeRows = [formatRp(C_TODAY_INCOME), formatRp(A_YESTERDAY_INCOME)]
     for (const row of amounts.filter((a) => incomeRows.includes(a))) {
@@ -110,7 +110,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     expect(await daftar.firstDayHeaderTotal()).toBe(TODAY_NET)
   })
 
-  it('TC-LIST-03 items group under their own day headers', async () => {
+  it('TC-LIST-03 items group under their own day headers @regression', async () => {
     expect(await daftar.dayHeaderCount()).toBe(2)
     // findRowText scrolls the LazyColumn — the yesterday income is only
     // visible under the older header.
@@ -118,7 +118,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     expect(await yesterdayRow.isDisplayed()).toBe(true)
   })
 
-  it('TC-LIST-05 rows render category, type label and formatted amount', async () => {
+  it('TC-LIST-05 rows render category, type label and formatted amount @regression', async () => {
     const incomeRow = await daftar.rowTexts(formatRp(C_TODAY_INCOME))
     expect(incomeRow).toContain('Investasi')
     expect(incomeRow).toContain('Pemasukan')
@@ -134,7 +134,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
   // renameInDialog now writes through keyboard-free instrumentation setText
   // (setValueIntoTaggedField, the flow that always worked live via Appium
   // MCP set_value), so the keyboard never opens and the dialog stays put.
-  it('TC-LIST-07 long category name does not overlap the row amount', async () => {
+  it('TC-LIST-07 long category name does not overlap the row amount @regression', async () => {
     const LONG_NAME = 'KATEGORI PANJANG SEK' // dialog max is 20 chars
     await ringkasan.open()
     await kategori.openFromRingkasan()
@@ -182,14 +182,14 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     expect(nameBox.x + nameSize.width).toBeLessThanOrEqual(amountBox.x + 1)
   })
 
-  it('TC-LIST-09 income summary equals the sum of income rows this month', async () => {
+  it('TC-LIST-09 income summary equals the sum of income rows this month @regression', async () => {
     await daftar.open()
     expect(await daftar.summaryIncome()).toBe(A_YESTERDAY_INCOME + C_TODAY_INCOME)
   })
 
   // +10_000: TC-LIST-07's renamed-category expense now exists (it runs
   // before this test in file order and is dated today).
-  it('TC-LIST-10 expense summary equals the sum of expense rows this month', async () => {
+  it('TC-LIST-10 expense summary equals the sum of expense rows this month @regression', async () => {
     expect(await daftar.summaryExpense()).toBe(B_TODAY_EXPENSE + 10_000)
   })
 
@@ -211,7 +211,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
   ) {
     const first = chunk * BULK_PER_SEED + 1
     const last = Math.min((chunk + 1) * BULK_PER_SEED, BULK_COUNT)
-    it(`TC-LIST-08 seeds bulk items ${first}–${last} of ${BULK_COUNT}`, async () => {
+    it(`TC-LIST-08 seeds bulk items ${first}–${last} of ${BULK_COUNT} @regression`, async () => {
       await tambah.open()
       for (let i = first; i <= last; i++) {
         if ((i - first) % 5 === 0) console.log(`[TC-LIST-08] creating bulk item ${i}/${BULK_COUNT}`)
@@ -228,7 +228,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     })
   }
 
-  it('TC-LIST-08 scrolling 100+ items does not crash', async () => {
+  it('TC-LIST-08 scrolling 100+ items does not crash @regression', async () => {
     await daftar.open()
     // Down to the bottom of the LazyColumn and back: 14 swipes ≈ 100+ rows
     // at ~7–8 rows per screenful. A crash or freeze surfaces as a command

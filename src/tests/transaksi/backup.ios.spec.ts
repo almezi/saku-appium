@@ -88,7 +88,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     })
   })
 
-  it('TC-BACKUP-01 tapping the daftar backup button opens the Cadangan screen', async () => {
+  it('TC-BACKUP-01 tapping the daftar backup button opens the Cadangan screen @regression', async () => {
     // The seed's save leaves the app on Tambah; the backup button lives on the
     // Transaksi screen, so navigate there first.
     await daftar.open()
@@ -100,7 +100,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     expect(await cadangan.warningStrip.isDisplayed()).toBe(true)
   })
 
-  it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file', async () => {
+  it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file @regression', async () => {
     await cadangan.exportJsonButton.click()
     await cadangan.waitForShareSheet()
     expect(await cadangan.shareSheetCaption()).toContain('saku-cadangan')
@@ -108,7 +108,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     expect(await cadangan.isDisplayed()).toBe(true)
   })
 
-  it('TC-BACKUP-03 the exported files contain the current transaction', async () => {
+  it('TC-BACKUP-03 the exported files contain the current transaction @regression', async () => {
     const json = JSON.parse(await readExportedFile('saku-cadangan.json')) as {
       transactions: Array<{ amount: number; note: string | null }>
     }
@@ -125,7 +125,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     expect(csv).toContain(`,${SEED_AMOUNT},`)
   })
 
-  it('TC-BACKUP-05 cancelling the export leaves no side effects', async () => {
+  it('TC-BACKUP-05 cancelling the export leaves no side effects @regression', async () => {
     await cadangan.exportCsvButton.click()
     await cadangan.waitForShareSheet()
     await cadangan.dismissShareSheet()
@@ -142,9 +142,9 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
   // The import picker cannot be driven on iOS: see the file header and
   // BUG_Found_10.md. Skipped per the repo's iOS-blocked-case convention
   // (same shape as TC-LIST-07/08), not because the app is at fault.
-  it.skip('TC-BACKUP-04 importing a backup restores its transactions (skipped on iOS: system file picker is out-of-process)', async () => {})
+  it.skip('TC-BACKUP-04 importing a backup restores its transactions (skipped on iOS: system file picker is out-of-process) @regression', async () => {})
 
-  it('TC-BACKUP-06 exporting with zero transactions produces a valid empty file', async () => {
+  it('TC-BACKUP-06 exporting with zero transactions produces a valid empty file @regression', async () => {
     // Cadangan has no bottom bar, so leave it through its own back button
     // before deleting on Transaksi.
     await cadangan.tapBack()

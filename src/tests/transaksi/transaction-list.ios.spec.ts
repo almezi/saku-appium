@@ -27,7 +27,7 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
     await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
   })
 
-  it('seeds three transactions across two days', async () => {
+  it('seeds three transactions across two days @regression', async () => {
     await createTransactionIos({
       type: 'pemasukan',
       amount: A_YESTERDAY_INCOME,
@@ -53,7 +53,7 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
     expect(await daftar.dayHeaderCount()).toBe(2)
   })
 
-  it('TC-LIST-01 empty month shows the empty state', async () => {
+  it('TC-LIST-01 empty month shows the empty state @regression', async () => {
     await daftar.open()
     await daftar.prevMonth()
     try {
@@ -69,21 +69,21 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
     expect(await daftar.dayHeaderCount()).toBeGreaterThanOrEqual(1)
   })
 
-  it('TC-LIST-02 day header shows weekday, date and net total', async () => {
+  it('TC-LIST-02 day header shows weekday, date and net total @regression', async () => {
     const texts = await daftar.firstDayHeaderTexts()
     expect(texts[0]).toBe(ID_WEEKDAYS[today.getDay()])
     expect(texts[1]).toBe(idDate(today))
     expect(texts[2]).toBe(formatNegativeRp(Math.abs(TODAY_NET)))
   })
 
-  it('TC-LIST-04 items sort newest first (days and within a day)', async () => {
+  it('TC-LIST-04 items sort newest first (days and within a day) @regression', async () => {
     const amounts = await daftar.rowAmountTextsInOrder()
     expect(amounts[0]).toBe(formatRp(C_TODAY_INCOME))
     expect(amounts[1]).toBe(formatRp(B_TODAY_EXPENSE))
     expect(amounts[2]).toBe(formatRp(A_YESTERDAY_INCOME))
   })
 
-  it('TC-LIST-06 income rows carry no minus; expense-heavy day total does', async () => {
+  it('TC-LIST-06 income rows carry no minus; expense-heavy day total does @regression', async () => {
     const amounts = await daftar.rowAmountTextsInOrder()
     const incomeRows = [formatRp(C_TODAY_INCOME), formatRp(A_YESTERDAY_INCOME)]
     for (const row of amounts.filter((a) => incomeRows.includes(a))) {
@@ -92,13 +92,13 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
     expect(await daftar.firstDayHeaderTotal()).toBe(TODAY_NET)
   })
 
-  it('TC-LIST-03 items group under their own day headers', async () => {
+  it('TC-LIST-03 items group under their own day headers @regression', async () => {
     expect(await daftar.dayHeaderCount()).toBe(2)
     const yesterdayRow = await daftar.findRowText(formatRp(A_YESTERDAY_INCOME))
     expect(await yesterdayRow.isDisplayed()).toBe(true)
   })
 
-  it('TC-LIST-05 rows render category, type label and formatted amount', async () => {
+  it('TC-LIST-05 rows render category, type label and formatted amount @regression', async () => {
     const incomeRow = await daftar.rowTexts(formatRp(C_TODAY_INCOME))
     expect(incomeRow).toContain('Investasi')
     expect(incomeRow).toContain('Pemasukan')
@@ -109,17 +109,17 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
     expect(expenseRow).toContain(formatRp(B_TODAY_EXPENSE))
   })
 
-  it.skip('TC-LIST-07 long category name does not overlap the row amount (skipped on iOS)', async () => {})
+  it.skip('TC-LIST-07 long category name does not overlap the row amount (skipped on iOS) @regression', async () => {})
 
-  it('TC-LIST-09 income summary equals the sum of income rows this month', async () => {
+  it('TC-LIST-09 income summary equals the sum of income rows this month @regression', async () => {
     await daftar.open()
     expect(await daftar.summaryIncome()).toBe(A_YESTERDAY_INCOME + C_TODAY_INCOME)
   })
 
-  it('TC-LIST-10 expense summary equals the sum of expense rows this month', async () => {
+  it('TC-LIST-10 expense summary equals the sum of expense rows this month @regression', async () => {
     expect(await daftar.summaryExpense()).toBe(B_TODAY_EXPENSE)
   })
 
-  it.skip('TC-LIST-08 seeds bulk items (skipped on iOS)', async () => {})
-  it.skip('TC-LIST-08 scrolling 100+ items does not crash (skipped on iOS)', async () => {})
+  it.skip('TC-LIST-08 seeds bulk items (skipped on iOS) @regression', async () => {})
+  it.skip('TC-LIST-08 scrolling 100+ items does not crash (skipped on iOS) @regression', async () => {})
 })

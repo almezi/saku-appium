@@ -95,7 +95,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
     await clearAmount()
   })
 
-  it('TC-AMT-01 tapping the amount field opens the numeric keypad', async () => {
+  it('TC-AMT-01 tapping the amount field opens the numeric keypad @regression', async () => {
     const editor = await amountEditor()
     await editor.click()
     await editor.waitForDisplayed({ timeout: 10_000 })
@@ -113,11 +113,11 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
     expect(await letterKeys.length).toBe(0)
   })
 
-  it('TC-AMT-02 typed digits format live as "Rp X.XXX"', async () => {
+  it('TC-AMT-02 typed digits format live as "Rp X.XXX" @regression', async () => {
     expect(await typeAmount('250000')).toBe('Rp 250.000')
   })
 
-  it('TC-AMT-03 backspace to empty returns helper state and re-disables save', async () => {
+  it('TC-AMT-03 backspace to empty returns helper state and re-disables save @regression', async () => {
     await tambah.selectCategory(categories.income.salary)
     await typeAmount('10000')
     expect(await tambah.isSaveEnabled()).toBe(true)
@@ -126,7 +126,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
     expect(await tambah.getHelperText()).toBe('Isi jumlah dulu')
   })
 
-  it('TC-AMT-04 clear field re-disables save', async () => {
+  it('TC-AMT-04 clear field re-disables save @regression', async () => {
     await typeAmount('10000')
     await tambah.selectCategory(categories.income.salary)
     expect(await tambah.isSaveEnabled()).toBe(true)
@@ -134,11 +134,11 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
     expect(await tambah.isSaveEnabled()).toBe(false)
   })
 
-  it('TC-AMT-05 thousand separator auto-inserted on formatted amounts', async () => {
+  it('TC-AMT-05 thousand separator auto-inserted on formatted amounts @regression', async () => {
     expect(await typeAmount('1234567')).toBe('Rp 1.234.567')
   })
 
-  it('TC-AMT-06 cursor stays at end during formatting edits', async () => {
+  it('TC-AMT-06 cursor stays at end during formatting edits @regression', async () => {
     expect(await typeAmount('123')).toBe('Rp 123')
     // One backspace drops the last digit only.
     await pressBackspace()
@@ -149,7 +149,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
     expect(await tambah.getAmountText()).toBe('Rp 124')
   })
 
-  it('TC-AMT-07 max digits limit clamps at 12 without crashing', async () => {
+  it('TC-AMT-07 max digits limit clamps at 12 without crashing @regression', async () => {
     await clearAmount()
     expect(await typeAmount('9'.repeat(18))).toBe('Rp 999.999.999.999')
     expect(await tambah.isDisplayed()).toBe(true)

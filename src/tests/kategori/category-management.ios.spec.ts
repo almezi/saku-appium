@@ -62,13 +62,13 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     })
   })
 
-  it('TC-KAT-01 the Ringkasan manage button opens kategori_screen', async () => {
+  it('TC-KAT-01 the Ringkasan manage button opens kategori_screen @regression', async () => {
     await ringkasan.open()
     await kategori.openFromRingkasan()
     expect(await kategori.isDisplayed()).toBe(true)
   })
 
-  it('TC-KAT-02 the Tambah manage-category link opens kategori_screen', async () => {
+  it('TC-KAT-02 the Tambah manage-category link opens kategori_screen @regression', async () => {
     // Kategori shows no bottom bar, so step back to Ringkasan first.
     await kategori.tapBack()
     await ringkasan.waitForScreen()
@@ -77,7 +77,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     expect(await kategori.isDisplayed()).toBe(true)
   })
 
-  it('TC-KAT-03/04 the income tab lists all default income categories', async () => {
+  it('TC-KAT-03/04 the income tab lists all default income categories @regression', async () => {
     // Opens on Pemasukan; the list is a LazyColumn, so scroll each row below
     // the header before asserting (9 defaults).
     for (const id of DEFAULT_INCOME_IDS) {
@@ -86,7 +86,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     }
   })
 
-  it('TC-KAT-05 the type toggle switches to the expense category list', async () => {
+  it('TC-KAT-05 the type toggle switches to the expense category list @regression', async () => {
     await kategori.selectType('pengeluaran')
     for (const id of [
       categories.expense.dailyFood,
@@ -102,7 +102,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     await kategori.selectType('pemasukan')
   })
 
-  it('TC-KAT-06 search filters the list by name', async () => {
+  it('TC-KAT-06 search filters the list by name @regression', async () => {
     const before = await kategori.categoryRowCount()
     expect(before).toBeGreaterThan(1)
     // "gaj" matches only "Gaji" (income tab, case-insensitive).
@@ -112,7 +112,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     expect(await kategori.rowHide(categories.income.freelance).isExisting()).toBe(false)
   })
 
-  it('TC-KAT-07 the pencil opens the "Ubah kategori" dialog with its field and actions', async () => {
+  it('TC-KAT-07 the pencil opens the "Ubah kategori" dialog with its field and actions @regression', async () => {
     // TC-KAT-06's filter persists; clear it, then create the custom category
     // the pencil/trash flows need (default rows have no edit affordance).
     await kategori.search('')
@@ -128,7 +128,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     expect(await kategori.formName.isExisting()).toBe(false)
   })
 
-  it('TC-KAT-09 saving an empty name is blocked and the dialog stays open', async () => {
+  it('TC-KAT-09 saving an empty name is blocked and the dialog stays open @regression', async () => {
     await kategori.openEditDialog(customId)
     await kategori.typeRename('')
     await kategori.saveRename()
@@ -138,24 +138,24 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     expect(await kategori.rowText(customId)).toContain(CUSTOM_NAME)
   })
 
-  it('TC-KAT-10 cancelling the dialog leaves the category unchanged', async () => {
+  it('TC-KAT-10 cancelling the dialog leaves the category unchanged @regression', async () => {
     await kategori.openEditDialog(customId)
     await kategori.typeRename('Jangan Disimpan')
     await kategori.cancelRename()
     expect(await kategori.rowText(customId)).not.toContain('Jangan Disimpan')
   })
 
-  it('TC-KAT-13 the row shows the Bawaan transaction count', async () => {
+  it('TC-KAT-13 the row shows the Bawaan transaction count @regression', async () => {
     expect(await kategori.rowText(categories.income.salary)).toContain('Bawaan ·')
   })
 
-  it('TC-KAT-14 the category color mark renders', async () => {
+  it('TC-KAT-14 the category color mark renders @regression', async () => {
     await kategori.scrollToRow(categories.income.salary)
     await kategori.mark(categories.income.salary).waitForDisplayed({ timeout: 10_000 })
     expect(await kategori.mark(categories.income.salary).isDisplayed()).toBe(true)
   })
 
-  it('TC-KAT-08 renaming a category updates its list row', async () => {
+  it('TC-KAT-08 renaming a category updates its list row @regression', async () => {
     await kategori.openEditDialog(customId)
     await kategori.typeRename(RENAMED_NAME)
     await kategori.saveRename()
@@ -163,7 +163,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     expect(await kategori.rowText(customId)).toContain(RENAMED_NAME)
   })
 
-  it('TC-KAT-11/12 hiding a category removes it from the Tambah picker', async () => {
+  it('TC-KAT-11/12 hiding a category removes it from the Tambah picker @regression', async () => {
     // Clear any filter so the gift row is in the rendered list, then hide it.
     await kategori.search('')
     await kategori.setHidden(categories.income.gift, true)
@@ -192,7 +192,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     await kategori.setHidden(categories.income.gift, false)
   })
 
-  it('TC-KAT-15 back returns to the previous screen', async () => {
+  it('TC-KAT-15 back returns to the previous screen @regression', async () => {
     await kategori.tapBack()
     expect(await tambah.isDisplayed()).toBe(true)
   })

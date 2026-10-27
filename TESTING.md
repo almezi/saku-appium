@@ -14,7 +14,8 @@ Consolidated test data, execution plan, examples, and results template.
 >
 > **Current scale:** 30 spec files (16 Android + 14 iOS), 254 test cases
 > (137 + 117), 148 unique test-case ids, 195 cases in the catalogue, and
-> 17 unit tests for the pure helpers (`npm run test:unit`).
+> 18 unit tests for the pure helpers and the test-type guardrail
+> (`npm run test:unit`).
 >
 > The sections below are kept as the record of the original plan. Where they
 > describe files that were never committed, read them as *illustrative* rather

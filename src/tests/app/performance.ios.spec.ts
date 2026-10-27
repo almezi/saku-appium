@@ -63,7 +63,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
     }
   })
 
-  it('TC-PERF-02 tab switch completes in under 1.5s', async () => {
+  it('TC-PERF-02 tab switch completes in under 1.5s @regression', async () => {
     await tambah.open()
     await driver.pause(500)
     const t0 = Date.now()
@@ -74,7 +74,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
     expect(t).toBeLessThan(1_500)
   })
 
-  it('TC-PERF-04 saving a transaction completes in under 2s', async () => {
+  it('TC-PERF-04 saving a transaction completes in under 2s @regression', async () => {
     await tambah.open()
     await tambah.fillForm({
       type: 'pemasukan',
@@ -93,7 +93,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
     expect(t).toBeLessThan(2_000)
   })
 
-  it('TC-PERF-03 list scroll stays fluid with 100+ items', async () => {
+  it('TC-PERF-03 list scroll stays fluid with 100+ items @regression', async () => {
     await daftar.open()
     // Normalise the scroll position: the list must not start at its end,
     // where further sweeps would move nothing.
@@ -128,7 +128,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
   })
 
   // Runs LAST: the relaunch disrupts the Appium session.
-  it('TC-PERF-01 cold start completes in under 8s', async () => {
+  it('TC-PERF-01 cold start completes in under 8s @regression', async () => {
     const totals: number[] = []
     for (let attempt = 0; attempt < 3; attempt++) {
       await driver.terminateApp(IOS_BUNDLE_ID)
@@ -147,7 +147,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
   })
 
   // Skipped in wdio: 50 UI cycles exceed the mocha timeout.
-  it.skip('TC-PERF-05 memory stays stable across 50 add/delete cycles', async () => {
+  it.skip('TC-PERF-05 memory stays stable across 50 add/delete cycles @regression', async () => {
     // iOS has no `dumpsys meminfo`; the app's RSS is readable from the
     // host `ps -A -o pid,rss,comm` (~316 MB measured), which is out of the
     // driver's reach — the case is exercised out of band.
