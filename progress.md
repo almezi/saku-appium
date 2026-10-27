@@ -18,6 +18,9 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 > fine) · `BUG_Found_03.md` → **app code** (WAL invalidation silently discards data; TRUNCATE
 > journal mode / checkpoint-on-stop) · `BUG_Found_04.md` → **automation code** (setValue-based
 > dialog typing; app-side investigation only if that proves insufficient).
+>
+> Platform status (2026-10-27): Android — complete (137/146 passing, 9 skipped per retry policy);
+> iOS — partial (only TC-NAV spec exists: 8/8 passing on iPhone 18 Pro sim; other sub-phases not yet ported).
 
 ---
 
@@ -79,6 +82,8 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 **Spec:** `src/tests/tambah/add-income.spec.ts` | **Agent:** ZCode (GLM-5.3) — 9/9 passing 2026-10-24
 
+> **iOS run 2026-10-27:** ported as `src/tests/tambah/add-income.ios.spec.ts` (9/9 passing, iPhone 18 Pro sim / iOS 27.0, wdio.ios.conf.ts). Typing winner: `addValue` (no `hideKeyboard` — throws). Save confirmation = form reset (no `component_toast` tag on iOS). Currency digits-only verification.
+
 ### 1.C — Add Expense (TC-EXP) — 8 tasks
 
 - [x] TC-EXP-01: Expense + amount + category → save succeeds
@@ -91,6 +96,8 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [x] TC-EXP-08: Expense > balance → balance negative `−Rp`
 
 **Spec:** `src/tests/tambah/add-expense.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
+
+> **iOS run 2026-10-27:** ported as `src/tests/tambah/add-expense.ios.spec.ts` (8/8 passing, iPhone 18 Pro sim / iOS 27.0, wdio.ios.conf.ts). Same typing/save gotchas as 1.B.
 
 ### 1.D — Transaction List (TC-LIST) — 11 tasks
 
