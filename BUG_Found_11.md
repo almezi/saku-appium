@@ -1,4 +1,8 @@
-# BUG_FOUND.md — 11
+# BUG_Found_11.md — Bug Report 11
+
+## Status
+- **State:** Fixed
+- **Summary:** The Material3 date picker labels day cells in the device's day-first order, so the date-matching helper never matched. Fixed at the root cause in the helper.
 
 ## Identity
 - **Reported by:** Qoder automation agent (iOS suite verification, Phase 3.F finalization)

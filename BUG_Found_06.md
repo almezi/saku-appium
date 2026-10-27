@@ -1,22 +1,22 @@
-# BUG_Found_06.md
+# BUG_Found_06.md — Bug Report 06
+
+## Status
+- **State:** Open
+- **Summary:** Bottom-nav labels clip mid-word at 200 % font scale. App-side text-overflow handling; the accessibility tree and tag resolution are unaffected.
 
 ## Identity
 
-| Field | Value |
-|---|---|
-| Reported by | ZCode agent (Appium MCP run, Phase 3.D) |
-| Reported at | 2026-10-26T13:40:00+07:00 |
-| Branch | features/phase3 |
-| Commit SHA | 14d1ec6 |
+- **Reported by:** ZCode agent (Appium MCP run, Phase 3.D)
+- **Reported at:** 2026-10-26T13:40:00+07:00
+- **Branch:** features/phase3
+- **Commit SHA:** 14d1ec6
 
 ## Test Context
 
-| Field | Value |
-|---|---|
-| Phase | 3 |
-| Sub-phase | 3.D — Rotation & Config Change |
-| Test case ID | TC-ROT-06 |
-| Spec file | src/tests/app/rotation.spec.ts |
+- **Phase:** 3
+- **Sub-phase:** 3.D — Rotation & Config Change
+- **Test case ID:** TC-ROT-06
+- **Spec file:** src/tests/app/rotation.spec.ts
 
 ## Bug Details
 

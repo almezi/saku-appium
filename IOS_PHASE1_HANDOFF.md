@@ -1,15 +1,43 @@
-# IOS_PHASE1_HANDOFF.md — iOS Phase 1 port: state + TODO
+# IOS_PHASE1_HANDOFF.md — iOS port: state + remaining work
 
-> Written 2026-10-27 after the Wave-1 agent hit its quota limit mid-run.
-> Pick up from here. Read AGENTS.md, progress.md (§1.A iOS note), TESTABILITY.md
-> (iOS sections), and this file before touching code.
+> **Status as of 2026-10-27.** This file was originally written mid-port, when only Wave 1
+> (TC-INC / TC-EXP) had landed. Since then the port has progressed through Phase 3.
+> **Read the "Verified iOS facts" section below before touching any iOS code** — those
+> findings are hard-won and will cost you a day to rediscover.
+>
+> Also read `AGENTS.md` (§ Android/iOS Twin Convention), `progress.md` (per-case status),
+> and `TESTABILITY.md` (iOS sections).
 
-## Mission
+## Where the port actually stands
 
-Port Phase 1 (sub-phases 1.B–1.H, 59 test cases) of the Saku suite to iOS.
-1.A (TC-NAV) is DONE: 8/8 passing (`src/tests/navigasi/navigation.ios.spec.ts`,
-`npm run test:navigasi:ios`). Android Phase 1 is complete and must stay green —
-all iOS work is ADDITIVE (new `*.ios.*` files / `ios*` exports).
+**Done** — 8 iOS page objects and 14 iOS spec files, 117 passing test cases:
+
+| Area | iOS spec | Status |
+|---|---|---|
+| 1.A Navigation | `src/tests/navigasi/navigation.ios.spec.ts` | 8/8 |
+| 1.B Add income | `src/tests/tambah/add-income.ios.spec.ts` | 9/9 |
+| 1.C Add expense | `src/tests/tambah/add-expense.ios.spec.ts` | 8/8 |
+| 1.D Transaction list | `src/tests/transaksi/transaction-list.ios.spec.ts` | 9/9 (3 skipped by design) |
+| 1.F Edit transaction | `src/tests/transaksi/edit-transaction.ios.spec.ts` | 8/8 |
+| 2.A Budget | `src/tests/anggaran/budget.ios.spec.ts` | 11/11 |
+| 2.B Categories | `src/tests/kategori/category-management.ios.spec.ts` | 13/13 |
+| 2.C Backup | `src/tests/transaksi/backup.ios.spec.ts` | 5/5 (TC-BACKUP-04 skipped) |
+| 3.A Validation | `src/tests/tambah/validation.ios.spec.ts` | 17/17 |
+| 3.B Amount input | `src/tests/tambah/amount-input.ios.spec.ts` | 7/7 |
+| 3.C Persistence | `src/tests/app/persistence.ios.spec.ts` | 5/5 |
+| 3.D Rotation | `src/tests/app/rotation.ios.spec.ts` | 6/6 |
+| 3.E Accessibility | `src/tests/app/accessibility.ios.spec.ts` | 7/7 |
+| 3.F Performance | `src/tests/app/performance.ios.spec.ts` | 4/4 (+1 skipped) |
+
+Page objects: `base`, `tambah`, `daftar`, `ringkasan`, `ubah`, `anggaran`, `kategori`,
+`cadangan` — all eight exist as `*.ios.page.ts`.
+
+**Not yet ported (Android-only):**
+
+| Area | Android spec | Note |
+|---|---|---|
+| 1.E Summary | `src/tests/ringkasan/summary.spec.ts` | `ringkasan.ios.page.ts` exists but is unported — 13 cases |
+| 1.G Delete / 1.H Undo | `src/tests/transaksi/delete-undo.spec.ts` | No iOS spec — 9 cases; the delete confirmation is a bottom sheet, whose iOS accessibility tree is the open risk (see below) |
 
 ## Environment (all verified 2026-10-27)
 
@@ -22,6 +50,8 @@ all iOS work is ADDITIVE (new `*.ios.*` files / `ios*` exports).
 - Run a spec (ALWAYS detached — runs exceed the 10-min tool cap):
   `nohup npx wdio run ./wdio.ios.conf.ts --spec ./src/tests/tambah/add-income.ios.spec.ts > /tmp/<name>.log 2>&1 &`
   then poll `/tmp/<name>.log`. Session boot is 1–3 min (reinstall + WDA). Never kill early.
+  Convenient aliases: `npm run test:ios` for the whole suite, plus a per-area alias
+  (e.g. `npm run test:list:ios`) — see `README.md`.
 - MCP (USER DIRECTIVE: use it to the max for speed): Appium MCP sessions attach to an
   EXTERNAL server on :4723 (`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
   nohup npx appium server --port 4723 ... &` — the embedded MCP server cannot see the
@@ -37,101 +67,99 @@ all iOS work is ADDITIVE (new `*.ios.*` files / `ios*` exports).
 - `testTag` → accessibilityIdentifier works; `iosByTag` = `$('~tag')` is the locator.
 - Accessibility tree is lazy: first lookups after launch/app-switch 404 → waitForDisplayed generous.
 - Element handles die on screen switches — always resolve fresh (iosByTag is lazy; never cache).
-- TYPING WINNER: `element.addValue(text)` works on Compose fields (verified in diag2:
-  amount + note both take text). Keyboard opens; `driver.hideKeyboard()` THROWS
-  ("Did not know how to dismiss the keyboard") — never call it. Dismissal that works:
-  `addValue('\n')` (Return) into the field, or background/foreground.
+- TYPING WINNER: `element.addValue(text)` works on Compose fields. Keyboard opens;
+  `driver.hideKeyboard()` THROWS ("Did not know how to dismiss the keyboard") — never call it.
+  Dismissal that works: `addValue('\n')` (Return) into the field, or background/foreground.
+  **Caveat:** iOS `setValue` APPENDS instead of replacing, so every write must clear the
+  field first with a backspace burst.
 - Currency fields live-format ("250000" → "Rp 250.000") → verify digits only ('digits' mode).
-- Day-header/row child texts: read via `iosExtractChildTexts` (XCUIElementTypeStaticText
-  predicate) — already implemented and used by the daftar.ios page.
+- **Compose renders a tagged container's strings as SIBLINGS on iOS.** A tagged node is an
+  EMPTY `XCUIElementTypeOther`; its text sits in sibling nodes. Tree-only child queries
+  return nothing — read by **geometry from one page-source dump** instead. The dump order
+  is also not the visual order (a day header dumps weekday → total → date), so split the
+  frame in half and read the left column first to restore the Android reading order.
+  See `BUG_Found_13.md` and `src/helpers/elements.ts` (`iosStaticTexts`, `iosTextsInRect`,
+  `iosColumnTexts`).
+- The Material3 date picker labels its day cells in the **device's** day-first order
+  ("Monday, 26 October 2026"), so `Intl.DateTimeFormat('en-US')` never matched — match
+  both renderings. See `BUG_Found_11.md`.
+- There is **no `component_toast` tag on iOS** — the save is confirmed by the **form reset**
+  (amount cleared + save re-disabled), which is what the Android TC-INC-08 also asserts.
+- The numeric keypad's Delete key is a silent no-op after the category sheet closes (the
+  dismissed keyboard lingers in the tree with `visible="false"`). Use the hardware
+  backspace (U+E003), the twin of Android's DEL keycode 67. See `BUG_Found_14.md`.
+- The app is **PORTRAIT-ONLY** (`UISupportedInterfaceOrientations`) and WDA **cannot rotate**
+  an iOS simulator — the W3C orientation endpoint answers "Unable To Rotate Device" and
+  `mobile: rotate` is not implemented by appium-xcuitest-driver 12.21. Rotation cases are
+  driven through the config changes iOS actually delivers: `mobile: setAppearance` (live),
+  `mobile: setContentSize` (picked up by the Compose tree only on the next launch, so the
+  font case restarts the app) and `mobile: backgroundApp` (`driver.background()` is not
+  implemented for XCUITest).
+- WDIO's `isClickable()` **THROWS** in a mobile native context ("Method not supported in
+  mobile native environment") — use the `hittable` attribute plus the "Button" trait.
+- The tap-target floor is Apple's **44 pt** (HIG), not Android's 48 dp.
+- `mobile: scrollGesture` is not implemented by appium-xcuitest-driver 12.21 — a sweep uses
+  `mobile: scroll`.
+- `dumpsys meminfo` has no simulator counterpart, so TC-PERF-05 cannot run on iOS
+  (`BUG_Found_12.md`).
+- iOS interaction budgets sit at ~2× Android's because every interaction crosses the WDA
+  boundary (a tap alone costs ~0.4 s) — the iOS budgets are 1.5 s / 2 s / 8 s.
 
-## Current state (Wave 1 = 1.B TC-INC + 1.C TC-EXP) — ~90% done
+## Remaining work
 
-DONE:
-- iOS page objects: `src/pageobjects/base.ios.page.ts`, `tambah.ios.page.ts`,
-  `daftar.ios.page.ts`, `ringkasan.ios.page.ts`, `ubah.ios.page.ts`.
-- iOS helpers: `iosTypeIntoTaggedField` / `iosFieldText` / `iosFieldEditor`
-  (src/helpers/input.ts), `iosExtractChildTexts` / `iosReadAmount` / `iosAmountText`
-  (src/helpers/elements.ts), `createTransactionIos` (src/helpers/transactions.ts).
-- Specs: `src/tests/tambah/add-income.ios.spec.ts` (9 cases),
-  `src/tests/tambah/add-expense.ios.spec.ts` (8 cases) — full ports of the Android specs.
-- Throwaway probe `src/tests/tambah/diag.ios.spec.ts` (diag2 PASSED — keyboard findings above).
-- Run history: run1 8/9 + 7/8 (keyboard dismiss) → runs 3–4 typing regression → run 5
-  typing FIXED, new sole failure in each spec: **`component_toast` still not displayed
-  after 10000ms** after tapping `tambah_button_save`.
+### 1.E TC-SUM — Summary (13 cases) — not ported
 
-## THE remaining Wave-1 blocker: save → toast not found
+`ringkasan.ios.page.ts` exists but has never been exercised. Port `summary.spec.ts` to
+`summary.ios.spec.ts` using `ringkasan.ios.page.ts` + `iosReadAmount`.
 
-`tambah.ios.page.ts:165 save()` = click save + `iosByTag(tags.component.toast).waitForDisplayed(10s)`.
-Run 5 shows the toast never surfaces. Hypotheses (in test order):
-1. The toast exists but its `component_toast` tag does not surface on iOS (tag drift —
-   like Android's sheet drift; the toast may expose only label text e.g. "Transaksi disimpan").
-2. The save click didn't register (keyboard state? button covered?).
-3. The toast composes/expires faster than the wait can catch (or is announced, not displayed).
-FASTEST PATH (user directive): with a seeded valid form, tap save via MCP and dump
-`getPageSource` immediately + 1s/2s/3s after; grep the XML for "toast"/"disimpan"/the
-confirmation text. Then fix accordingly:
-- Tag drift → locate by what actually exposes (document the exception), or
-- Save not registering → verify via isSaveEnabled + alternative confirmations
-  (form reset = amount cleared + save re-disabled is ALSO a valid save signal; the
-  Android TC-INC-08 asserts form reset), or
-- Timing → poll existence not displayed.
+- MCP-verify live **first**: the breakdown rows, the month switcher, and the savings "—"
+  case (income 0 renders "—" with the hint "Tambah pemasukan…", not "0,0%").
+- Android facts that need an iOS counterpart: breakdown bars are untagged container+fill
+  Views (the share is `fill width / container width`, 80 % → 712 px of 890 px); an empty
+  month hides balance/savings/comparison/breakdown/buttons entirely and shows
+  `ringkasan_empty_state` + `ringkasan_empty_action`.
+- **Risk:** the sibling-string rendering (above) applies to the breakdown rows. Expect to
+  reuse `iosColumnTexts` / `iosTextsInRect` rather than the Android child-text reads.
 
-## TODO — Wave 1 completion (do FIRST)
+### 1.G / 1.H TC-DEL + TC-UNDO (delete-undo.ios.spec.ts, 9+3 cases) — not ported
 
-- [ ] MCP: live-drive one save; page-source around the toast window; identify cause (above).
-- [ ] Fix `tambah.ios.page.ts save()` accordingly (keep a toast assert if possible; a
-      form-reset assertion is an acceptable substitute — mirror Android TC-INC-08).
-- [ ] Green runs: `add-income.ios.spec.ts` 9/9, `add-expense.ios.spec.ts` 8/8 (detached runs;
-      triage via /tmp logs + reports/screenshots/ios-*.png + reports/appium-ios-wdio.log).
-- [ ] DELETE `src/tests/tambah/diag.ios.spec.ts` before committing.
-- [ ] progress.md: append iOS notes to §1.B and §1.C (date 2026-10-27, device, X/9 + X/8,
-      gotchas incl. typing winner + toast resolution) in the established style.
-- [ ] Commit ONLY iOS files: `git add src/pageobjects/*.ios.page.ts
-      src/helpers/input.ts src/helpers/elements.ts src/helpers/transactions.ts
-      src/tests/tambah/add-income.ios.spec.ts src/tests/tambah/add-expense.ios.spec.ts
-      progress.md` → `test(tambah): port TC-INC/TC-EXP to iOS`. DO NOT add the parked
-      Android files (below). No push.
+- **Spike the delete sheet FIRST via MCP.** The delete confirmation is a bottom sheet;
+  `TESTABILITY.md` flags sheets as OPEN for iOS because they may expose an empty
+  accessibility tree. If the tree is empty, file a bug (Blocker for these cases, P1),
+  mark the cases `~[BUG]~` in `progress.md`, and continue with the rest.
+- Note the sheet root is `daftar_delete_sheet` (not the documented `component_sheet_bottom`,
+  which does not exist in v2.2) and the empty list drops the summary cards in favour of
+  `daftar_empty_state`.
+- The Android delete sheet was confirmed to open over a pending undo toast, so
+  back-to-back deletes are safe.
+- Android's toast-expiry wait uses a plain 6 s pause because the toast node can linger
+  composed after its 5 s expiry — the iOS equivalent probably differs (there is no toast
+  tag at all), so verify the undo affordance's lifetime live.
 
-## TODO — Wave 2 (1.D, 1.F, 1.G, 1.H — 29 cases), MCP-first
+### Regression gate
 
-For each: MCP-drive the flow live first (page-source evidence for every new interaction),
-then port the Android spec 1:1 as `<name>.ios.spec.ts` in the same folder, then one
-detached green run, then progress.md note + commit `test(<folder>): port <AREA> to iOS`.
-- [ ] 1.D TC-LIST (10 cases; src/tests/transaksi/transaction-list.ios.spec.ts) — port from
-      transaction-list.spec.ts; SKIP-list: 07/08 stay skipped on iOS with a pointer to
-      the same dispositions as Android (07/08: seeded-in-form cost + dialog). TC-LIST-11
-      was retired on 2026-10-27 (pull-to-refresh is out of scope in the app's UI_SPEC §7 —
-      see BUG_Found_09.md), so there is nothing left to port for it. Month switcher verify-retry and
-      raw-swipe scroll: port from daftar.page.ts (daftar.ios.page.ts already has swipes).
-- [ ] 1.F TC-EDIT (8 cases; edit-transaction.ios.spec.ts) — ubah.ios.page.ts exists
-      (untested). Watch: prefill reads, "Simpan perubahan" disabled-until-changed.
-- [ ] 1.G TC-DEL + 1.H TC-UNDO (delete-undo.ios.spec.ts, 9+3 cases) — RISK: delete
-      confirmation is a bottom sheet (TESTABILITY.md OPEN: sheets may expose an empty
-      accessibility tree on iOS). MCP-spike the delete sheet FIRST; if the tree is empty,
-      file BUG_Found_10.md (Blocker for these cases, P1) + mark the cases ~[BUG]~ and
-      continue with the rest.
-- [ ] Full Wave-2 regression: all iOS specs green in one run; progress.md updates; commits.
+After either port lands:
 
-## TODO — Wave 3 (1.E TC-SUM — 13 cases)
-
-- [ ] summary.ios.spec.ts (src/tests/ringkasan/) — port from summary.spec.ts using
-      ringkasan.ios.page.ts + iosReadAmount; MCP-verify breakdown rows + month switcher
-      + savings "—" case live first. Note Android facts: breakdown bars are untagged
-      container+fill Views (ratio via width) — verify the iOS equivalent via MCP before
-      porting TC-SUM-09.
-- [ ] Final Phase 1 iOS regression: every *.ios.spec.ts green; update progress.md Quick
-      Summary with an iOS line; final commit.
+1. Run the affected iOS spec detached until green (one spec per run, then the set).
+2. Run **all** iOS specs in ONE invocation as the final check — the Phase 3 set ran as
+   6/6 spec files, 46 passing + 1 skipped in 13m 14s.
+3. Append a `progress.md` note in the established style (date, device, X/N, gotchas).
+4. `npm run typecheck` must pass; `npm run test:unit` if money helpers were touched.
+5. Conventional Commits, explicit `git add` paths only. No push.
 
 ## Rules (from AGENTS.md — enforced)
 
-- Tags only (text locators = documented exceptions only). Bounded retries (3).
-- 3 consecutive failures ⇒ skip case, ~[BUG]~ in progress.md, next BUG_Found_NN.md
-  (next number: 10 — 09 was just filed), continue. Never skip silently.
-- Log failures to terminal + test-cases-simple-money-tracker.md.
+- Tags only (text locators = documented exceptions only, and `src/config/category-labels.ts`
+  is the only one). Bounded retries (3).
+- 3 consecutive failures ⇒ skip case, `~[BUG]~` in progress.md, next `BUG_Found_NN.md`,
+  continue. Never skip silently.
+- Log failures to terminal + `test-cases-simple-money-tracker.md`.
+- **Add the iOS twin whenever you add or change an Android screen method or test case.**
 - `npm run typecheck` must pass; `npm run test:unit` if money helpers touched.
-- Conventional Commits; never commit reports/, screenshots, node_modules, .kilo/, .idea/,
-  spike/diag files. No push.
+- Conventional Commits; never commit `reports/`, screenshots, `node_modules`, `.kilo/`,
+  `.idea/`, spike/diag files. No push.
+- ⚠️ `wdio.ios.conf.ts` is **not** covered by `npm run typecheck` (`tsconfig.json` includes
+  only `src/**/*.ts` and `wdio.conf.ts`) — see `code_review.md` finding **S1**.
 
 ## Parked, NOT yours (uncommitted, another task's work — leave alone)
 

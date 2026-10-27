@@ -1,22 +1,22 @@
-# BUG_Found_05.md
+# BUG_Found_05.md — Bug Report 05
+
+## Status
+- **State:** Open
+- **Summary:** The Tambah form is unsavable in landscape — the note field and save button are not composed. App-side defect; workaround is to rotate back to portrait before saving.
 
 ## Identity
 
-| Field | Value |
-|---|---|
-| Reported by | ZCode agent (Appium MCP run, Phase 3.D) |
-| Reported at | 2026-10-26T13:20:00+07:00 |
-| Branch | features/phase3 |
-| Commit SHA | 14d1ec6 |
+- **Reported by:** ZCode agent (Appium MCP run, Phase 3.D)
+- **Reported at:** 2026-10-26T13:20:00+07:00
+- **Branch:** features/phase3
+- **Commit SHA:** 14d1ec6
 
 ## Test Context
 
-| Field | Value |
-|---|---|
-| Phase | 3 |
-| Sub-phase | 3.D — Rotation & Config Change |
-| Test case ID | TC-ROT-01 (finding surfaced during the pass; case itself passes on round trip) |
-| Spec file | src/tests/app/rotation.spec.ts |
+- **Phase:** 3
+- **Sub-phase:** 3.D — Rotation & Config Change
+- **Test case ID:** TC-ROT-01 (finding surfaced during the pass; case itself passes on round trip)
+- **Spec file:** src/tests/app/rotation.spec.ts
 
 ## Bug Details
 

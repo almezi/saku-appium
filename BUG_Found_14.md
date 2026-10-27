@@ -1,4 +1,8 @@
-# BUG_FOUND.md — 14
+# BUG_Found_14.md — Bug Report 14
+
+## Status
+- **State:** Fixed
+- **Summary:** The numeric keypad's Delete key is a silent no-op after the category sheet closes (the dismissed keyboard lingers in the tree). Fixed by sending the hardware backspace.
 
 ## Identity
 - **Reported by:** Qoder automation agent (iOS Phase 3.B re-verification)

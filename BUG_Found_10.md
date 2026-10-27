@@ -1,4 +1,8 @@
-# BUG_FOUND.md — 10
+# BUG_Found_10.md — Bug Report 10
+
+## Status
+- **State:** Open
+- **Summary:** The app is not at fault — TC-BACKUP-04 blocks on iOS picker remote-view automation. The picker is not dismissable programmatically, unlike the share popover.
 
 ## Identity
 - **Reported by:** Qoder automation agent (2.C iOS execution session)

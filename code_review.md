@@ -10,13 +10,18 @@ anything not listed as open below is either fixed or accepted by decision.
 | #2 | 2026-10-25 | `ringkasan.page.ts` deep-dive + project-wide five-axis review | B / B+ |
 | #1 | 2026-10-24 | Initial five-axis quality & security pass | B / B+ |
 
+> **Documentation pass — 2026-10-27 (later the same day).** All 31 Markdown files were
+> fact-checked against the source and updated. The doc-related findings **S10**, **S11**,
+> **S12** and **M8/M11** are now **resolved** — see § Documentation maintenance pass below
+> for what changed and what was deliberately left alone.
+
 ---
 
 # Review #3 — 2026-10-27
 
 ## Scope & method
 
-Full-project read of `src/` (8,883 LOC across 57 `.ts` files), both WDIO configs, `package.json`,
+Full-project read of `src/` (8,883 LOC across 60 `.ts` files), both WDIO configs, `package.json`,
 `tsconfig.json`, `.gitignore`, `AGENTS.md`, `README.md`, git history (99 commits), plus static
 checks: typecheck, unit tests, `npm audit`, tag/prefix audits, cross-import graph, Android↔iOS
 twin parity matrix (method-level *and* test-case-id-level), maintainability metrics (fan-in /
@@ -43,6 +48,7 @@ lists what still needs a device to close.
 | CI gate | 🔴 **absent** — all verification is manual |
 | Typecheck coverage | 🟠 `wdio.ios.conf.ts` excluded from `tsc` |
 | Spec ↔ iOS parity | 🟠 2 Android specs have no iOS twin |
+| Documentation currency | ✅ **refreshed 2026-10-27** — all 32 `.md` files fact-checked, 0 broken references (was: stale layout, missing iOS half, wrong counts, duplicated sections) |
 | Duplicate helpers | 🟠 3 copies of rect-containment, 2 of iOS amount extraction |
 | **Maintainability** | 🟠 **B** — strong bones, but **twins have drifted** and *bus factor = 1* |
 
@@ -62,7 +68,7 @@ questions. Measured across seven dimensions.
 | Twin API consistency | **C** | **44 %–100 % method parity**, screen by screen |
 | Test-case identity | **C+** | `TC-BUD`/`TC-BUDGET` → **0 shared ids**; 1 id maps to 8 cases |
 | Magic-number discipline | **C** | **124 inline timeout literals**, 9 distinct values, 0 centralized |
-| Documentation currency | **C−** | `AGENTS.md` layout stale; README omits the whole iOS half |
+| Documentation currency | ~~**C−**~~ → **B** | *Was:* `AGENTS.md` layout stale; README omits the whole iOS half. **Fixed 2026-10-27** — all 32 `.md` files fact-checked, 0 broken refs. *Still unenforced* |
 | Bus factor | **D** | **1 author, 99/99 commits** — no second maintainer |
 | **Overall** | **B** | Solid structure, unsustained by the process around it |
 
@@ -204,8 +210,8 @@ it slipping.
 | **M5** | **124 inline timeout literals**, 9 distinct values, no `config/timeouts.ts`, no `DEFAULT_TIMEOUT` | 🟠 Major | 44 files across `src/` |
 | **M6** | `driver.pause()` with **11 distinct durations**, several load-bearing — no named constants | 🟠 Major | `src/` (55+ sites) |
 | **M7** | No automated **twin-parity check** — the drift in M1/M2/M3/M4 is invisible until someone reads both files | 🟠 Major | (missing) |
-| **M8** | `README.md` Layout **omits the entire iOS half** — no `wdio.ios.conf.ts`, no `*.ios.*` | 🟠 Major | `README.md` |
-| **M9** | `AGENTS.md` layout stale — lists 2 non-existent files, `BUG_Found_02..08` vs 13 actual, and **never documents the iOS twin convention** | 🟠 Major | `AGENTS.md:71-95` |
+| **M8** | `README.md` Layout **omits the entire iOS half** — no `wdio.ios.conf.ts`, no `*.ios.*` | 🟠 Major | `README.md` — ✅ **fixed 2026-10-27** |
+| **M9** | `AGENTS.md` layout stale — lists 2 non-existent files, `BUG_Found_02..08` vs 13 actual, and **never documents the iOS twin convention** | 🟠 Major | `AGENTS.md:71-95` — ✅ **fixed 2026-10-27** |
 | **M10** | **Bus factor = 1** — 99/99 commits by one author, no rotation, no external PR | 🟠 Major | git history |
 | **M11** | Android `budget.spec.ts` **merges two test cases** into one `it()` (`TC-BUD-03/07`) — the platforms don't have matching atomic granularity | 🟡 Minor | `budget.spec.ts:47` |
 | **M12** | 11 of 57 source files carry **no JSDoc** — mostly specs, plus `base.page.ts` | 🟡 Minor | `src/` |
@@ -221,8 +227,11 @@ it slipping.
    Node. **Do this before M1/M2**, so the fixes are verifiable.
 2. **M5 — `src/config/timeouts.ts`.** Mechanical, behavior-preserving, and it makes M14
    self-documenting.
-3. **M8 + M9 — regenerate the layout blocks** from the tree (or by hand, once) and add the
-   iOS twin convention to `AGENTS.md`.
+3. ~~**M8 + M9 — regenerate the layout blocks**~~ — ✅ **done 2026-10-27**: `README.md` now
+   documents the full tree with the twin convention and real counts; `AGENTS.md` gained
+   **§ Android / iOS Twin Convention** and **§ Source-of-truth ordering**. The *same*
+   argument as M7 applies — a docs link-checker in CI would keep them correct, where today
+   they only were correct once.
 4. **M1 + M2 — converge `cadangan` and `ringkasan` twins.** Decide per screen whether the iOS
    twin should expose the Android API (preferred — it makes specs portable) or whether the
    divergence is genuine and should be documented as such. **Right now it is neither.**
@@ -416,6 +425,19 @@ misbehave.
 > too), and standardize the prefix to one casing. Update `AGENTS.md` §Bug Reporting Protocol and
 > its Directory Layout block to match.
 
+> **✅ RESOLVED (documentation pass, 2026-10-27) — partially.** The bug files were
+> **normalized in place** rather than moved: all 14 now share the canonical H1
+> (`# BUG_Found_NN.md — Bug Report NN`), an identical `## Status` block, and the
+> bullet-list Identity/Test Context form (the four table-style files were converted).
+> `BUGS.md` was added as a single index with severity, priority, state and a
+> defect-family analysis.
+>
+> **Still open:** the *files* remain at the repo root and the casing split
+> (`BUG_FOUND.md` vs `BUG_Found_NN.md`) persists — renaming 14 files plus their inbound
+> references is a mechanical but reviewable change that touches `progress.md`, `AGENTS.md`,
+> `README.md` and the catalogue. Deliberately deferred to a dedicated PR rather than
+> bundled into a documentation pass.
+
 #### S11 — `AGENTS.md` directory layout has drifted
 The layout block lists `CATEGORIES.md` and `agent.md` — **neither exists**. It enumerates
 `BUG_Found_02..08` but there are now **13**. It does not mention `docs/09-ios-migration-plan.md`,
@@ -426,11 +448,23 @@ structural convention in the project is undocumented in the agent instructions.
 > section documenting the `*.page.ts` / `*.ios.page.ts` / `*.spec.ts` / `*.ios.spec.ts` scheme,
 > the shared-tag-source rule, and the platform-isolation invariant.
 
+> **✅ RESOLVED (documentation pass, 2026-10-27).** The layout block was regenerated from
+> the actual tree: the phantom `CATEGORIES.md` / `agent.md` entries are gone, all 14 bug
+> files are enumerated with one-line descriptions, and `BUGS.md`, `HANDOVER.md`,
+> `code_review.md`, `pr_review.md`, `IOS_PHASE1_HANDOFF.md` and `BUG_FOUND.template.md`
+> are now listed.
+>
+> Three new sections were added: **§ Android / iOS Twin Convention** (the pairing scheme,
+> the no-cross-import rule, the add-to-both-twins rule), **§ Source-of-truth ordering**
+> (which document wins when they disagree), and a corrected **§ Commands to Run**
+> (the old one told agents to run `./gradlew assembleDebug`, which does not exist in
+> this repo — it is the harness, not the app).
+
 ### 🟡 Minor — opportunistic
 
 | # | Finding | Location |
 |---|---|---|
-| **S12** | Node version stated three different ways: `.nvmrc` = `24`, `engines.node` = `">=20"`, README = `"≥ 22"`. | `.nvmrc`, `package.json:8`, `README.md:11` |
+| **S12** | Node version stated three different ways: `.nvmrc` = `24`, `engines.node` = `">=20"`, README/HANDOVER = `"≥ 22"`. | `.nvmrc`, `package.json:8`, `README.md`, `HANDOVER.md` |
 | **S13** | `package.json` description still says *"Android"* though the suite drives both platforms. | `package.json:4` |
 | **S14** | `.kilo/` is **not gitignored** while `.zcode/` is (commit `8313d8e` stopped tracking `.zcode` explicitly). `.kilo/` holds `node_modules/`, `package-lock.json`, `plans/` — one `git add -A` from committing a nested `node_modules`. | `.gitignore` |
 | **S15** | `opencode.json` hardcodes `/Users/auliameiazizi/Library/Android/sdk` — a machine-specific absolute path in a tracked file. | `opencode.json` |
@@ -441,6 +475,14 @@ structural convention in the project is undocumented in the agent instructions.
 | **S20** | `a11y-parse.ts` / `a11y-parse.ios.ts` are **helper modules living under `src/tests/`**. The `*.spec.ts` glob won't collect them, so no runtime bug — but they belong in `src/helpers/`. | `src/tests/app/` |
 | **S21** | `qodana.yaml` (JetBrains Qodana config) sits at the root of a TypeScript project — copy-paste from the app repo. | `qodana.yaml` |
 | **S22** | `docs/` has `09-ios-migration-plan.md` but no `08-` prefix sibling; numbering starts at 09. | `docs/` |
+
+> **Partial resolution (documentation pass, 2026-10-27):** **S12** — `README.md` and
+> `HANDOVER.md` now both state *"Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires
+> `>=20`)"*, so the three-way conflict is documented rather than silent. Picking **one**
+> floor is still a `package.json` decision, not a docs decision. **S13** — the
+> `package.json` description still says *"Android"*; that is a code change, not a docs
+> change. **S16**, **S17**, **S18**, **S19**, **S20**, **S22** all remain open — every one
+> is a source change.
 
 ---
 
@@ -538,7 +580,80 @@ is the harness root, `~/Documents/github/simplemoneytracker` is the app repo.
 
 ---
 
+## Documentation maintenance pass — 2026-10-27
+
+Every Markdown file in the repo (31 before this pass, 32 after — `BUGS.md` was added) was
+fact-checked against the source and updated. Method: a script extracted every path
+reference, npm-script name, internal anchor and numeric claim from all `.md` files and
+verified each one against the working tree.
+
+**Ground truth used** (measured, not assumed):
+
+| Fact | Value |
+|---|---|
+| `src/` TypeScript files / LOC | 60 / 8,883 |
+| Spec files | 30 (16 Android + 14 iOS) |
+| Test cases (`it()`) | 254 (137 Android + 117 iOS) |
+| Page objects | 16 (8 screens × 2 platforms) |
+| Helper modules (+ unit tests) | 6 (+ 2 test files, 17 tests) |
+| Config modules | 3 |
+| Unique test-case ids | 148, across 19 prefixes |
+| Catalogue cases | 195 across 25 areas |
+| npm scripts | 31 |
+| Node | `.nvmrc` 24, `engines.node` `>=20` |
+
+### What was fixed
+
+| File(s) | Change |
+|---|---|
+| `README.md` | Layout section listed only the Android half — regenerated with the full tree, the **iOS twin convention**, and the real counts. Added a **§ Run — iOS** section (the iOS suite had no run commands at all). Added a **§ Documentation map** index. Removed the stray trailing `# saku-appium` heading. Re-labelled the MCP material as legacy, and separated "run the suite" from "interactive MCP triage". |
+| `AGENTS.md` | **S11** resolved: layout regenerated from the real tree (phantom `CATEGORIES.md` / `agent.md` gone, all 14 bugs enumerated). Added **§ Android / iOS Twin Convention** and **§ Source-of-truth ordering**. Fixed **§ Commands to Run** — it told agents to run `./gradlew assembleDebug`, which does not exist in this repo. Rewrote the bug protocol to match the 14-file reality. |
+| `BUG_FOUND.md` … `BUG_Found_14.md` | All 14 normalized: canonical H1 (`# BUG_Found_NN.md — Bug Report NN`), a uniform **## Status** block (state + summary), and the bullet-list Identity/Test Context form — the four table-style files were converted. |
+| `BUGS.md` | **New.** Single index of all 14 defects with severity, priority, state, and a *defect-family* analysis (system-surface automation / platform rendering differences / real app defects). |
+| `BUG_FOUND.template.md` | Rewritten to the canonical structure, with a **Status** section and a footer documenting the conventions. |
+| `HANDOVER.md` | §1, §2, §3 and §4 updated for the dual-platform reality — the onboarding guide described an **Android-only** project. Added the iOS prerequisites, the iOS run commands, the iOS half of the project map, and the twin convention. §11 now points at `code_review.md` and `BUGS.md`. |
+| `TESTABILITY.md` | Added the note that `src/config/tags.ts` is the machine-readable mirror (71 tag literals) and that the one text-lookup exception is `src/config/category-labels.ts`. |
+| `progress.md` | Fixed 4 **planned** spec paths that never existed (`form-validation.spec.ts` → `validation.spec.ts`, `rotation-config.spec.ts` → `rotation.spec.ts`, …). Filled 4 empty `Agent: ___________` placeholders with verifiable attribution. Fixed the title casing and the self-referential first line. |
+| `test-cases-simple-money-tracker.md` | **§Q and §R were duplicated** (an "executed" note followed by the catalogue) — merged. Corrected the totals from "*~140 cases across 25 areas*" to **195 across 25**, and added the catalogue-vs-implemented distinction (195 catalogue / 148 implemented). |
+| `docs/README.md` | Rewritten: the reading order listed `DEVELOPMENT.md` twice, and the file never mentioned the harness-side documents. Added the harness/app distinction — `docs/` describes the **app**, the root describes the **harness**. |
+| `docs/DEVELOPMENT.md` | 3 references to the deleted `CATEGORIES.md` → `TESTABILITY.md` § CATEGORIES. |
+| `docs/09-ios-migration-plan.md` | The claim *"**Nothing in this document has been implemented yet**"* was false — 45 of its 74 checkboxes are done. Replaced with an accurate status header. |
+| `TESTING.md` | 4 section headings read `## utest …` — a broken find/replace of "Unit test". Fixed. Status note updated with the current scale and the iOS half. |
+| `IOS_PHASE1_HANDOFF.md` | This was a point-in-time TODO list describing a port that is now **117 cases across 14 specs**. Rewritten as a status document: a per-area table of what shipped, a consolidated **§ Verified iOS facts** section (the hard-won findings, including the sibling-rendering rule), and the **two areas still unported** (TC-SUM, TC-DEL/TC-UNDO) with their specific risks. |
+| `code_review.md` | This section. |
+
+### Deliberately *not* changed
+
+- **File renames and moves** (the `bugs/` directory, the casing split) — a rename touches
+  14 files plus their inbound references across 5 documents. Worth its own PR.
+- **Historical records** — `pr_review.md` (a review of PR #3, dated) and the failure-log
+  entries in `test-cases-simple-money-tracker.md` are append-only history. Editing them
+  would falsify the record.
+- **Claims that are correct but reference files in the app repo** (e.g.
+  `docs/screenshots/saku-ios-real.png`) — these were annotated to say where the file
+  actually lives rather than deleted.
+- **`docs/` app-domain documents** (`PRODUCT.md`, `DESIGN.md`) — verified accurate against
+  the app repo; their cross-references and counts (20 component sections, 15 artboards)
+  all check out.
+
+### Residual
+
+The audit now reports **zero broken references**. The remaining flagged items are all
+intentional: negative references in this file (`there is **no** src/config/timeouts.ts`),
+placeholders in templates (`BUG_Found_NN.md`), and gitignored local artifacts cited as
+evidence (`reports/…`).
+
+**The underlying risk is unchanged:** the docs are now *correct*, but nothing keeps them
+*correct*. The same argument as **S2** and **S4** applies — a link-checker and a
+`npm run check:docs` in CI would make documentation drift a build failure instead of
+something a reader has to notice. The script used for this pass is a good starting point.
+
+---
+
 ## Recommended order of work
+
+> Updated after the 2026-10-27 documentation pass — item 8 is now done (except the
+> file-rename part of S10).
 
 1. **S1** (one line) + **S4** (CI running `typecheck && test:unit`) + **M7** (twin-parity +
    TC-id uniqueness script) — establish the gate. These three are cheap and they convert the
@@ -554,8 +669,11 @@ is the harness root, `~/Documents/github/simplemoneytracker` is the app repo.
    literal-cleanups land together.
 7. **S8 → S9** (assertion-style sweep, sleep replacement) — largest diff; land separately with
    3 clean emulator runs as the acceptance bar.
-8. **S10 → S11, M8 → M9, M12 → M22** (docs/hygiene) — cheap, no device run needed. Include the
-   `AGENTS.md` iOS-twin-convention section: it is the highest-read file in the repo.
+8. ~~**S10 → S11, M8 → M9, M12 → M22** (docs/hygiene)~~ — **done** in the 2026-10-27
+   documentation pass, except: (a) the `bugs/` directory move + casing standardization
+   (own PR), (b) `S12`/`S13` (a `package.json` decision), (c) `S16`–`S20`, `S22` (source
+   changes). A **`npm run check:docs` link-checker in CI** would close the loop the
+   documentation pass opened — without it the docs drift again within weeks.
 
 ---
 

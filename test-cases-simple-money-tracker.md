@@ -1,6 +1,6 @@
 # Simple Money Tracker — E2E Test Cases
 
-App: `id.almezi.simplemoneytracker_kt` | Platform: Android (UiAutomator2) | Date: 2026-10-23
+App: `id.almezi.simplemoneytracker_kt` | Platforms: Android (UiAutomator2) + iOS (XCUITest) | Date: 2026-10-23 (catalogue), last updated 2026-10-27
 
 ## Screens & locator map
 
@@ -262,16 +262,6 @@ Locate by text/content-desc only:
 > occurrence today, matching the 2.B WAL-loss incident — see `BUG_Found_03.md`.
 
 ### Q. Budget / Anggaran (TC-BUDGET) — wdio-executed 2026-10-25
-- `budget.spec.ts`: first-ever wdio run 3/7 → fixes (before-seed, tag-based sheet selection,
-  child-text row reads, `anggaran_form_delete_sheet`) → **final run 7/7 PASSING**.
-
-### R. Category management (TC-KAT) — wdio-executed 2026-10-25
-- `category-management.spec.ts`: run 1 0/13 (empty-month cascade — no seed), run 2 3/13
-  (UiScrollable scrollIntoView unreliable on the LazyColumn), run 3 9/13, final (dialog-typing
-  tests skipped per the 3-failure rule) **11/13 PASSING, 2 SKIPPED** — TC-KAT-08/10 hit the
-  TC-LIST-07 dialog self-dismiss flake (`BUG_Found_04.md`).
-
-### Q. Budget / Anggaran (TC-BUDGET)
 - TC-BUDGET-01 Tap `ringkasan_anggaran_button` → budget screen opens
 - TC-BUDGET-02 Title "Anggaran", month label "Oktober 2026"
 - TC-BUDGET-03 Total card shows "ANGGARAN", amount, "Rp X dari Rp Y", progress bar
@@ -284,7 +274,11 @@ Locate by text/content-desc only:
 - TC-BUDGET-10 Edit/remove budget works
 - TC-BUDGET-11 Back button returns to Ringkasan
 
-### R. Category management (TC-KAT)
+> **Execution (2026-10-25):** `budget.spec.ts`: first-ever wdio run 3/7 → fixes (before-seed,
+> tag-based sheet selection, child-text row reads, `anggaran_form_delete_sheet`) →
+> **final run 7/7 PASSING**.
+
+### R. Category management (TC-KAT) — wdio-executed 2026-10-25
 - TC-KAT-01 Tap `ringkasan_kelola_button` → `kategori_screen` opens
 - TC-KAT-02 Tap `tambah_link_kelola_kategori` → `kategori_screen` opens
 - TC-KAT-03 Type toggle switches income/expense category lists
@@ -300,6 +294,11 @@ Locate by text/content-desc only:
 - TC-KAT-13 Category shows "Bawaan · N transaksi" count
 - TC-KAT-14 Category mark color renders
 - TC-KAT-15 Back button returns to previous screen
+
+> **Execution (2026-10-25):** `category-management.spec.ts`: run 1 0/13 (empty-month cascade —
+> no seed), run 2 3/13 (UiScrollable scrollIntoView unreliable on the LazyColumn), run 3 9/13,
+> final (dialog-typing tests skipped per the 3-failure rule) **11/13 PASSING, 2 SKIPPED** —
+> TC-KAT-08/10 hit the TC-LIST-07 dialog self-dismiss flake (`BUG_Found_04.md`).
 
 ### S. Persistence (TC-PERS)
 - TC-PERS-01 Kill app, relaunch → transactions persist
@@ -351,7 +350,14 @@ Locate by text/content-desc only:
 
 ---
 
-Total: ~140 test cases across 25 areas. Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
+Total: **195 catalogue test cases across 25 areas.** Locators verified via live page source (id strategy failed for some; use xpath `//*[@resource-id="..."]` or accessibility id on text labels).
+
+> **Catalogue vs. implemented.** This file is the **catalogue** — the full designed scope.
+> The **implemented** suite in `src/tests/` covers 148 of these ids (254 test cases across
+> 30 spec files, Android + iOS twins). The gap is deliberate: `TC-SEED` waits on app-side
+> intent extras that do not exist yet, and `TC-CAT` / `TC-ACC` / `TC-DATE` / `TC-SAVE` /
+> `TC-MON` / `TC-CONS` / `TC-EXC` are covered as behaviour inside other cases rather than
+> as standalone ids. See `progress.md` for per-case execution status.
 
 ---
 

@@ -2,8 +2,22 @@
 
 The contract between the app and the automation suite. You own this file; the AI implements it exactly and never changes it. Everything here is DRAFT until you approve it.
 
+> **Machine-readable mirror:** `src/config/tags.ts` is the suite's copy of this contract
+> (71 tag literals, mirroring `TestTags.kt` in the app repo). This document is the
+> **source of truth**; `src/config/tags.ts` must be kept in sync with it — never invent
+> a tag in either place independently.
+>
+> **Harness note:** this file describes the *app's* contract. The suite that consumes it
+> lives in `src/` in this repo. See `README.md` for the harness layout and
+> `AGENTS.md` for the Android/iOS twin convention.
+
 ## Locator rule
 Never locate by visible text. Locate only by test tag (accessibility ID).
+
+> **One documented exception:** `src/config/category-labels.ts` resolves a small number of
+> category labels by text, because the category sheet rows carry no test tags in app
+> v2.2. That file states its own removal condition — when the app tags those rows, the
+> exception must be deleted, not extended.
 
 ## Tag naming
 `<screen>_<type>_<name>`, lower snake case, all defined in one file: `TestTags.kt`. Never generated, renamed or invented by the AI.
@@ -197,7 +211,7 @@ as an `accessibilityIdentifier`:
 `component_card_transaction_edit_<categoryId>`,
 `component_card_transaction_delete_<categoryId>`, `avatar_<categoryId>`.
 
-Screenshot: `docs/screenshots/saku-ios-real.png` (in the app repo — not carried into this test repo). App: `iosApp/` (app repo).
+Screenshot: `docs/screenshots/saku-ios-real.png` (held in the app repo — not carried into this test-harness repo). App: `iosApp/` (app repo).
 
 ### Also noted (not blocking)
 

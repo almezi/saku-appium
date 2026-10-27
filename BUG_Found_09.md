@@ -1,22 +1,22 @@
-# BUG_FOUND.md — 09
+# BUG_Found_09.md — Bug Report 09
+
+## Status
+- **State:** Closed
+- **Summary:** Retired, not fixed — pull-to-refresh is simply not implemented in the app, so TC-LIST-11 was withdrawn from the catalogue rather than left failing.
 
 ## Identity
 
-| Field | Value |
-|---|---|
-| **Reported by** | ZCode (GLM-5.3) — senior QA run, Phase 1.D completion |
-| **Reported at** | 2026-10-27T08:20:00+07:00 |
-| **Branch** | harness `feature/implement-ios-automation` |
-| **Commit SHA** | (harness working tree at time of report) |
+- **Reported by:** ZCode (GLM-5.3) — senior QA run, Phase 1.D completion
+- **Reported at:** 2026-10-27T08:20:00+07:00
+- **Branch:** harness `feature/implement-ios-automation`
+- **Commit SHA:** (harness working tree at time of report)
 
 ## Test Context
 
-| Field | Value |
-|---|---|
-| **Phase** | 1 |
-| **Sub-phase** | 1.D (Transaction List) |
-| **Test case ID** | TC-LIST-11 |
-| **Spec file** | `src/tests/transaksi/transaction-list.spec.ts` |
+- **Phase:** 1
+- **Sub-phase:** 1.D (Transaction List)
+- **Test case ID:** TC-LIST-11
+- **Spec file:** `src/tests/transaksi/transaction-list.spec.ts`
 
 ## Bug Details
 
@@ -52,7 +52,6 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Closed — retired, not fixed (option ②) |
 | **Resolved at** | 2026-10-27 |
 | **Decision by** | App owner |
 | **Harness change** | TC-LIST-11 removed from the catalog and both specs |

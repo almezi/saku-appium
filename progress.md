@@ -1,6 +1,12 @@
-# Progress.md — Test Execution Checklist
+# progress.md — Test Execution Checklist
 
-Track completion of every test task from `progress.md`. Check `[x]` when a test case passes. Each agent should update only the sub-phases they own.
+Track completion of every test task from `test-cases-simple-money-tracker.md`. Check `[x]`
+when a test case passes. Each agent should update only the sub-phases they own.
+
+**Markers:** `[x]` passing · `[ ]` not yet done or skipped · `[~[BUG]~]` blocked by a filed
+defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
+
+**Bug index:** `BUGS.md` lists all 14 filed defects with their state and fix ownership.
 
 ## Quick Summary
 
@@ -395,7 +401,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-VAL-16: Rapid double-tap save → only one transaction
 - [x] TC-VAL-17: Save with keyboard open → works
 
-**Spec:** *planned: `src/tests/tambah/form-validation.spec.ts`* | **Agent:** ___________
+**Spec:** `src/tests/tambah/validation.spec.ts` | **Agent:** repo owner (spec added in `c78728a`, 2026-10-26) — Android execution not separately logged; the iOS run below is the recorded evidence
 
 > **iOS run 2026-10-27:** ported as `src/tests/tambah/validation.ios.spec.ts` — **17/17 passing**
 > (iPhone 18 Pro sim / iOS 27.0, Appium 3.8.0, `npm run test:val:ios`, 2m 45.9s). iOS adaptations
@@ -449,7 +455,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-PERS-04: Force-stop mid-save → no corrupt DB, no crash
 - [x] TC-PERS-05: Reinstall → data cleared
 
-**Spec:** *planned: `src/tests/app/persistence.spec.ts`* | **Agent:** ___________
+**Spec:** `src/tests/app/persistence.spec.ts` | **Agent:** repo owner (spec added in `c78728a`, 2026-10-26) — Android execution not separately logged; the iOS run below is the recorded evidence
 
 > **iOS run 2026-10-27:** ported as `src/tests/app/persistence.ios.spec.ts` — **5/5 passing**
 > (iPhone 18 Pro sim / iOS 27.0, `npm run test:pers:ios`, 1m 5.9s). iOS adaptations measured live
@@ -469,7 +475,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-ROT-05: App backgrounded → resumed, no data loss
 - [~[BUG]~] TC-ROT-06: Font scale 200% → no clipped text
 
-**Spec:** *planned: `src/tests/app/rotation-config.spec.ts`* | **Agent:** ___________
+**Spec:** `src/tests/app/rotation.spec.ts` | **Agent:** ZCode agent (Appium MCP run, Phase 3.D, 2026-10-26) — 5/6 passing, TC-ROT-06 blocked by `BUG_Found_06.md`
 
 > **iOS run 2026-10-27:** ported as `src/tests/app/rotation.ios.spec.ts` — **6/6 passing**
 > (iPhone 18 Pro sim / iOS 27.0, `npm run test:rot:ios`, 2m 54.2s). iOS adaptations measured live
@@ -495,7 +501,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-A11Y-06: Icon-only buttons have labels ("Buka pilihan", "Bulan sebelumnya")
 - [x] TC-A11Y-07: Amount values readable as currency
 
-**Spec:** *planned: `src/tests/app/accessibility.spec.ts`* | **Agent:** ___________
+**Spec:** `src/tests/app/accessibility.spec.ts` | **Agent:** repo owner (spec added in `c78728a`, 2026-10-26) — **7/7 passing** per the commit message; the iOS run below is the recorded evidence
 
 > **iOS run 2026-10-27:** ported as `src/tests/app/accessibility.ios.spec.ts` — **7/7 passing**
 > (iPhone 18 Pro sim / iOS 27.0, `npm run test:a11y:ios`, 22s), with the tree parser

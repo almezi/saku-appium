@@ -1,4 +1,8 @@
-# BUG_Found_04.md — Bug Report
+# BUG_Found_04.md — Bug Report 04
+
+## Status
+- **State:** Open
+- **Summary:** The "Ubah kategori" dialog self-dismisses between open and typing under WebdriverIO, so rename/cancel flows are unautomatable. App-side logic verified working via MCP.
 
 ## Identity
 - **Reported by:** ZCode automation agent (GLM-5.3, Phase 2 wdio-execution session)

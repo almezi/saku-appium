@@ -1,4 +1,8 @@
-# BUG_FOUND.md — 13
+# BUG_Found_13.md — Bug Report 13
+
+## Status
+- **State:** Fixed
+- **Summary:** Compose renders a tagged container's strings as siblings on iOS, so tree-only child reads returned nothing. Fixed in the helpers and the affected iOS page objects.
 
 ## Identity
 - **Reported by:** Qoder automation agent (iOS suite verification, Phase 3 finalization)

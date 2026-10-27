@@ -1,22 +1,22 @@
-# BUG_FOUND.md — 08
+# BUG_Found_08.md — Bug Report 08
+
+## Status
+- **State:** Fixed
+- **Summary:** `xcodebuild` dies with SIGTRAP while parsing a malformed `Saku.xcscheme`, so every iOS build failed. Fix applied and verified; still needs committing by the app owner.
 
 ## Identity
 
-| Field | Value |
-|---|---|
-| **Reported by** | ZCode (GLM-5.3) — senior QA run, Phase 1.A iOS bring-up |
-| **Reported at** | 2026-10-27T07:15:00+07:00 |
-| **Branch** | app repo `feature/fix-bug-detected-by-automation-261026` (HEAD `723cf7f`) / harness `feature/implement-ios-automation` |
-| **Commit SHA** | 723cf7f (app repo) |
+- **Reported by:** ZCode (GLM-5.3) — senior QA run, Phase 1.A iOS bring-up
+- **Reported at:** 2026-10-27T07:15:00+07:00
+- **Branch:** app repo `feature/fix-bug-detected-by-automation-261026` (HEAD `723cf7f`) / harness `feature/implement-ios-automation`
+- **Commit SHA:** 723cf7f (app repo)
 
 ## Test Context
 
-| Field | Value |
-|---|---|
-| **Phase** | 1 |
-| **Sub-phase** | 1.A (TC-NAV iOS execution, build/setup step) |
-| **Test case ID** | TC-NAV-01 (blocked before first test — app could not be built) |
-| **Spec file** | `src/tests/navigasi/navigation.ios.spec.ts` |
+- **Phase:** 1
+- **Sub-phase:** 1.A (TC-NAV iOS execution, build/setup step)
+- **Test case ID:** TC-NAV-01 (blocked before first test — app could not be built)
+- **Spec file:** `src/tests/navigasi/navigation.ios.spec.ts`
 
 ## Bug Details
 

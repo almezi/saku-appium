@@ -2,15 +2,25 @@
 
 Consolidated test data, execution plan, examples, and results template.
 
-> **Status note (2026-10-25):** this is the original **manual/MCP execution
+> **Status note (2026-10-27):** this is the original **manual/MCP execution
 > plan**. The `test-data/` files and helper scripts it describes
 > (`schema-validator.py`, `duplicate-checker.py`, …) are illustrative — they
 > were never committed to this repo. The **executable source of truth** is the
-> WebdriverIO suite in `src/` (run via `npm test`, see `HANDOVER.md` §3);
-> live per-sub-phase status is in `progress.md`, and known issues are in the
-> `BUG_FOUND*.md` / `BUG_Found_*.md` files.
+> WebdriverIO suite in `src/` (Android: `npm test`; iOS: `npm run test:ios` —
+> see `HANDOVER.md` §3 and `README.md`); live per-sub-phase status is in
+> `progress.md`, the full catalogue of designed cases is in
+> `test-cases-simple-money-tracker.md`, and known issues are indexed in
+> `BUGS.md` (details in the `BUG_FOUND*.md` / `BUG_Found_*.md` files).
+>
+> **Current scale:** 30 spec files (16 Android + 14 iOS), 254 test cases
+> (137 + 117), 148 unique test-case ids, 195 cases in the catalogue, and
+> 17 unit tests for the pure helpers (`npm run test:unit`).
+>
+> The sections below are kept as the record of the original plan. Where they
+> describe files that were never committed, read them as *illustrative* rather
+> than actionable.
 
-## utest data specification
+## Unit test data specification
 
 
 This document defines the test data requirements for automated testing of the Simple Money Tracker mobile app.
@@ -642,7 +652,7 @@ This document provides a comprehensive guide to managing test data for Simple Mo
 
 ---
 
-## utest execution plan
+## Unit test execution plan
 
 
 This directory contains the test artifacts for vibe (automated) testing of the Simple Money Tracker mobile app using Appium MCP.
@@ -1019,7 +1029,7 @@ if __name__ == "__main__":
 
 ---
 
-## utest examples
+## Unit test examples
 
 
 This document provides concrete examples of how to write and execute tests for the Simple Money Tracker mobile app using Appium MCP.
@@ -1772,7 +1782,7 @@ This comprehensive testing approach ensures the Simple Money Tracker app is thor
 
 ---
 
-## utest results template
+## Unit test results template
 
 
 This document defines the template and format for reporting test results in the Simple Money Tracker automation testing.

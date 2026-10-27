@@ -8,13 +8,15 @@
 
 ## 1. What this project actually is (in plain words)
 
-We automate the **Simple Money Tracker (Saku)** Android app — a personal finance app for
+We automate the **Simple Money Tracker (Saku)** app — a personal finance app for
 tracking income ("pemasukan") and expenses ("pengeluaran"), by month.
 
 - **App under test (AUT):** `id.almezi.simplemoneytracker_kt` (a Kotlin/Compose app).
+- **Platforms:** **Android** (UiAutomator2) and **iOS** (XCUITest, simulator). The suite
+  is dual-platform — every screen has an Android and an iOS implementation.
 - **Tooling:** [Appium](https://appium.io/) (v3) + [WebdriverIO](https://webdriver.io/) (v9) + TypeScript + Mocha.
-- **What it does:** Drives the app on an emulator/device the way a user would (tap, type,
-  scroll), then reads what's on screen and asserts the math/UI is correct.
+- **What it does:** Drives the app on an emulator/device/simulator the way a user would
+  (tap, type, scroll), then reads what's on screen and asserts the math/UI is correct.
 - **Example checks:** "balance = income − expense", "savings rate = (income−expense)/income",
   "breakdown bars add up to 100%", "negative balance shows `−Rp` not `Rp -`".
 
@@ -32,10 +34,11 @@ You need a working Android test environment before any test will run.
 
 | Need | Why | Notes |
 |---|---|---|
-| **Node.js ≥ 22** | Runs the suite (TS + WDIO) | `node -v` to check |
+| **Node.js ≥ 22** | Runs the suite (TS + WDIO) | `node -v` to check. `.nvmrc` pins `24` |
 | **Android SDK / emulator** | Appium drives a real Android | Default udid `emulator-5554`. Set `ANDROID_HOME` or it auto-detects `~/Library/Android/sdk` (macOS). |
 | **An emulator or device, booted** | The app must be installed & running | Pixel 10-ish, API 34+. Must be visible to `adb devices`. |
 | **The app APK** | The thing we test | Expected at `resources/SimpleMoneyTrackerKT-v2.2.apk`. |
+| **macOS + Xcode** | Only for the iOS half | Booted simulator (`xcrun simctl list devices`) + the XCUITest driver. |
 
 Steps:
 
@@ -56,6 +59,24 @@ npm run test:navigasi
 
 If you see a session-creation error, 99% of the time the emulator isn't running or the
 APK path is wrong. See §8 (Debugging).
+
+### The iOS half
+
+The iOS suite needs no APK — it drives a **simulator**. Boot one, then run the same
+suite through `wdio.ios.conf.ts`:
+
+```bash
+xcrun simctl list devices                # pick a UDID (e.g. iPhone 18 Pro)
+npm run test:ios                         # all iOS specs
+npm run test:navigasi:ios                # one iOS spec
+```
+
+The iOS page objects are separate implementations (`*.ios.page.ts`) with their own
+quirks — most notably, Compose renders a tagged container's strings as **siblings** on
+iOS, so text must be read by **geometry from one page-source dump**, never by nested
+tree traversal. `IOS_PHASE1_HANDOFF.md` documents the port; `BUG_Found_11.md`,
+`BUG_Found_13.md` and `BUG_Found_14.md` record the specific iOS defects found along the
+way.
 
 ### Environment overrides (when you need them)
 | Variable | Default | Use |
@@ -88,6 +109,13 @@ npx wdio run ./wdio.conf.ts --spec ./src/tests/ringkasan/summary.spec.ts
 npm run test:shard                         # split spec files across devices — ~2x faster
 npm run test:parallel                      # every spec on every device — coverage
 
+# iOS (simulator; no APK needed):
+npm run test:ios                           # every iOS spec
+npm run test:navigasi:ios                  # one iOS spec
+npm run test:list:ios                      # transaction list
+npm run test:val:ios                       # form validation
+npm run test:perf:ios                      # performance budgets
+
 # Pure unit tests (no emulator needed!) for the money/element helpers:
 npm run test:unit
 ```
@@ -107,19 +135,22 @@ data** (`appium:noReset = false` in `wdio.conf.ts`). That means:
 ```
 saku-appium/
 ├── wdio.conf.ts                 # Runner config: Android caps, Appium service, Mocha, reporters
+├── wdio.ios.conf.ts             # Runner config: iOS/XCUITest caps, simulator
 ├── resources/                   # The APK lives here
 ├── src/
 │   ├── config/
 │   │   ├── tags.ts              # ★ THE TEST-TAG CONTRACT (read this constantly)
-│   │   └── categories.ts        # Stable category/account IDs (never use display names)
+│   │   ├── categories.ts        # Stable category/account IDs (never use display names)
+│   │   └── category-labels.ts   # The one documented text-lookup exception
 │   ├── helpers/
 │   │   ├── locators.ts          # Turn a tag into an Appium selector (byTag, scrollToTag…)
 │   │   ├── elements.ts          # Read text/amounts off already-found elements
 │   │   ├── money.ts             # Rupiah format/parse (pure functions → unit tested)
 │   │   ├── input.ts             # Type into Compose text fields
 │   │   ├── transactions.ts      # createTransaction() — UI-driven test data setup
-│   │   └── __tests__/           # Node unit tests for the pure helpers
-│   ├── pageobjects/             # One class per screen (Page Object Model)
+│   │   ├── ios-app.ts           # iOS app lifecycle helpers (terminate/activate/reinstall)
+│   │   └── __tests__/           # Node unit tests for the pure helpers (17 tests)
+│   ├── pageobjects/             # One class per screen, × 2 platforms
 │   │   ├── base.page.ts         # Parent class: waitForScreen, tapBack, systemBack
 │   │   ├── ringkasan.page.ts     # ★ Summary screen (we walk through this in §6)
 │   │   ├── daftar.page.ts        # Transaction list screen
@@ -127,19 +158,42 @@ saku-appium/
 │   │   ├── ubah.page.ts          # Edit transaction screen
 │   │   ├── anggaran.page.ts      # Budget screen
 │   │   ├── kategori.page.ts      # Category management screen
-│   │   └── cadangan.page.ts      # Backup/export screen (share-sheet + SAF import flows)
+│   │   ├── cadangan.page.ts      # Backup/export screen (share-sheet + SAF import flows)
+│   │   └── *.ios.page.ts         # The iOS twin of each — independent implementations
 │   └── tests/                   # The actual Mocha specs, grouped by feature
-│       ├── navigasi/  tambah/  transaksi/  ringkasan/  anggaran/  kategori/
-├── reports/                     # Appium log + screenshots (gitignored in practice)
-├── docs/                        # Deeper architecture/design notes
+│       ├── navigasi/  tambah/  transaksi/  ringkasan/  anggaran/  kategori/  app/
+├── reports/                     # Appium log + screenshots (gitignored)
+├── docs/                        # Deeper architecture/design notes (see docs/README.md)
 ├── TESTABILITY.md               # How the app exposes test tags (the contract)
 ├── UI_SPEC.md                   # UI behavior spec (formatting rules, etc.)
 ├── README.md                    # Quickstart + layout
+├── HANDOVER.md                  # This file
+├── code_review.md               # Senior QA review — known weak points
+├── BUGS.md                      # Index of all filed bugs
 └── AGENTS.md                    # Operating rules (commit style, bug protocol)
 ```
 
 Rule of thumb: **never edit `tags.ts` by guessing.** It mirrors `TestTags.kt` in the app
 repo. If a tag is missing, the app doesn't expose it yet.
+
+### The Android/iOS twin convention
+
+Every screen that exists on both platforms has **two independent implementations**:
+
+```
+src/pageobjects/tambah.page.ts      ←→  src/pageobjects/tambah.ios.page.ts
+src/tests/tambah/add-income.spec.ts ←→  src/tests/tambah/add-income.ios.spec.ts
+```
+
+Android runs through `wdio.conf.ts` (`npm test`); iOS through `wdio.ios.conf.ts`
+(`npm run test:ios`). The two halves are **not** generated from a shared base — they
+are written separately and are expected to expose the same public method surface. Today
+they have drifted in places (see `code_review.md` findings **M1**–**M2**), so **when you
+add a screen method, add it to both twins**, and when you add a test case, add it to both
+spec twins with the same `TC-<AREA>-<NN>` id.
+
+> ⚠️ `wdio.ios.conf.ts` is **not** covered by `npm run typecheck` — `tsconfig.json`
+> includes only `src/**/*.ts` and `wdio.conf.ts`. See `code_review.md` finding **S1**.
 
 ---
 
@@ -362,8 +416,11 @@ categories have `countsInTotals = false` (e.g. `inc_transfer_in`, `exp_finance_i
    assertion or the "not found" element.
 2. **Open the screenshot.** `reports/screenshots/<timestamp>-<test>.png` is captured
    automatically on failure (`afterTest` hook in `wdio.conf.ts`).
-3. **Check the Appium log.** `reports/appium.log`. Look for `NoSuchElement`,
-   `stale element`, or command timeouts.
+3. **Check the Appium log.** The runner's server log lands in `reports/` — the filename
+   varies with the run and the port in use (`appium-4725.log` for the shared server the
+   runner spawns, `appium-4723.log` for a self-started `appium:server1`,
+   `appium-ios-wdio.log` for the iOS runner). List `reports/` and read the newest one.
+   Look for `NoSuchElement`, `stale element`, or command timeouts.
 4. **Confirm the emulator is alive & the app installed.** `adb devices`,
    `adb shell pm list packages | grep simplemoney`.
 5. **Reproduce in isolation.** Run just that one spec:
@@ -490,13 +547,19 @@ The app is in Indonesian; you'll see these in tags, tests, and screens.
 
 ## 11. Where to go next (other docs in this repo)
 
-- `README.md` — quickstart & full layout.
+- `README.md` — quickstart & full layout, plus the iOS runbook.
 - `TESTABILITY.md` — **the tag contract**: how the app exposes `testTag`s and the rules for
   adding them. Read before touching `tags.ts`.
 - `UI_SPEC.md` — UI behavior spec (money formatting, empty states, edge cases).
-- `AGENTS.md` — commit conventions (Conventional Commits) and the **bug-reporting
-  protocol** (`BUG_FOUND.md`, `progress.md`). Follow this when you find a real app bug.
+- `AGENTS.md` — commit conventions (Conventional Commits), the **Android/iOS twin
+  convention**, and the **bug-reporting protocol**. Follow this when you find a real
+  app bug.
+- `code_review.md` — the senior QA review of this harness. Read §S1–§S22 and §M1–§M14
+  before refactoring — they list the known weak points, so you do not have to rediscover
+  them.
+- `BUGS.md` — index of all 14 filed defects, with a "patterns worth knowing" section.
 - `docs/` — deeper architecture/design notes and the iOS migration plan.
+- `IOS_PHASE1_HANDOFF.md` — how the iOS port was done, and the iOS-specific quirks.
 - `test-cases-simple-money-tracker.md` — the full catalogued test-case backlog (Phases 1–3).
 
 ### First-week checklist for the new owner
@@ -504,8 +567,11 @@ The app is in Indonesian; you'll see these in tags, tests, and screens.
 - [ ] You can run a single spec in isolation.
 - [ ] You've read `ringkasan.page.ts` top-to-bottom and understand the retry patterns.
 - [ ] You've run `npm run test:unit` and seen the money helpers tested.
-- [ ] You've added one small test using the §9 recipe and it passes.
-- [ ] You know how to file a `BUG_FOUND.md` per `AGENTS.md` when you hit an app bug.
+- [ ] You've booted an iOS simulator and run `npm run test:navigasi:ios` at least once.
+- [ ] You've added one small test using the §9 recipe and it passes — **and you added
+      the matching iOS twin**, per the twin convention.
+- [ ] You know how to file a bug report per `AGENTS.md` when you hit an app bug.
+- [ ] You've skimmed `code_review.md` §S1–§S22 so you know what is already known-broken.
 
 ---
 

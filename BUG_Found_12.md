@@ -1,4 +1,8 @@
-# BUG_FOUND.md — 12
+# BUG_Found_12.md — Bug Report 12
+
+## Status
+- **State:** Open
+- **Summary:** No app defect — TC-PERF-05 cannot be executed on the iOS simulator because the measurement path (`dumpsys meminfo`) has no simulator counterpart.
 
 ## Identity
 - **Reported by:** Qoder automation agent (iOS Phase 3.F execution)
