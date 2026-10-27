@@ -30,6 +30,24 @@ import { CadanganPage } from '../../pageobjects/cadangan.page'
  *   share sheet being cancelled does NOT revert it to "belum pernah". The
  *   backup genuinely exists, so that is correct app behaviour; TC-BACKUP-05
  *   asserts no-data-change instead of an unchanged timestamp.
+ *
+ * v2.3 redesign (live probe 2026-10-28, Pixel_10 / API 37, app versionName
+ * 2.3): six of the nine Cadangan test tags no longer render — screen root,
+ * status card, import button, import result, import error and warning strip
+ * (BUG_Found_15); only the daftar entry button and the two export cards
+ * survive. The status card is untagged output now: one status line
+ * "N transaksi  ·  N akun  ·  N kategori" (two spaces around the middle
+ * dot) plus the CADANGAN TERAKHIR block showing "Belum pernah" (capital B)
+ * or a date with a Perlu/Aman pill, so status assertions read rendered
+ * TextViews. The import entry is an untagged "Pulihkan dari cadangan"
+ * TextView whose click lands in its clickable container, and v2.3 renders
+ * NO import result node and NO toast — the import outcome is asserted
+ * through the status line's transaction count. The emptied list renders no
+ * daftar_backup_button; the empty state's secondary button ("Impor dari
+ * cadangan") opens Cadangan. Export (cache/backups/… + the
+ * com.android.intentresolver share sheet) and the SAF picker drive
+ * (com.google.android.documentsui on API 37) are unchanged from the notes
+ * above.
  */
 const APP_ID = 'id.almezi.simplemoneytracker_kt'
 // Fallback ONLY, for adb calls that somehow run before the session exists.
@@ -108,14 +126,41 @@ async function tapPickerNode(selector: string, label: string): Promise<void> {
   throw new Error(`SAF picker node "${label}" could not be tapped`)
 }
 
+/**
+ * Navigates the SAF picker to the Downloads root and waits for the pushed
+ * file row. The roots drawer slides in with an animation, so a single
+ * Show-roots → Downloads tap pair can lose that race and leave the picker on
+ * Recent (observed live on API 37, 2026-10-28) — each attempt re-opens the
+ * drawer, taps Downloads and waits for the row itself, which is the arrival
+ * being verified; a drawer left open by a failed attempt is re-toggled by
+ * the next attempt's Show-roots tap.
+ */
+async function openDownloadsRoot(fileName: string): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await tapPickerNode('description("Show roots")', 'Show roots')
+      // Drawer slide-in: the row is queryable before it is safely tappable.
+      await driver.pause(600)
+      await tapPickerNode('text("Downloads")', 'Downloads root')
+      const fileRow = $(`android=new UiSelector().textContains("${fileName}")`)
+      await fileRow.waitForDisplayed({ timeout: 5_000 })
+      return
+    } catch {
+      await driver.pause(800)
+    }
+  }
+  throw new Error(`SAF picker did not reach "${fileName}" via the Downloads root`)
+}
+
 describe('TC-BACK — backup & export (Phase 2) @regression', () => {
   const daftar = new DaftarPage()
   const cadangan = new CadanganPage()
 
   before(async () => {
     await daftar.open()
-    // Seed one income so the status card reports "1 transaksi tersimpan" and
-    // the export files have a known single row to assert on.
+    // Seed one income so the status line reports "1 transaksi" (v2.3 format:
+    // "N transaksi · N akun · N kategori") and the export files have a known
+    // single row to assert on.
     await createTransaction({
       type: 'pemasukan',
       amount: SEED_AMOUNT,
@@ -130,18 +175,21 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     await daftar.open()
     await cadangan.openFromDaftar()
     expect(await cadangan.isDisplayed()).toBe(true)
-    const status = (await cadangan.statusTexts()).join(' ')
-    expect(status).toContain('1 transaksi tersimpan')
-    expect(status).toContain('belum pernah')
+    // v2.3 renders the status as one untagged line plus the CADANGAN TERAKHIR
+    // block, so assert on the joined rendered texts ("1 transaksi", and the
+    // never-backed-up label with a capital B).
+    const status = await cadangan.statusText()
+    expect(status).toContain('1 transaksi')
+    expect(status).toContain('Belum pernah')
     expect(await cadangan.warningCard.isDisplayed()).toBe(true)
   })
 
   it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file @regression', async () => {
     await cadangan.exportJsonButton.click()
-    await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
+    await cadangan.waitForShareSheet()
     const fileName = $('android=new UiSelector().textContains("saku-cadangan.json")')
     expect(await fileName.isDisplayed()).toBe(true)
-    await driver.back() // dismiss the share sheet
+    await cadangan.dismissShareSheet()
     expect(await cadangan.isDisplayed()).toBe(true)
   })
 
@@ -154,8 +202,8 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
 
     // Re-export CSV so the file reflects the same data, then assert content.
     await cadangan.exportCsvButton.click()
-    await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
-    await driver.back()
+    await cadangan.waitForShareSheet()
+    await cadangan.dismissShareSheet()
     const csv = (await readExportedFile('cache/backups/saku-cadangan.csv')).replace(/^\uFEFF/, '')
     expect(csv).toContain(CSV_HEADER)
     expect(csv).toContain(seedNote)
@@ -164,18 +212,18 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
 
   it('TC-BACKUP-05 cancelling the export leaves no side effects @regression', async () => {
     await cadangan.exportCsvButton.click()
-    await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
-    await driver.back()
+    await cadangan.waitForShareSheet()
+    await cadangan.dismissShareSheet()
     expect(await cadangan.isDisplayed()).toBe(true)
     // Cancelling the share must not touch data: the transaction count is
-    // unchanged and no import result/error surfaced. "Cadangan terakhir" is
-    // NOT asserted here — the export already wrote the backup file, so the
-    // app correctly reports a backup date instead of "belum pernah"
-    // (verified live, see the header note).
-    const status = (await cadangan.statusTexts()).join(' ')
-    expect(status).toContain('1 transaksi tersimpan')
-    expect(await cadangan.importResult.isExisting()).toBe(false)
-    expect(await cadangan.importError.isExisting()).toBe(false)
+    // unchanged. "Cadangan terakhir" is NOT asserted here — the export
+    // already wrote the backup file, so the app correctly reports a backup
+    // date instead of "belum pernah" (verified live, see the header note).
+    // v2.3 renders no import result/error surface at all (BUG_Found_15), so
+    // there is no node to assert absent: the unchanged status line below IS
+    // the no-side-effect check.
+    const status = await cadangan.statusText()
+    expect(status).toContain('1 transaksi')
   })
 
   it('TC-BACKUP-04 importing a backup restores its transactions @regression', async () => {
@@ -189,22 +237,17 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
       async () => (await driver.getCurrentPackage()).includes('documentsui'),
       { timeout: 15_000 },
     )
-    await tapPickerNode('description("Show roots")', 'Show roots')
-    await tapPickerNode('text("Downloads")', 'Downloads root')
-    // Resolve the file row with a plain text query: the roots drawer is also
-    // scrollable, so a UiScrollable here can race the drawer closing and
-    // scroll the drawer instead of the file list. The Downloads listing is
-    // short; a settle wait plus waitForDisplayed is enough (verified live).
-    await driver.pause(800)
+    await openDownloadsRoot(IMPORT_FILE_NAME)
+    // Settle the drawer-close recomposition before clicking the row.
+    await driver.pause(400)
     const fileRow = $(`android=new UiSelector().textContains("${IMPORT_FILE_NAME}")`)
-    await fileRow.waitForDisplayed({ timeout: 10_000 })
     await fileRow.click()
 
-    await cadangan.importResult.waitForDisplayed({ timeout: 20_000 })
-    const result = await cadangan.importResult.getText()
-    expect(result).toContain('1 transaksi ditambahkan')
-    const status = (await cadangan.statusTexts()).join(' ')
-    expect(status).toContain('2 transaksi tersimpan')
+    // v2.3 surfaces no import result node and no toast — the only observable
+    // is the status line's transaction count (verified live, 2026-10-28).
+    await cadangan.waitForScreen()
+    const status = await cadangan.statusText()
+    expect(status).toContain('2 transaksi')
     await adbShell(`rm -f /sdcard/Download/${IMPORT_FILE_NAME}`)
   })
 
@@ -224,7 +267,9 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     }
     expect(await daftar.emptyState.isDisplayed()).toBe(true)
 
-    await cadangan.openFromDaftar()
+    // The emptied list renders no daftar_backup_button on v2.3 — entry is
+    // the empty state's secondary button (verified 2026-10-28).
+    await cadangan.openFromEmptyDaftar()
     await cadangan.exportCsvButton.click()
     await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
     await driver.back()

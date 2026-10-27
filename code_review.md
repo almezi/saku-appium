@@ -203,7 +203,7 @@ it slipping.
 
 | # | Finding | Severity | Location |
 |---|---|---|---|
-| **M1** | `cadangan` twins are **not the same abstraction** — 5 Android methods unmatched, iOS exposes a disjoint API. A spec cannot be ported by swapping locators. | 🔴 Critical | `cadangan.page.ts`, `cadangan.ios.page.ts` |
+| **M1** | `cadangan` twins are **not the same abstraction** — 5 Android methods unmatched, iOS exposes a disjoint API. A spec cannot be ported by swapping locators. | 🔴 Critical | `cadangan.page.ts`, `cadangan.ios.page.ts` — ✅ **fixed 2026-10-28** (converged API: `statusTexts`/`statusText`/`warningCard` renames + Android gaining `openFromEmptyDaftar`/`tapBack`/`waitForShareSheet`/`dismissShareSheet` during the v2.3 backup-automation update; `ringkasan` remains open as M2) |
 | **M2** | `ringkasan` twin at **44 % parity** — 10 Android methods (`breakdownBarRatio`, `comparisonTexts`, `emptyStateTexts`, `monthLabel`, `nextMonth`, `prevMonth`, `openAnggaran`, `openKelolaKategori`, `savingsText`, `scrollToBottom`) have no iOS equivalent, yet `RingkasanIosPage` is consumed by 7 iOS specs | 🔴 Critical | `ringkasan.page.ts` vs `ringkasan.ios.page.ts` |
 | **M3** | `TC-BUD` / `TC-BUDGET` prefix divergence → **0 shared ids** across 11 test cases on the two platforms | 🔴 Critical | `budget.spec.ts:25`, `budget.ios.spec.ts:40` |
 | **M4** | **One id maps to many test cases**: `TC-LIST-08` is defined **8×** in the Android spec (7 generated bulk chunks + 1 scroll test). A defect report citing `TC-LIST-08` cannot identify which case failed. | 🔴 Critical | `transaction-list.spec.ts:214,231` |
@@ -364,6 +364,12 @@ because those three Android modules happen to export a pure constant alongside t
 > **Fix:** move `anggaranTags`, `kategoriTags`, `cadanganTags` into `src/config/tags.ts` (or a
 > sibling `src/config/tags.ts` split), then have the iOS pages import from `config/` like every
 > other tag consumer.
+>
+> **🟠 Partially fixed 2026-10-28:** `cadanganTags` moved into `src/config/tags.ts` (and trimmed
+> to the three tags app v2.3 still renders — see BUG_Found_15) during the backup-automation
+> update, killing the cadangan cross-import (`cadangan.ios.page.ts` now imports from `config/`).
+> `anggaranTags` (`anggaran.page.ts`) and `kategoriTags` (`kategori.page.ts`) remain in their
+> page objects and their iOS twins still import from the Android modules.
 
 #### S6 — Rect-containment logic exists in three copies
 `containsCenter` is **verbatim duplicated** in `anggaran.ios.page.ts:10` and
@@ -491,7 +497,7 @@ structural convention in the project is undocumented in the agent instructions.
 | # | Item | Status now |
 |---|---|---|
 | **R1** | `switchMonth` asserts the label *changed*, not that it equals the target month | ✅ **fixed 2026-10-28** — all three switchers (`daftar.page.ts`, `ringkasan.page.ts`, `daftar.ios.page.ts`) now parse the label via the new `src/helpers/months.ts`, step it, and require an exact (month, year) match; a label that moved to the wrong month throws immediately. Verified only by static checks — needs a device pass (switchers touch `prevMonth`/`nextMonth` callers on both platforms) |
-| **O2** | `@wdio/junit-reporter` not installed (blocked on dependency approval) | ✅ **fixed 2026-10-28** — `@wdio/junit-reporter@9.32.0` installed as a devDependency (explicit user approval, see Standing decisions) and wired as a second reporter in both `wdio.conf.ts` and `wdio.ios.conf.ts`, writing per-capability XML into `reports/`. junit subtree adds 0 advisories; a device run still has to confirm the files land |
+| **O2** | `@wdio/junit-reporter` not installed (blocked on dependency approval) | ✅ **fixed 2026-10-28** — `@wdio/junit-reporter@9.32.0` installed as a devDependency (explicit user approval, see Standing decisions) and wired as a second reporter in both `wdio.conf.ts` and `wdio.ios.conf.ts`, writing `reports/junit-results-<cid>.xml` (v9's `outputFileFormat` must be a function — the default stream name is `.log`). Device-verified on the 2026-10-28 Pixel_10 runs (`tests="6" failures="0"`); junit subtree adds 0 advisories |
 | **O3** | `tambah` category-sheet magic scroll bound `8 × 45%` | ✅ **resolved** — now uses `UiScrollable.scrollIntoView` (`tambah.page.ts:90`) |
 | **O4** | TC-INC-09 re-implements `save()` inline | ✅ **fixed 2026-10-28** — `add-income.spec.ts` calls `tambah.save()` (click + toast wait, the same two steps) |
 | **O5** | `tsconfig` `types` redundant (`webdriverio` + `@wdio/globals/types`); `noUncheckedIndexedAccess` not enabled | ✅ **fixed 2026-10-28** — redundant `webdriverio` entry removed from `types`; `noUncheckedIndexedAccess` enabled and the ~32 surfaced sites fixed with guards (no non-null assertions). Behavior-neutral by construction; device gate still applies |

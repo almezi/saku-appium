@@ -33,7 +33,10 @@ import { CadanganIosPage } from '../../pageobjects/cadangan.ios.page'
  *    its remote view is NOT published to the accessibility tree (unlike the
  *    share popover) and coordinate taps do not reach it either, so neither
  *    element queries nor blind taps can select a file. Verified live 3×;
- *    see BUG_Found_10.md — the iOS analogue of Android's BUG_Found_02.
+ *    see BUG_Found_10.md — the iOS analogue of Android's BUG_Found_02;
+ *  - M1 convergence (2026-10-28) — the iOS twin exposes the same public API
+ *    as the Android twin (statusTexts/statusText/warningCard renames); only
+ *    the locator layer differs.
  */
 const IOS_BUNDLE = 'id.almezi.saku'
 // Fallback ONLY, for host commands that somehow run before the session exists.
@@ -94,10 +97,10 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     await daftar.open()
     await cadangan.openFromDaftar()
     expect(await cadangan.isDisplayed()).toBe(true)
-    const status = await cadangan.screenText()
+    const status = await cadangan.statusText()
     expect(status).toContain('1 transaksi')
     expect(status).toContain('Belum pernah')
-    expect(await cadangan.warningStrip.isDisplayed()).toBe(true)
+    expect(await cadangan.warningCard.isDisplayed()).toBe(true)
   })
 
   it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file @regression', async () => {
@@ -134,7 +137,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     // unchanged and no toast surfaced. "Cadangan terakhir" is NOT asserted
     // here — the export already wrote the backup file, so the app correctly
     // reports a backup date instead of "Belum pernah" (verified live).
-    const status = await cadangan.screenText()
+    const status = await cadangan.statusText()
     expect(status).toContain('1 transaksi')
     expect(await iosByTag(tags.component.toast).isExisting()).toBe(false)
   })

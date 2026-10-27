@@ -9,17 +9,17 @@ file; the numbering is continuous and files are never deleted or renumbered.
 
 | State | Count | Bugs |
 |---|---|---|
-| **Open** | 8 | 01, 02, 03, 04, 05, 06, 10, 12 |
-| **Fixed** | 5 | 07, 08, 11, 13, 14 |
+| **Open** | 8 | 01, 03, 04, 05, 06, 10, 12, 15 |
+| **Fixed** | 6 | 02, 07, 08, 11, 13, 14 |
 | **Closed** | 1 | 09 |
-| **Total** | **14** | |
+| **Total** | **15** | |
 
 ## Index
 
 | # | File | Platform | Severity / Priority | State | One-line summary |
 |---|---|---|---|---|---|
 | 01 | [BUG_FOUND.md](BUG_FOUND.md) | Android | Major / P2 | Open | TECNO real-device deadlock under uiautomator2; no confirmed fix path — emulator-only workaround |
-| 02 | [BUG_Found_02.md](BUG_Found_02.md) | Android | Major / P2 | Open | SAF picker drive blocks TC-BACKUP-04; app itself is fine (verified via MCP) |
+| 02 | [BUG_Found_02.md](BUG_Found_02.md) | Android | Major / P2 | Fixed | SAF picker drive blocks TC-BACKUP-04; app itself is fine (verified via MCP) → drawer race closed by verify-retry drive |
 | 03 | [BUG_Found_03.md](BUG_Found_03.md) | Android | Critical / P1 | Open | A committed transaction silently vanishes from the DB on the next clean reopen (WAL loss) |
 | 04 | [BUG_Found_04.md](BUG_Found_04.md) | Android | Major / P2 | Open | "Ubah kategori" dialog self-dismisses under WDIO between open and typing |
 | 05 | [BUG_Found_05.md](BUG_Found_05.md) | Android | Minor / P3 | Open | Tambah form unsavable in landscape — note field and save button are not composed |
@@ -32,6 +32,7 @@ file; the numbering is continuous and files are never deleted or renumbered.
 | 12 | [BUG_Found_12.md](BUG_Found_12.md) | iOS | Trivial / P3 | Open | TC-PERF-05 cannot run on the simulator — `dumpsys meminfo` has no counterpart |
 | 13 | [BUG_Found_13.md](BUG_Found_13.md) | iOS | Critical / P1 | Fixed | Compose renders a tagged container's strings as siblings → tree-only child reads returned nothing |
 | 14 | [BUG_Found_14.md](BUG_Found_14.md) | iOS | Critical / P1 | Fixed | Numeric keypad Delete key is a silent no-op after the category sheet closes |
+| 15 | [BUG_Found_15.md](BUG_Found_15.md) | Android + iOS | Major / P2 | Open | v2.3 redesign drops six Cadangan test tags on both platforms; import outcome has no UI surface — worked around via documented text lookups |
 
 ## Patterns worth knowing
 

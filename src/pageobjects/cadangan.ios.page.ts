@@ -1,19 +1,27 @@
 import { $, $$ } from '@wdio/globals'
 import { iosByTag } from '../helpers/locators'
 import { tags } from '../config/tags'
-import { cadanganTags } from './cadangan.page'
 import type { ChainablePromiseElement } from '../types'
 
 /**
  * Cadangan (backup & export) on iOS — accessibility-id twin of CadanganPage.
- * Method names mirror the Android page; only the locator layer differs.
+ * The twins expose the SAME public API method-for-method (M1 convergence,
+ * 2026-10-28: statusTexts/statusText/warningCard renamed to match Android);
+ * platform differences are internal — the locator layer, the share popover
+ * (iOS) vs the system share sheet (Android), and tapBack (iOS has no system
+ * BACK). The two documented iOS-only extras are the `screen` title anchor and
+ * `shareSheetCaption()`.
+ *
+ * This file no longer imports the Android page module: its three surviving
+ * tags now live on `tags.cadangan` in src/config/tags.ts, which removes the
+ * last page-object cross-import for cadangan (review finding S5).
  *
  * Tag drift on this build (verified live via MCP on the iPhone 18 Pro
  * simulator, iOS 27.0, 2026-10-27): only `cadangan_export_csv` and
  * `cadangan_export_json` are applied. `cadangan_screen`, `cadangan_status_card`,
  * `cadangan_import_button`, `cadangan_import_result`, `cadangan_import_error`
  * and `cadangan_warning` exist in TestTags.kt but are attached to no node, so
- * the screen, the status line, the import button and the warning strip are
+ * the screen, the status line, the import button and the warning card are
  * resolved as rendered output — the same documented exception the Anggaran and
  * Kategori ports use for untagged headers.
  *
@@ -40,8 +48,8 @@ const TITLE = '-ios predicate string: type == "XCUIElementTypeStaticText" AND la
 const IMPORT_BUTTON =
   '-ios predicate string: type == "XCUIElementTypeButton" AND label == "Pulihkan dari cadangan"'
 
-/** Warning strip; its Button label is "<note>, Detail" (the note plus the link). */
-const WARNING_STRIP =
+/** Warning card; its Button label is "<note>, Detail" (the note plus the link). */
+const WARNING_CARD =
   '-ios predicate string: type == "XCUIElementTypeButton" AND name BEGINSWITH "Hanya tersimpan di perangkat ini"'
 
 /** Full-screen dismiss region of the presented share popover. */
@@ -53,7 +61,7 @@ const SHARE_CAPTION = '-ios predicate string: name == "LP.CaptionBar.TopCaption"
 export class CadanganIosPage {
   /** Entry from Transaksi: the backup button lives on the daftar screen. */
   async openFromDaftar(): Promise<void> {
-    await iosByTag(cadanganTags.daftarEntryButton).click()
+    await iosByTag(tags.cadangan.daftarEntryButton).click()
     await this.waitForScreen()
   }
 
@@ -68,24 +76,30 @@ export class CadanganIosPage {
     await this.waitForScreen()
   }
 
+  /**
+   * Title anchor — a documented iOS-only extra: Android anchors screen
+   * detection on the export card, while this build applies no
+   * `cadangan_screen` tag on iOS, so the "Cadangan" title StaticText is the
+   * only stable node with that exact label while the screen is up.
+   */
   get screen(): ChainablePromiseElement {
     return $(TITLE)
   }
 
   get exportCsvButton(): ChainablePromiseElement {
-    return iosByTag(cadanganTags.exportCsv)
+    return iosByTag(tags.cadangan.exportCsv)
   }
 
   get exportJsonButton(): ChainablePromiseElement {
-    return iosByTag(cadanganTags.exportJson)
+    return iosByTag(tags.cadangan.exportJson)
   }
 
   get importButton(): ChainablePromiseElement {
     return $(IMPORT_BUTTON)
   }
 
-  get warningStrip(): ChainablePromiseElement {
-    return $(WARNING_STRIP)
+  get warningCard(): ChainablePromiseElement {
+    return $(WARNING_CARD)
   }
 
   async waitForScreen(timeout = 30_000): Promise<void> {
@@ -102,11 +116,12 @@ export class CadanganIosPage {
   }
 
   /**
-   * Every rendered StaticText on the screen, top-to-bottom. The status card
-   * has no tag, so its label/date/pill and the "n transaksi · n akun ·
-   * n kategori" summary are read as rendered output.
+   * Every rendered StaticText on the screen, top-to-bottom. v2.3 renders the
+   * status card as untagged output on BOTH platforms — the "<n> transaksi ·
+   * <n> akun · <n> kategori" summary plus the CADANGAN TERAKHIR block and its
+   * Perlu/Aman pill — so status assertions read rendered texts.
    */
-  async screenTexts(): Promise<string[]> {
+  async statusTexts(): Promise<string[]> {
     const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"')
     const texts: string[] = []
     for (const node of nodes) {
@@ -117,8 +132,8 @@ export class CadanganIosPage {
   }
 
   /** The screen's rendered texts joined, for `toContain` status assertions. */
-  async screenText(): Promise<string> {
-    return (await this.screenTexts()).join(' | ')
+  async statusText(): Promise<string> {
+    return (await this.statusTexts()).join(' | ')
   }
 
   /** True while the share popover is up after an export. */

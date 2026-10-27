@@ -103,6 +103,18 @@ export const tags = {
     deleteSheet: 'ubah_delete_sheet',
   },
 
+  // Cadangan (backup & export). v2.3 dropped six of the nine TESTABILITY.md
+  // tags on BOTH platforms (verified live 2026-10-28: Pixel_10 / API 37 and
+  // the iOS build) — only the daftar entry button and the two export cards
+  // still render; the screen root, status card, import button, import
+  // result/error and warning strip are resolved as rendered output by the
+  // page objects (see BUG_Found_15.md).
+  cadangan: {
+    daftarEntryButton: 'daftar_backup_button',
+    exportCsv: 'cadangan_export_csv',
+    exportJson: 'cadangan_export_json',
+  },
+
   // Shared components
   component: {
     sheetConfirm: 'component_sheet_button_confirm',
