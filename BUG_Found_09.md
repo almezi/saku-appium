@@ -45,5 +45,34 @@
 ## Additional Notes
 
 - Disposition taken per AGENTS.md retry/bug protocol: TC-LIST-11 is marked skipped with `~[BUG]~` in `progress.md`; the spec's `it.skip` carries a comment pointing here. No "swipe only" substitute pass was fabricated.
-- Options for the app owner: ① implement pull-to-refresh on `daftar_screen` (then the existing `it.skip` body — kept current with the suite's data model — can be un-skipped unchanged, expected sums included), or ② retire TC-LIST-11 from the catalog and remove the skip block.
+- Options for the app owner: ① implement pull-to-refresh on `daftar_screen` (then the existing `it.skip` body — kept current with the suite's data model — can be un-skipped unchanged, expected sums included), or ② retire TC-LIST-11 from the catalog and remove the skip block. **The app owner chose ② on 2026-10-27** (see Resolution).
 - Related: the earlier TC-LIST-11 failures (5×, 2026-10-24) were logged as cascades of TC-LIST-07/08 seeds; with those two now unblocked, the feature-missing root cause is the only remaining blocker for this case.
+
+## Resolution
+
+| Field | Value |
+|---|---|
+| **Status** | Closed — retired, not fixed (option ②) |
+| **Resolved at** | 2026-10-27 |
+| **Decision by** | App owner |
+| **Harness change** | TC-LIST-11 removed from the catalog and both specs |
+
+Pull-to-refresh was rejected as a product change rather than deferred. The app's
+`UI_SPEC.md` §7 now lists it under Out of scope, with the reason: the Transaksi
+list is backed by a reactive Room `Flow`, so there is no remote fetch to
+re-trigger and a refresh gesture would be a no-op dressed up as a feature.
+
+Changes made in this repo:
+
+- `test-cases-simple-money-tracker.md` §J — TC-LIST-11 struck through with the
+  retirement note, so it is not silently re-added later.
+- `src/tests/transaksi/transaction-list.spec.ts` — the `it.skip` body and its
+  `~[BUG]~` comment block removed (18 lines).
+- `src/tests/transaksi/transaction-list.ios.spec.ts` — the iOS placeholder
+  `it.skip` removed.
+- `progress.md` §1.D — case set corrected to 10, TC-LIST-11 marked retired
+  rather than skipped.
+- `npm run typecheck` passes after the removals.
+
+No app code changed for this bug. It stays on record per AGENTS.md
+("do not delete BUG_FOUND.md files").

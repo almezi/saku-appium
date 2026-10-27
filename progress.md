@@ -99,7 +99,7 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 > **iOS run 2026-10-27:** ported as `src/tests/tambah/add-expense.ios.spec.ts` (8/8 passing, iPhone 18 Pro sim / iOS 27.0, wdio.ios.conf.ts). Same typing/save gotchas as 1.B.
 
-### 1.D — Transaction List (TC-LIST) — 11 tasks
+### 1.D — Transaction List (TC-LIST) — 10 tasks
 
 - [x] TC-LIST-01: Empty month → empty state / zero summaries
 - [x] TC-LIST-02: Day header shows weekday + date + net total
@@ -111,9 +111,9 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 - [ ] TC-LIST-08: Scroll 100+ items, no crash — **SKIPPED** (failed 4×): seeding 100 items through the real form (~12 s/item) exceeds the 20-min test timeout; blocked on the app's unimplemented `test_seed` intent
 - [x] TC-LIST-09: `daftar_summary_masuk` = sum income in month
 - [x] TC-LIST-10: `daftar_summary_keluar` = sum expense in month
-- [ ] TC-LIST-11: Pull-to-refresh → data still correct — **SKIPPED** (failed 5×, always as a cascade): expected sums depended on TC-LIST-07/08 data; revisit together with TC-LIST-08
+- ~~TC-LIST-11: Pull-to-refresh → data still correct~~ — **RETIRED 2026-10-27**, not skipped: pull-to-refresh is out of scope in the app's `UI_SPEC.md` §7 (the list is a reactive local query, so there is nothing to re-fetch). Spec block and iOS placeholder removed; see `BUG_Found_09.md`.
 
-**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24; re-validated on device 2026-10-25 (9 passing incl. seed, 0 failing) after helper fixes from the review remediation
+**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24; re-validated on device 2026-10-25 (9 passing incl. seed, 0 failing) after helper fixes from the review remediation. Counts are of the 11-case set at the time; TC-LIST-11 was retired on 2026-10-27, so the live set is 10.
 
 
 ### 1.E — Summary / Ringkasan (TC-SUM) — 13 tasks

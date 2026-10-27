@@ -190,7 +190,9 @@ Locate by text/content-desc only:
 - TC-LIST-08 Scroll 100+ items, no crash
 - TC-LIST-09 `daftar_summary_masuk` = sum income in month
 - TC-LIST-10 `daftar_summary_keluar` = sum expense in month
-- TC-LIST-11 Pull-to-refresh → data still correct
+- ~~TC-LIST-11 Pull-to-refresh~~ — **retired 2026-10-27**: pull-to-refresh is
+  out of scope in the app's `UI_SPEC.md` §7 (the list is a reactive local
+  query, so there is nothing to re-fetch). See `BUG_Found_09.md`.
 
 ### K. Edit transaction (TC-EDIT)
 - TC-EDIT-01 Tap `Ubah` → form opens prefilled

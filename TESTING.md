@@ -1889,6 +1889,13 @@ Test results are collected during automated test execution and reported in a str
 - TC-SAVE-06: Tap disabled button → no action  
 
 #### J. Transaction List (TC-LIST) - [11/11 PASSED]
+
+> Historical: this section keeps the original manual-plan numbering, which
+> differs from the live catalog. TC-LIST-11 here ("No stale or duplicate
+> items") is not the catalogued TC-LIST-11, and "TC-LIST-10: Pull-to-refresh
+> works" predates the retirement — pull-to-refresh is out of scope in
+> `UI_SPEC.md` §7 (see `BUG_Found_09.md`). Authoritative list:
+> `test-cases-simple-money-tracker.md` §J.
 - TC-LIST-01: Empty month handled  
 - TC-LIST-02: Day header with weekday + date + total  
 - TC-LIST-03: Items grouped by day header  

@@ -122,6 +122,4 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
 
   it.skip('TC-LIST-08 seeds bulk items (skipped on iOS)', async () => {})
   it.skip('TC-LIST-08 scrolling 100+ items does not crash (skipped on iOS)', async () => {})
-
-  it.skip('TC-LIST-11 pull-to-refresh keeps the data correct (skipped on iOS)', async () => {})
 })

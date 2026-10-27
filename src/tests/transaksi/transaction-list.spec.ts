@@ -244,22 +244,4 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
       B_TODAY_EXPENSE + 10_000 + BULK_COUNT * 1_000,
     )
   })
-
-  // ~[BUG] SKIPPED 2026-10-27 — feature missing: the app implements NO
-  // pull-to-refresh on daftar_screen (grep of the whole Compose source for
-  // PullToRefresh/pullRefresh returns zero matches; the case catalog lists
-  // it, the app never built it). The test cannot pass as written and faking
-  // a swipe-only "data intact" pass would verify nothing about refresh.
-  // Filed as BUG_Found_09.md (Minor / P3): either implement pull-to-refresh
-  // or retire TC-LIST-11 from the catalog.
-  it.skip('TC-LIST-11 pull-to-refresh keeps the data correct', async () => {
-    await daftar.open()
-    const listElement = await byTag(tags.daftar.screen)
-    const listId = await listElement.elementId
-    await driver.execute('mobile: swipeGesture', { elementId: listId, direction: 'down', percent: 0.7 })
-    expect(await daftar.summaryIncome()).toBe(A_YESTERDAY_INCOME + C_TODAY_INCOME)
-    expect(await daftar.summaryExpense()).toBe(B_TODAY_EXPENSE + 10_000 + BULK_COUNT * 1_000)
-    const row = await daftar.findRowText(formatRp(1_000))
-    expect(await row.isDisplayed()).toBe(true)
-  })
 })
