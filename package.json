@@ -29,6 +29,7 @@
     "test:anggaran:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/anggaran/budget.ios.spec.ts",
     "test:kategori": "wdio run ./wdio.conf.ts --spec ./src/tests/kategori/*.spec.ts",
     "test:kategori:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/kategori/category-management.ios.spec.ts",
+    "test:backup:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/backup.ios.spec.ts",
     "wdio": "wdio run ./wdio.conf.ts"
   },
   "devDependencies": {

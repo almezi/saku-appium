@@ -64,6 +64,11 @@ export const tags = {
     summaryKeluar: 'daftar_summary_keluar',
     item: (transactionId: string) => `daftar_item_${transactionId}`,
     emptyState: 'daftar_empty_state',
+    // The empty list renders its own layout instead of the header strip: the
+    // `daftar_backup_button` is absent there and its `onOpenBackup` action
+    // moves to the empty state's secondary button (DaftarScreen.kt).
+    emptyStatePrimary: 'daftar_empty_state_primary',
+    emptyStateSecondary: 'daftar_empty_state_secondary',
   },
 
   // Ringkasan (summary)

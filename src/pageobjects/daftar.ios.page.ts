@@ -88,6 +88,36 @@ export class DaftarIosPage extends BaseIosPage {
     throw new Error(`Edit affordance for category "${categoryId}" could not be clicked`)
   }
 
+  /**
+   * Delete affordance of the (unique) transaction using `categoryId`; opens
+   * the screen-level confirmation sheet (`daftar_delete_sheet`), the iOS twin
+   * of the Android `tapDelete`. Same card-button predicate as `tapEdit`.
+   */
+  async tapDelete(categoryId: string): Promise<void> {
+    const pattern = `-ios predicate string: name MATCHES "daftar_item_.*_delete_${categoryId}"`
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const buttons = $$(pattern)
+      if ((await buttons.length) > 0) {
+        try {
+          await buttons[0].click()
+          return
+        } catch {
+          // Stale handle after recomposition — settle and re-query.
+          await driver.pause(500)
+        }
+      }
+      await this.swipeList('up')
+    }
+    throw new Error(`Delete affordance for category "${categoryId}" could not be clicked`)
+  }
+
+  /** Confirms the open delete sheet and waits for it to close. */
+  async confirmDeleteSheet(): Promise<void> {
+    await iosByTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: 10_000 })
+    await iosByTag(tags.component.sheetConfirm).click()
+    await iosByTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: 10_000, reverse: true })
+  }
+
   async emptyStateTexts(): Promise<string[]> {
     return iosExtractChildTexts(iosByTag(tags.daftar.emptyState))
   }
