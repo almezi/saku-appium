@@ -36,6 +36,31 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 
 **Spec:** `src/tests/navigasi/navigation.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
 
+> **iOS run 2026-10-27: 8/8 PASSING** (`src/tests/navigasi/navigation.ios.spec.ts`, first iOS spec
+> on this branch). App: Saku.app Debug built fresh from the app repo (bundle `id.almezi.saku`, iOS
+> target reports bundle version 1.0 — not synced with the Android v2.2 numbering; flag for the app
+> owner). Device: iPhone 18 Pro simulator `80FCD259-BA75-4018-8FE6-31F4E812AD9B` (iOS 27.0), Appium
+> 3.8.0 / xcuitest-driver 12.21.0. Run via new `npm run test:navigasi:ios` (config: `wdio.ios.conf.ts`;
+> locator helpers `iosByTag`/`iosAllByTag` added to `locators.ts` — tags resolve as accessibility IDs
+> exactly as TESTABILITY.md promised). Findings baked into the code/docs:
+> ① **TC-NAV-06 adapted for iOS**: there is no system BACK, so the Android `driver.back()` steps
+> become background-2 s + foreground per tab; observed behavior is *tab state fully restored*
+> ("Daftar restored" / "Ringkasan restored") — unlike Android where BACK pops to the start tab.
+> Assertion accepts kept-or-reset per the TC-PERS-02 "verify" precedent. ② iOS nav-bar element
+> handles die on every screen switch ("No matches found for Identity Binding") — always re-resolve
+> by tag; `iosByTag`'s lazy re-resolution makes the spec immune. ③ The iOS accessibility tree is
+> lazy-populated: first `tambah_screen` lookups 404 right after session start, so the `before`
+> hook waits 45 s. ④ Build blocker found en route: `xcodebuild` SIGTRAP-crashed parsing the shared
+> `Saku.xcscheme` (malformed `container:$.xcodeproj` LaunchAction reference from app-repo commit
+> `0a50aa4`) — fixed in the app repo working tree, filed as `BUG_Found_08.md`. ⑤ Environment:
+> this machine's `xcode-select` → CommandLineTools (no iOS SDK), so every iOS entry point must
+> export `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (wdio.ios.conf.ts does it
+> automatically); the appium-mcp embedded server inherits the broken env and cannot create local
+> iOS sessions — iOS MCP sessions need an external Appium server started with DEVELOPER_DIR set
+> (port 4723 is reserved for it). ⑥ Do NOT point the suite at the Appium MCP's cached prebuilt WDA
+> (`usePrebuiltWDA` + that .app ⇒ xcodebuild 65, 3× session failures); the driver builds its own
+> version-matched WDA from source (~2 min once, then cached).
+>
 > ~[BUG] 2026-10-25: real-device re-runs of TC-NAV on TECNO CM7 (HiOS/Android 16) are
 > blocked — uiautomator2 instrumentation deadlocks when the app is foreground (3
 > consecutive failures, retry limit reached). See `BUG_FOUND.md`. Emulator passes 8/8.

@@ -19,7 +19,9 @@
     "test:shard": "SAKU_SHARD=1 wdio run ./wdio.conf.ts",
     "appium:server1": "ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk} appium server --base-path=/wd/hub --port 4723",
     "appium:server2": "ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk} appium server --base-path=/wd/hub --port 4725",
-    "test:navigasi": "wdio run ./wdio.conf.ts --spec ./src/tests/navigasi/*.spec.ts",
+    "test:navigasi": "wdio run ./wdio.conf.ts --spec ./src/tests/navigasi/navigation.spec.ts",
+    "test:ios": "wdio run ./wdio.ios.conf.ts",
+    "test:navigasi:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/navigasi/navigation.ios.spec.ts",
     "test:tambah": "wdio run ./wdio.conf.ts --spec ./src/tests/tambah/*.spec.ts",
     "test:transaksi": "wdio run ./wdio.conf.ts --spec ./src/tests/transaksi/*.spec.ts",
     "test:ringkasan": "wdio run ./wdio.conf.ts --spec ./src/tests/ringkasan/*.spec.ts",
@@ -36,6 +38,7 @@
     "@wdio/spec-reporter": "^9.0.0",
     "appium": "^3.0.0",
     "appium-uiautomator2-driver": "^8.0.0",
+    "appium-xcuitest-driver": "^12.21.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.0"
   }

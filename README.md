@@ -106,4 +106,84 @@ All test cases are written in markdown for easy documentation and can be convert
 ---
 
 *Generated via Appium MCP exploration and comprehensive test case catalog.*
+
+## iOS Appium (Simulator) - Setup & Runbook
+
+### Prerequisites
+- macOS with Xcode installed
+- iOS Simulator available (run `xcrun simctl list devices` to see devices)
+- Appium MCP server (embedded mode used by this MCP)
+
+### Quick Start (iOS Simulator)
+Use the UDID of your simulator. Example below uses `80FCD259-BA75-4018-8FE6-31F4E812AD9B` (iPhone 18 Pro).
+
+#### Step 0 — Appium server
+- **Local/embedded mode:** No separate Appium server to start — the MCP hosts the driver internally.
+- **Remote mode:** Only if explicitly using a remote Appium server URL, pass `remoteServerUrl`.
+
+#### Step 1 — Select the iOS simulator device
+```json
+{
+  "tool": "appium_select_device",
+  "params": {
+    "platform": "ios",
+    "iosDeviceType": "simulator",
+    "deviceUdid": "80FCD259-BA75-4018-8FE6-31F4E812AD9B"
+  }
+}
+```
+
+#### Step 2 — Boot simulator + launch WebDriverAgent (WDA)
+```json
+{
+  "tool": "appium_prepare_ios_simulator",
+  "params": {
+    "udid": "80FCD259-BA75-4018-8FE6-31F4E812AD9B"
+  }
+}
+```
+- First attempt may time out launching WDA; retry if needed.
+- On success: WDA ready at `http://127.0.0.1:51606` (port may vary).
+
+#### Step 3 — Create the Appium session
+```json
+{
+  "tool": "appium_session_management",
+  "params": {
+    "action": "create",
+    "platform": "ios",
+    "capabilities": "{\"appium:webDriverAgentUrl\": \"http://127.0.0.1:51606\"}"
+  }
+}
+```
+- Creates an iOS session via XCUITest. Session ID will be returned (e.g., `abb1f7c0-c367-41e7-b8f3-158313515788`).
+
+#### Step 4 — (Optional) Install your app
+```json
+{
+  "tool": "appium_app_lifecycle",
+  "params": {
+    "action": "install",
+    "path": "/absolute/path/to/YourApp.app"
+  }
+}
+```
+
+#### Step 5 — Start automating
+Now you can use the Appium MCP tools to drive the simulator:
+- `appium_find_element` / `appium_find_elements` — locate elements
+- `appium_gesture` — taps, scrolls, swipes, etc.
+- `appium_screenshot` — capture screen
+- `appium_get_page_source` — inspect XML
+- `appium_generate_locators` — generate locator candidates
+
+### Execution Order
+`Step 1 → Step 2 → Step 3 → (Step 4 optional) → Step 5`
+
+### Current Live Setup (example)
+- Device: iPhone 18 Pro (`80FCD259-BA75-4018-8FE6-31F4E812AD9B`)
+- WDA: `http://127.0.0.1:51606`
+- Session ID: `abb1f7c0-c367-41e7-b8f3-158313515788`
+- Platform: iOS / Automation: XCUITest
+
 # saku-appium

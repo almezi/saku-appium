@@ -83,6 +83,10 @@ Copy the template from `BUG_FOUND.template.md` and fill every field:
 ├── BUG_Found_02.md         # Active: SAF picker drive (TC-BACKUP-04)
 ├── BUG_Found_03.md         # Active: vanishing committed transaction (TC-BACKUP-06)
 ├── BUG_Found_04.md         # Active: rename-dialog self-dismiss under WDIO (TC-KAT-08/10, TC-LIST-07)
+├── BUG_Found_05.md         # (see file header)
+├── BUG_Found_06.md         # (see file header)
+├── BUG_Found_07.md         # Category-sheet lookup failure (TC-PERF) — fixed via text-label lookup
+├── BUG_Found_08.md         # iOS build blocker: xcodebuild SIGTRAP on malformed Saku.xcscheme (fixed in app repo, uncommitted)
 ├── progress.md             # Test execution checklist (mark [x]/~[BUG]~)
 ┕ root /            # Test infrastructure files
 │   ├── README.md
