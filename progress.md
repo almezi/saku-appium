@@ -20,7 +20,8 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 > dialog typing; app-side investigation only if that proves insufficient).
 >
 > Platform status (2026-10-27): Android — complete (137/146 passing, 9 skipped per retry policy);
-> iOS — partial (only TC-NAV spec exists: 8/8 passing on iPhone 18 Pro sim; other sub-phases not yet ported).
+> iOS — partial (TC-NAV 8/8, TC-INC 9/9, TC-EXP 8/8, TC-BUDGET 11/11 passing on the iPhone 18 Pro
+> sim — 36 cases across 4 specs; remaining sub-phases not yet ported).
 
 ---
 
@@ -205,6 +206,34 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 > `tambah_input_amount`/`anggaran_form_limit`; tap-to-focus + `set_value` `w3cActions: true` works and
 > the value survives a type-toggle. ⑥ Saving a transaction resets the form to Pemasukan (type toggle
 > resets along with amount/category — expect income categories in the reopened picker).
+
+**Spec (iOS):** `src/tests/anggaran/budget.ios.spec.ts` — **11/11 passing under wdio 2026-10-27**
+(iPhone 18 Pro sim, iOS 27.0, Appium 3.8.0 @ :4725, XCUITest 12.21; run via
+`npm run test:anggaran:ios`, 4 iterations to green). Same 11-case split as the Android spec; page
+object `src/pageobjects/anggaran.ios.page.ts`.
+
+> iOS findings behind the budget port (verified live 2026-10-27):
+> ① **Compose flattens tagged cards**: `anggaran_total_card` / `anggaran_row_<id>` land on an EMPTY
+> `XCUIElementTypeOther`; the texts and the bar node render as SIBLING nodes inside `anggaran_list`
+> (page-source dump). Child-text queries return `[]`, so card/row text and bar width are read by
+> **geometry** (static text / Other whose center falls inside the card's rect). The same defect sat
+> in the shared `iosReadAmount` and was fixed there (rect fallback + currency-preferred candidate,
+> which also stopped day headers from parsing their date — "2026" — instead of the total; that change
+> took `add-income.ios.spec.ts` 9/9 and `add-expense.ios.spec.ts` 8/8 on the same run pair).
+> ② **Save is a silent no-op while the keyboard is up**: the amount field keeps focus across the
+> category sheet, so the keypad re-opens over `tambah_button_save` and the WDA tap lands on a digit
+> key (amount grew, nothing saved). `TambahIosPage.save()` now dismisses with verification
+> (`iosDismissKeyboard` → dead-zone tap, then Return IME action when still shown) and retries the
+> click 3x; the reset signal is the amount field returning to empty/`Rp 0`.
+> ③ **Two delete-sheet roots**: row Hapus opens the screen-level `anggaran_delete_sheet`, form delete
+> opens `anggaran_form_delete_sheet` (added `anggaranTags.screenDeleteSheet`; the Android page object
+> only had the form one).
+> ④ Bar fill is NOT exposed to accessibility — only the 330 px track node exists, so the bar is
+> asserted structurally by width and progress numerically by the "Rp X dari Rp Y" text.
+> ⑤ Title/month are untagged StaticTexts (read as rendered output, documented exception);
+> `component_button_back` is the only way off the screen (no system BACK on iOS).
+> ⑥ The Ringkasan Anggaran button is hidden while the month has no transactions (UI_SPEC 6.3), so
+> `before` seeds one income through `createTransactionIos`.
 
 ### 2.B — Category Management (TC-KAT) — 15 tasks
 

@@ -186,25 +186,52 @@ export async function iosFieldText(field: ChainablePromiseElement): Promise<stri
   return ((await field.getText().catch(() => '')) || '').trim()
 }
 
+/** True while the iOS software keyboard is present in the accessibility tree. */
+export async function iosKeyboardShown(): Promise<boolean> {
+  const keyboards = await $$('-ios predicate string: type == "XCUIElementTypeKeyboard"')
+  return (await keyboards.length) > 0
+}
+
 /**
  * Dismisses the iOS software keyboard by tapping the dead zone above the
  * screen content (inside the status-bar inset, where Saku renders nothing —
- * every screen reserves that area via safeAreaTop). WDA's own
+ * every screen reserves that area via safeAreaTop), falling back to the
+ * Return IME action when the tap leaves the keyboard up. WDA's own
  * hideKeyboard CANNOT dismiss a Compose keyboard ("Did not know how to
  * dismiss the keyboard", ~12 s of internal retries per call — measured), so
  * it is not attempted.
  */
-async function iosDismissKeyboard(): Promise<void> {
-  const { width } = await driver.getWindowSize()
+export async function iosDismissKeyboard(): Promise<void> {
+  if (!(await iosKeyboardShown().catch(() => false))) return
+  const tapDeadZone = async () => {
+    const { width } = await driver.getWindowSize()
+    await driver.performActions([
+      {
+        type: 'pointer',
+        id: 'finger1',
+        parameters: { pointerType: 'touch' },
+        actions: [
+          { type: 'pointerMove', duration: 0, x: Math.floor(width / 2), y: 30 },
+          { type: 'pointerDown', button: 0 },
+          { type: 'pointerUp', button: 0 },
+        ],
+      },
+    ])
+    await driver.pause(400)
+  }
+  await tapDeadZone()
+  if (!(await iosKeyboardShown().catch(() => false))) return
+  // The dead-zone tap does not always clear focus (measured on the Tambah
+  // amount field, which keeps focus across the category sheet). The Return
+  // IME action does close the Compose keyboard; currency editors filter the
+  // newline out.
   await driver.performActions([
     {
-      type: 'pointer',
-      id: 'finger1',
-      parameters: { pointerType: 'touch' },
+      type: 'key',
+      id: 'keyboard1',
       actions: [
-        { type: 'pointerMove', duration: 0, x: Math.floor(width / 2), y: 30 },
-        { type: 'pointerDown', button: 0 },
-        { type: 'pointerUp', button: 0 },
+        { type: 'keyDown', value: '\n' },
+        { type: 'keyUp', value: '\n' },
       ],
     },
   ])

@@ -26,6 +26,7 @@
     "test:transaksi": "wdio run ./wdio.conf.ts --spec ./src/tests/transaksi/*.spec.ts",
     "test:ringkasan": "wdio run ./wdio.conf.ts --spec ./src/tests/ringkasan/*.spec.ts",
     "test:anggaran": "wdio run ./wdio.conf.ts --spec ./src/tests/anggaran/*.spec.ts",
+    "test:anggaran:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/anggaran/budget.ios.spec.ts",
     "test:kategori": "wdio run ./wdio.conf.ts --spec ./src/tests/kategori/*.spec.ts",
     "wdio": "wdio run ./wdio.conf.ts"
   },

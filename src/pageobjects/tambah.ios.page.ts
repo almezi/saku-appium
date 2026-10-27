@@ -1,6 +1,6 @@
 import { $ } from '@wdio/globals'
 import { iosByTag } from '../helpers/locators'
-import { iosTypeIntoTaggedField, iosFieldText } from '../helpers/input'
+import { iosTypeIntoTaggedField, iosFieldText, iosDismissKeyboard, iosKeyboardShown } from '../helpers/input'
 import { iosExtractChildTexts } from '../helpers/elements'
 import { tags } from '../config/tags'
 import { accounts, type TransactionType } from '../config/categories'
@@ -165,16 +165,44 @@ export class TambahIosPage extends BaseIosPage {
    * Saves and waits for the form reset (iOS has no component_toast tag — tag
    * drift, verified via MCP 2026-10-27: no element with "toast"/"disimpan"
    * exists in the accessibility tree after save). The app stays on Tambah.
-   * The save confirmation on iOS is the form reset: the save button re-disables
-   * after the amount field returns to its default. Mirrors Android TC-INC-08
-   * which asserts the same form-reset signal.
+   * The save confirmation on iOS is the form reset: the amount field returns
+   * to its default (the save button itself does NOT re-disable).
+   *
+   * The amount field keeps focus through later field interactions, so the
+   * keyboard can reappear over the save button after the category sheet
+   * closes; a WDA tap then hits a keypad digit and the tap is lost (measured
+   * live: the amount grew by one digit and nothing saved). Each attempt
+   * therefore dismisses and verifies the keyboard away before tapping.
    */
   async save(): Promise<void> {
-    await this.saveButton.click()
-    // Brief settle so the click is processed; the button's press-state can
-    // flicker disabled for a frame, and we want the post-save disabled state.
-    await driver.pause(500)
-    await this.saveButton.waitForEnabled({ timeout: 10_000, reverse: true })
+    let lastState = ''
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await iosDismissKeyboard()
+      if (await iosKeyboardShown().catch(() => false)) {
+        lastState = 'keyboard still shown'
+        await driver.pause(500)
+        continue
+      }
+      lastState = `saveEnabled=${await this.saveButton.isEnabled().catch(() => false)}`
+      await this.saveButton.click()
+      try {
+        await driver.waitUntil(
+          async () => {
+            const text = await iosFieldText(this.amountInput).catch(() => '')
+            return text === '' || text === '0' || text === 'Rp 0'
+          },
+          { timeout: 6_000 },
+        )
+        // Best-effort: confirm any toast that might surface on newer builds.
+        const toast = iosByTag(tags.component.toast)
+        await toast.waitForExist({ timeout: 2_000 }).catch(() => undefined)
+        return
+      } catch {
+        // Click raced a recomposition — settle and retry on a fresh query.
+        await driver.pause(700)
+      }
+    }
+    throw new Error(`Save did not reset the amount field after 3 attempts (last state: ${lastState})`)
   }
 
   async getAmountText(): Promise<string> {

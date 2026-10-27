@@ -2,6 +2,7 @@
  * Shared element-reading helpers. Locating and scrolling live in
  * locators.ts; these helpers read text off already-addressable elements.
  */
+import { $$ } from '@wdio/globals'
 import type { ChainablePromiseElement } from '../types'
 import { parseAmountText } from './money'
 
@@ -63,12 +64,44 @@ export async function readAmount(el: ChainablePromiseElement): Promise<number> {
 }
 
 /**
+ * Static texts rendered INSIDE a tagged node's measured rect, top-to-bottom
+ * then left-to-right.
+ *
+ * Compose Multiplatform on iOS hoists the children of a tagged container
+ * (cards, rows) OUT of the container node in the accessibility tree: the tag
+ * lands on an empty `Other` and its texts become SIBLINGS in the enclosing
+ * list (verified in an `anggaran_total_card` page-source dump, 2026-10-27).
+ * Tree-based child queries return nothing there, so the rendered strings are
+ * recovered from the geometry instead. Returns [] when the node has no rect
+ * (not composed yet) so callers can keep their existing fallbacks.
+ */
+async function iosTextsInside(el: ChainablePromiseElement): Promise<string[]> {
+  const { x, y } = await el.getLocation().catch(() => ({ x: 0, y: 0, width: 0, height: 0 }))
+  const { width, height } = await el.getSize().catch(() => ({ width: 0, height: 0 }))
+  if (width <= 0 || height <= 0) return []
+  const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"')
+  const found: { y: number; x: number; text: string }[] = []
+  for (const node of nodes) {
+    const loc = await node.getLocation().catch(() => null)
+    const size = await node.getSize().catch(() => null)
+    if (!loc || !size) continue
+    const cx = loc.x + size.width / 2
+    const cy = loc.y + size.height / 2
+    if (cx < x || cx > x + width || cy < y || cy > y + height) continue
+    const text = ((await node.getText().catch(() => '')) || '').trim()
+    if (text) found.push({ y: loc.y, x: loc.x, text })
+  }
+  return found.sort((a, b) => a.y - b.y || a.x - b.x).map((entry) => entry.text)
+}
+
+/**
  * iOS twin of readAmount. The tagged node is usually an accessible=false
  * wrapper whose own getText() is empty, so in addition to own text and child
  * static texts this reads the wrapper's `value`/`label` attributes (XCUITest
- * exposes them even when the node itself is not accessible) before falling
- * back to the children. Same last-digit-bearing-text rule: the value node
- * renders after the label ("MASUK" -> "Rp 250.000").
+ * exposes them even when the node itself is not accessible), and finally the
+ * texts rendered inside the node's rect (see iosTextsInside). Same
+ * last-digit-bearing-text rule: the value node renders after the label
+ * ("MASUK" -> "Rp 250.000").
  */
 export async function iosReadAmount(el: ChainablePromiseElement): Promise<number> {
   const texts: string[] = []
@@ -79,11 +112,18 @@ export async function iosReadAmount(el: ChainablePromiseElement): Promise<number
     if (v) texts.push(v)
   }
   texts.push(...(await iosExtractChildTexts(el)))
-  const withDigits = texts.filter((t) => /\d/.test(t))
+  let withDigits = texts.filter((t) => /\d/.test(t))
   if (withDigits.length === 0) {
-    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children)`)
+    withDigits = (await iosTextsInside(el)).filter((t) => /\d/.test(t))
   }
-  return parseAmountText(withDigits[withDigits.length - 1])
+  if (withDigits.length === 0) {
+    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children, rect)`)
+  }
+  // Prefer a currency-shaped candidate: day headers also render a date
+  // ("27 Okt 2026"), which would otherwise win the last-digit rule.
+  const currency = withDigits.filter((t) => /Rp\s?\d/.test(t))
+  const pool = currency.length > 0 ? currency : withDigits
+  return parseAmountText(pool[pool.length - 1])
 }
 
 /**
@@ -101,11 +141,17 @@ export async function iosAmountText(el: ChainablePromiseElement): Promise<string
     if (v) texts.push(v)
   }
   texts.push(...(await iosExtractChildTexts(el)))
-  const withDigits = texts.filter((t) => /\d/.test(t))
+  let withDigits = texts.filter((t) => /\d/.test(t))
   if (withDigits.length === 0) {
-    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children)`)
+    withDigits = (await iosTextsInside(el)).filter((t) => /\d/.test(t))
   }
-  return withDigits[withDigits.length - 1]
+  if (withDigits.length === 0) {
+    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children, rect)`)
+  }
+  // Same currency preference as iosReadAmount (skips a day header's date).
+  const currency = withDigits.filter((t) => /Rp\s?\d/.test(t))
+  const pool = currency.length > 0 ? currency : withDigits
+  return pool[pool.length - 1]
 }
 
 /**
