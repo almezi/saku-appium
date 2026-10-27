@@ -72,7 +72,7 @@ function tokenize(xml: string): TagEvent[] {
     idx = j + 1
     if (inner.startsWith('?') || inner.startsWith('!')) continue
     const attrs: Record<string, string> = {}
-    for (const a of inner.matchAll(/([\w-]+)="([^"]*)"/g)) attrs[a[1]] = decodeEntities(a[2])
+    for (const a of inner.matchAll(/([\w-]+)="([^"]*)"/g)) attrs[a[1] ?? ''] = decodeEntities(a[2] ?? '')
     events.push({ type: 'open', attrs })
     if (inner.trimEnd().endsWith('/')) events.push({ type: 'close', attrs: {} })
   }

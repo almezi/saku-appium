@@ -490,15 +490,15 @@ structural convention in the project is undocumented in the agent instructions.
 
 | # | Item | Status now |
 |---|---|---|
-| **R1** | `switchMonth` asserts the label *changed*, not that it equals the target month | 🟠 **still open** — `daftar.page.ts:47`, `ringkasan.page.ts:208` |
-| **O2** | `@wdio/junit-reporter` not installed (blocked on dependency approval) | 🟠 **still blocked** — same approval requirement applies to S3's `overrides` |
+| **R1** | `switchMonth` asserts the label *changed*, not that it equals the target month | ✅ **fixed 2026-10-28** — all three switchers (`daftar.page.ts`, `ringkasan.page.ts`, `daftar.ios.page.ts`) now parse the label via the new `src/helpers/months.ts`, step it, and require an exact (month, year) match; a label that moved to the wrong month throws immediately. Verified only by static checks — needs a device pass (switchers touch `prevMonth`/`nextMonth` callers on both platforms) |
+| **O2** | `@wdio/junit-reporter` not installed (blocked on dependency approval) | ✅ **fixed 2026-10-28** — `@wdio/junit-reporter@9.32.0` installed as a devDependency (explicit user approval, see Standing decisions) and wired as a second reporter in both `wdio.conf.ts` and `wdio.ios.conf.ts`, writing per-capability XML into `reports/`. junit subtree adds 0 advisories; a device run still has to confirm the files land |
 | **O3** | `tambah` category-sheet magic scroll bound `8 × 45%` | ✅ **resolved** — now uses `UiScrollable.scrollIntoView` (`tambah.page.ts:90`) |
-| **O4** | TC-INC-09 re-implements `save()` inline | 🟠 **still open** — `add-income.spec.ts:110` calls `tambah.saveButton.click()` directly |
-| **O5** | `tsconfig` `types` redundant (`webdriverio` + `@wdio/globals/types`); `noUncheckedIndexedAccess` not enabled | 🟠 **still open** |
-| **O6** | `ubah.openFromDaftar(daftar: DaftarPage, …)` couples page objects | 🟠 **still open** — `ubah.page.ts:39`; `ubah.ios.page.ts:5` imports `DaftarIosPage` |
+| **O4** | TC-INC-09 re-implements `save()` inline | ✅ **fixed 2026-10-28** — `add-income.spec.ts` calls `tambah.save()` (click + toast wait, the same two steps) |
+| **O5** | `tsconfig` `types` redundant (`webdriverio` + `@wdio/globals/types`); `noUncheckedIndexedAccess` not enabled | ✅ **fixed 2026-10-28** — redundant `webdriverio` entry removed from `types`; `noUncheckedIndexedAccess` enabled and the ~32 surfaced sites fixed with guards (no non-null assertions). Behavior-neutral by construction; device gate still applies |
+| **O6** | `ubah.openFromDaftar(daftar: DaftarPage, …)` couples page objects | ✅ **fixed 2026-10-28** — `openFromDaftar` deleted from both Ubah twins; all 28 spec call sites (14 Android + 14 iOS) now navigate via `daftar.tapEdit(categoryId)` + `ubah.waitForScreen()`. Zero page-object cross-imports remain, so the future `no-restricted-imports` lint rule has nothing to flag |
 | **N1** | Mixed `waitForDisplayed()` / `expect(...)` assertion styles | 🔴 **escalated** → now **S8** (105 vs 109 vs 0) |
-| **N2** | Convoluted `Array.from({length:20})` loop | 🟠 **still open** — `navigation.spec.ts:87` |
-| **N3** | 3 `as WebdriverIO.Element` casts after `toBeDefined()` guards | 🟠 **still open** — `transaction-list.spec.ts:179-181` |
+| **N2** | Convoluted `Array.from({length:20})` loop | ✅ **fixed 2026-10-28** — both navigation twins use a plain indexed loop |
+| **N3** | 3 `as WebdriverIO.Element` casts after `toBeDefined()` guards | ✅ **fixed 2026-10-28** — `transaction-list.spec.ts` narrows with a guard-throw (better failure message) instead of casts |
 
 ---
 
@@ -528,7 +528,8 @@ considered green:
 - **Never `npm audit fix --force`** — it downgrades `appium` 3.x → 2.19. Use targeted
   `overrides` (S3).
 - **Dependency changes require explicit approval** — including `overrides`, which alter the
-  resolved tree. Same posture as the `@wdio/junit-reporter` (O2) hold.
+  resolved tree. Granted so far: `@wdio/junit-reporter@^9.0.0` (2026-10-28, closes O2 —
+  install verified 0 new advisories). Still pending: the S3 `overrides` block.
 - **Locator rule:** locate by test tag, never by visible text. The one exception
   (`config/category-labels.ts`, text-based category sheet lookup) is documented, scoped, and
   carries its own removal condition — it must be deleted the moment the app tags sheet rows.

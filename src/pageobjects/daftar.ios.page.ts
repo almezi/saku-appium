@@ -8,6 +8,7 @@ import {
   iosTextsInRect,
 } from '../helpers/elements'
 import { tags } from '../config/tags'
+import { formatMonthYear, parseMonthLabel, shiftMonthYear } from '../helpers/months'
 import { BaseIosPage } from './base.ios.page'
 
 /**
@@ -58,7 +59,11 @@ export class DaftarIosPage extends BaseIosPage {
     if ((await matches.length) === 0) {
       throw new Error(`No element with label containing "${snippet}"`)
     }
-    return matches[0]
+    // The length throw above is the real runtime guard — an unawaited
+    // chainable index is never undefined; this is only a type bridge.
+    const first = matches[0]
+    if (first === undefined) throw new Error(`No element with label containing "${snippet}"`)
+    return first
   }
 
   /**
@@ -71,7 +76,11 @@ export class DaftarIosPage extends BaseIosPage {
     if ((await headers.length) === 0) {
       throw new Error('No daftar_day_header_* element found in the tree')
     }
-    return iosReadAmount(headers[0])
+    // The length throw above is the real runtime guard — an unawaited
+    // chainable index is never undefined; this is only a type bridge.
+    const header = headers[0]
+    if (header === undefined) throw new Error('No daftar_day_header_* element found in the tree')
+    return iosReadAmount(header)
   }
 
   /**
@@ -130,12 +139,17 @@ export class DaftarIosPage extends BaseIosPage {
       // length read after the swipe reflects the post-scroll state.
       const buttons = $$(pattern)
       if ((await buttons.length) > 0) {
-        try {
-          await buttons[0].click()
-          return
-        } catch {
-          // Stale handle after recomposition — settle and re-query.
-          await driver.pause(500)
+        // The length check above is the real runtime guard — an unawaited
+        // chainable index is never undefined; this is only a type bridge.
+        const button = buttons[0]
+        if (button !== undefined) {
+          try {
+            await button.click()
+            return
+          } catch {
+            // Stale handle after recomposition — settle and re-query.
+            await driver.pause(500)
+          }
         }
       }
       await this.swipeList('up')
@@ -153,12 +167,17 @@ export class DaftarIosPage extends BaseIosPage {
     for (let attempt = 0; attempt < 3; attempt++) {
       const buttons = $$(pattern)
       if ((await buttons.length) > 0) {
-        try {
-          await buttons[0].click()
-          return
-        } catch {
-          // Stale handle after recomposition — settle and re-query.
-          await driver.pause(500)
+        // The length check above is the real runtime guard — an unawaited
+        // chainable index is never undefined; this is only a type bridge.
+        const button = buttons[0]
+        if (button !== undefined) {
+          try {
+            await button.click()
+            return
+          } catch {
+            // Stale handle after recomposition — settle and re-query.
+            await driver.pause(500)
+          }
         }
       }
       await this.swipeList('up')
@@ -192,23 +211,45 @@ export class DaftarIosPage extends BaseIosPage {
     return iosByTag(tags.daftar.monthLabel).getText()
   }
 
-  private async switchMonth(arrow: string): Promise<void> {
+  /**
+   * Month switching with a verify-retry (iOS twin of the Android Daftar
+   * list): the arrow click can race list recomposition and silently not
+   * register. The switch is verified against the PARSED target (month,
+   * year), not merely a changed label — R1: a double-registered or
+   * wrong-direction click also changes the label and used to pass; it now
+   * fails immediately with the landed vs. target month.
+   */
+  private async switchMonth(arrow: string, direction: 'prev' | 'next'): Promise<void> {
     const before = await this.monthLabel()
+    const start = parseMonthLabel(before)
+    const target = shiftMonthYear(start, direction)
     for (let attempt = 0; attempt < 3; attempt++) {
       await iosByTag(arrow).click()
+      // Recomposition is not instantaneous: a label read immediately after
+      // the click returns the old value, and re-clicking on it steps two
+      // months. Settle first, then let a failed read surface instead of
+      // masking it as "unchanged".
       await driver.pause(300)
-      const after = await this.monthLabel()
-      if (after !== before) return
+      const after = parseMonthLabel(await this.monthLabel())
+      if (after.monthIndex === target.monthIndex && after.year === target.year) return
+      // Only retry the still-showing-old-month case (the silent no-op). A
+      // label that moved to the WRONG month means a click double-registered —
+      // re-clicking would step further away, so fail with the landed month.
+      if (after.monthIndex !== start.monthIndex || after.year !== start.year) {
+        throw new Error(
+          `Month switch via ${arrow} landed on "${formatMonthYear(after)}" instead of "${formatMonthYear(target)}"`,
+        )
+      }
     }
-    throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
+    throw new Error(`Month switch via ${arrow} did not reach ${formatMonthYear(target)} from "${before}"`)
   }
 
   async prevMonth(): Promise<void> {
-    await this.switchMonth(tags.daftar.monthPrev)
+    await this.switchMonth(tags.daftar.monthPrev, 'prev')
   }
 
   async nextMonth(): Promise<void> {
-    await this.switchMonth(tags.daftar.monthNext)
+    await this.switchMonth(tags.daftar.monthNext, 'next')
   }
 
   async dayHeaderCount(): Promise<number> {

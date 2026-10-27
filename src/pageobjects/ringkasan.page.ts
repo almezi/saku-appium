@@ -1,5 +1,6 @@
 import { byTag, scrollToTag } from '../helpers/locators'
 import { barFillRatio, extractChildTexts, readAmount } from '../helpers/elements'
+import { formatMonthYear, parseMonthLabel, shiftMonthYear } from '../helpers/months'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
 
@@ -15,7 +16,7 @@ function childTextsFromSource(xml: string, resourceId: string): string[] {
   )
   const segment = next === -1 ? rest.slice(0, 10_000) : rest.slice(0, next)
   return [...segment.matchAll(/text="([^"]+)"/g)]
-    .map((m) => m[1].replace(/&amp;/g, '&').trim())
+    .map((m) => (m[1] ?? '').replace(/&amp;/g, '&').trim())
     .filter((t) => t.length > 0)
 }
 
@@ -148,8 +149,11 @@ export class RingkasanPage extends BasePage {
           ...(await item.$$('android=new UiSelector().className("android.view.View")')),
         ]
         if (viewList.length !== 2) continue
-        const container = await viewList[0].getSize()
-        const fill = await viewList[1].getSize()
+        const containerNode = viewList[0]
+        const fillNode = viewList[1]
+        if (!containerNode || !fillNode) continue
+        const container = await containerNode.getSize()
+        const fill = await fillNode.getSize()
         return barFillRatio(container.width, fill.width)
       } catch {
         // Stale element or mid-recompose ghost — back off before the fresh
@@ -200,13 +204,21 @@ export class RingkasanPage extends BasePage {
 
   /**
    * Month switching with a verify-retry (same as the Daftar list): the arrow
-   * click can race recomposition and silently not register.
+   * click can race recomposition and silently not register. The switch is
+   * verified against the PARSED target (month, year), not merely a changed
+   * label — R1: a double-registered or wrong-direction click also changes
+   * the label and used to pass; it now fails immediately with the landed
+   * vs. target month.
    *
    * @param arrow Test tag of the switcher arrow to tap —
    * tags.ringkasan.monthPrev or tags.ringkasan.monthNext.
+   * @param direction Which way the arrow steps the month — 'prev' for
+   * monthPrev, 'next' for monthNext; selects the expected target month.
    */
-  private async switchMonth(arrow: string): Promise<void> {
+  private async switchMonth(arrow: string, direction: 'prev' | 'next'): Promise<void> {
     const before = await this.monthLabel()
+    const start = parseMonthLabel(before)
+    const target = shiftMonthYear(start, direction)
     for (let attempt = 0; attempt < 3; attempt++) {
       await byTag(arrow).click()
       // Recomposition is not instantaneous: a label read immediately after
@@ -214,17 +226,25 @@ export class RingkasanPage extends BasePage {
       // months. Settle first, then let a failed read surface instead of
       // masking it as "unchanged".
       await driver.pause(300)
-      const after = await this.monthLabel()
-      if (after !== before) return
+      const after = parseMonthLabel(await this.monthLabel())
+      if (after.monthIndex === target.monthIndex && after.year === target.year) return
+      // Only retry the still-showing-old-month case (the silent no-op). A
+      // label that moved to the WRONG month means a click double-registered —
+      // re-clicking would step further away, so fail with the landed month.
+      if (after.monthIndex !== start.monthIndex || after.year !== start.year) {
+        throw new Error(
+          `Month switch via ${arrow} landed on "${formatMonthYear(after)}" instead of "${formatMonthYear(target)}"`,
+        )
+      }
     }
-    throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
+    throw new Error(`Month switch via ${arrow} did not reach ${formatMonthYear(target)} from "${before}"`)
   }
 
   async prevMonth(): Promise<void> {
-    await this.switchMonth(tags.ringkasan.monthPrev)
+    await this.switchMonth(tags.ringkasan.monthPrev, 'prev')
   }
 
   async nextMonth(): Promise<void> {
-    await this.switchMonth(tags.ringkasan.monthNext)
+    await this.switchMonth(tags.ringkasan.monthNext, 'next')
   }
 }

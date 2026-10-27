@@ -108,7 +108,14 @@ export const config: TestrunnerConfig = {
       ],
 
   framework: 'mocha',
-  reporters: [['spec', { outputDir: './reports' }]],
+  // junit (O2, approved 2026-10-28) writes one machine-readable XML per
+  // capability into reports/ (gitignored) for CI/reporting consumption; the
+  // reporter creates the directory itself and derives per-capability
+  // filenames, so parallel shards cannot overwrite each other.
+  reporters: [
+    ['spec', { outputDir: './reports' }],
+    ['junit', { outputDir: './reports' }],
+  ],
 
   mochaOpts: {
     ui: 'bdd',

@@ -2,7 +2,6 @@ import { iosByTag } from '../helpers/locators'
 import { iosPageNodes, iosStaticTexts, iosTextsInRect } from '../helpers/elements'
 import { tags } from '../config/tags'
 import { BaseIosPage } from './base.ios.page'
-import type { DaftarIosPage } from './daftar.ios.page'
 import type { ChainablePromiseElement } from '../types'
 
 /**
@@ -41,12 +40,6 @@ export class UbahIosPage extends BaseIosPage {
     const header = nodes.find((node) => node.name === tags.ubah.header)
     if (!header) return ''
     return iosTextsInRect(header, iosStaticTexts(nodes))[0] ?? ''
-  }
-
-  /** Opens the edit screen from the Transaksi list via the row's edit affordance. */
-  async openFromDaftar(daftar: DaftarIosPage, categoryId: string): Promise<void> {
-    await daftar.tapEdit(categoryId)
-    await this.waitForScreen()
   }
 
   async isSaveEnabled(): Promise<boolean> {

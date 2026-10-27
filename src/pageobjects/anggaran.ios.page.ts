@@ -218,16 +218,16 @@ export class AnggaranIosPage extends BaseIosPage {
    */
   async monthLabel(): Promise<string> {
     const xml = await driver.getPageSource()
-    const match = xml.match(/value="([A-Z][a-z]+ \d{4})"/)
-    if (!match) throw new Error('Month label not found on the Anggaran screen')
-    return match[1]
+    const label = xml.match(/value="([A-Z][a-z]+ \d{4})"/)?.[1]
+    if (!label) throw new Error('Month label not found on the Anggaran screen')
+    return label
   }
 
   /** Joined rendered values of the whole screen (rendered-output assertion). */
   async screenText(): Promise<string> {
     const xml = await driver.getPageSource()
     return [...xml.matchAll(/value="([^"]+)"/g)]
-      .map((m) => m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"'))
+      .map((m) => (m[1] ?? '').replace(/&amp;/g, '&').replace(/&quot;/g, '"'))
       .join(' | ')
   }
 

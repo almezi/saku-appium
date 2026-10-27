@@ -53,7 +53,8 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
 
   it('TC-EDIT-01 tapping Ubah opens the form prefilled @regression', async () => {
     await daftar.open()
-    await ubah.openFromDaftar(daftar, categories.income.refund)
+    await daftar.tapEdit(categories.income.refund)
+    await ubah.waitForScreen()
     expect(await ubah.isDisplayed()).toBe(true)
     expect(await ubah.headerLabel()).toBe('Ubah transaksi')
     expect(await tambah.getAmountText()).toBe(formatRp(AMOUNT))
@@ -74,7 +75,8 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
   })
 
   it('TC-EDIT-03 changing the category recalculates the Ringkasan breakdown @regression', async () => {
-    await ubah.openFromDaftar(daftar, categories.income.refund)
+    await daftar.tapEdit(categories.income.refund)
+    await ubah.waitForScreen()
     await selectCategoryInline(categories.income.salary)
     await ubah.save()
     await ringkasan.open()
@@ -86,7 +88,8 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
 
   it('TC-EDIT-04 switching income to expense swaps the summaries @regression', async () => {
     await daftar.open()
-    await ubah.openFromDaftar(daftar, categories.income.salary)
+    await daftar.tapEdit(categories.income.salary)
+    await ubah.waitForScreen()
     // The edit screen's type toggle uses the shared segmented ids (verified
     // live; Tambah's tambah_toggle_type_* does not exist here).
     await byTag(tags.component.toggleSegmented(1)).click()
@@ -100,10 +103,12 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
 
   it('TC-EDIT-06 editing only the note keeps amount and category @regression', async () => {
     const editedNote = uniqueNote('note')
-    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await daftar.tapEdit(categories.expense.dailyFood)
+    await ubah.waitForScreen()
     await tambah.fillNote(editedNote)
     await ubah.save()
-    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await daftar.tapEdit(categories.expense.dailyFood)
+    await ubah.waitForScreen()
     expect(await tambah.getNoteText()).toBe(editedNote)
     expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
     const mark = byTag(tags.tambah.categoryMark(categories.expense.dailyFood))
@@ -113,12 +118,14 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
   })
 
   it('TC-EDIT-07 leaving the edit without saving keeps the data @regression', async () => {
-    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await daftar.tapEdit(categories.expense.dailyFood)
+    await ubah.waitForScreen()
     await tambah.fillAmount(999_999)
     await ubah.systemBack()
     await byTag(tags.daftar.screen).waitForDisplayed()
     expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
-    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await daftar.tapEdit(categories.expense.dailyFood)
+    await ubah.waitForScreen()
     expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
   })
 
@@ -131,7 +138,8 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
   })
 
   it('TC-EDIT-05 changing the date moves the item to another month @regression', async () => {
-    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await daftar.tapEdit(categories.expense.dailyFood)
+    await ubah.waitForScreen()
     await tambah.selectDate(prevMonthDay)
     await ubah.save()
     // The list keeps showing the current month, which now has no transactions.

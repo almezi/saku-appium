@@ -1,6 +1,7 @@
 import { byTag, scrollToTagMatches } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { extractChildTexts, readAmount } from '../helpers/elements'
+import { formatMonthYear, parseMonthLabel, shiftMonthYear } from '../helpers/months'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
 
@@ -41,11 +42,15 @@ export class DaftarPage extends BasePage {
 
   /**
    * Month switching with a verify-retry: the arrow click can race list
-   * recomposition and silently not register, so re-click until the label
-   * actually changes (bounded).
+   * recomposition and silently not register. The switch is verified against
+   * the PARSED target (month, year), not merely a changed label — R1: a
+   * double-registered or wrong-direction click also changes the label and
+   * used to pass; it now fails immediately with the landed vs. target month.
    */
-  private async switchMonth(arrow: string): Promise<void> {
+  private async switchMonth(arrow: string, direction: 'prev' | 'next'): Promise<void> {
     const before = await this.monthLabel()
+    const start = parseMonthLabel(before)
+    const target = shiftMonthYear(start, direction)
     for (let attempt = 0; attempt < 3; attempt++) {
       await byTag(arrow).click()
       // Recomposition is not instantaneous: a label read immediately after
@@ -53,18 +58,26 @@ export class DaftarPage extends BasePage {
       // months. Settle first, then let a failed read surface instead of
       // masking it as "unchanged".
       await driver.pause(300)
-      const after = await this.monthLabel()
-      if (after !== before) return
+      const after = parseMonthLabel(await this.monthLabel())
+      if (after.monthIndex === target.monthIndex && after.year === target.year) return
+      // Only retry the still-showing-old-month case (the silent no-op). A
+      // label that moved to the WRONG month means a click double-registered —
+      // re-clicking would step further away, so fail with the landed month.
+      if (after.monthIndex !== start.monthIndex || after.year !== start.year) {
+        throw new Error(
+          `Month switch via ${arrow} landed on "${formatMonthYear(after)}" instead of "${formatMonthYear(target)}"`,
+        )
+      }
     }
-    throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
+    throw new Error(`Month switch via ${arrow} did not reach ${formatMonthYear(target)} from "${before}"`)
   }
 
   async prevMonth(): Promise<void> {
-    await this.switchMonth(tags.daftar.monthPrev)
+    await this.switchMonth(tags.daftar.monthPrev, 'prev')
   }
 
   async nextMonth(): Promise<void> {
-    await this.switchMonth(tags.daftar.monthNext)
+    await this.switchMonth(tags.daftar.monthNext, 'next')
   }
 
   /**

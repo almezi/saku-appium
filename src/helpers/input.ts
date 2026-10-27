@@ -166,7 +166,10 @@ export async function iosFieldEditor(field: ChainablePromiseElement): Promise<Ch
     `(//*[@name="${tag}"]/following-sibling::` +
       `*[self::XCUIElementTypeTextView or self::XCUIElementTypeTextField])[1]`,
   )
-  if ((await sibling.length) > 0) return sibling[0]
+  if ((await sibling.length) > 0) {
+    const first = sibling[0]
+    if (first !== undefined) return first
+  }
   return null
 }
 

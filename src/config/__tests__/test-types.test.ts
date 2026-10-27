@@ -105,8 +105,10 @@ test('every test case carries exactly one recognized test type', () => {
           `${relative}:${call.line}: ${call.callee}("${call.title}") carries ${types.length} test type tags (${types.join(', ')})`,
         )
       } else {
-        fileTypes.add(types[0])
-        counts[types[0]] = (counts[types[0]] ?? 0) + 1
+        const [type] = types
+        if (type === undefined) continue
+        fileTypes.add(type)
+        counts[type] = (counts[type] ?? 0) + 1
       }
     }
 

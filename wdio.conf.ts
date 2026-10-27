@@ -159,7 +159,10 @@ function collectSpecFiles(dir: string): string[] {
 
 function roundRobin<T>(items: T[], buckets: number): T[][] {
   const parts: T[][] = Array.from({ length: buckets }, () => [])
-  items.forEach((item, index) => parts[index % buckets].push(item))
+  items.forEach((item, index) => {
+    const bucket = parts[index % buckets]
+    if (bucket) bucket.push(item)
+  })
   return parts
 }
 
@@ -216,7 +219,14 @@ export const config: TestrunnerConfig = {
       ],
 
   framework: 'mocha',
-  reporters: [['spec', { outputDir: './reports' }]],
+  // junit (O2, approved 2026-10-28) writes one machine-readable XML per
+  // capability into reports/ (gitignored) for CI/reporting consumption; the
+  // reporter creates the directory itself and derives per-capability
+  // filenames, so parallel shards cannot overwrite each other.
+  reporters: [
+    ['spec', { outputDir: './reports' }],
+    ['junit', { outputDir: './reports' }],
+  ],
 
   mochaOpts: {
     ui: 'bdd',

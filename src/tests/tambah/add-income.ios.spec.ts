@@ -73,7 +73,8 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
 
   it('TC-INC-05 note is persisted (verified by reopening in edit) @regression', async () => {
     await daftar.open()
-    await ubah.openFromDaftar(daftar, categories.income.salary)
+    await daftar.tapEdit(categories.income.salary)
+    await ubah.waitForScreen()
     expect(await tambah.getNoteText()).toBe(NOTE)
     // Leave without saving so the data stays untouched for later tests.
     // iOS adaptation: no system BACK — tap the Ubah header's back button.
@@ -93,21 +94,20 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
     await daftar.open()
     expect(await daftar.summaryIncome()).toBe(AMOUNT + bankAmount)
     // ...and the account persists — rows never show it, so verify on edit.
-    await ubah.openFromDaftar(daftar, categories.income.freelance)
+    await daftar.tapEdit(categories.income.freelance)
+    await ubah.waitForScreen()
     expect(await tambah.getAccountText()).toBe('BCA')
     await ubah.tapBack()
     await daftar.waitForScreen()
   })
 
   it('TC-INC-07 multiple incomes same day sum into the day header total @regression', async () => {
-    const extras = [50_000, 25_000]
-    const extraCategories = [categories.income.refund, categories.income.gift]
-    for (let i = 0; i < extras.length; i++) {
-      await createTransactionIos({
-        type: 'pemasukan',
-        amount: extras[i],
-        categoryId: extraCategories[i],
-      })
+    const extras: [number, string][] = [
+      [50_000, categories.income.refund],
+      [25_000, categories.income.gift],
+    ]
+    for (const [amount, categoryId] of extras) {
+      await createTransactionIos({ type: 'pemasukan', amount, categoryId })
     }
     await daftar.open()
     // All four incomes are today, so the (single) day header nets the sum.

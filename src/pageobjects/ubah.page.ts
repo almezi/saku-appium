@@ -1,7 +1,6 @@
 import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
-import { DaftarPage } from './daftar.page'
 import type { ChainablePromiseElement } from '../types'
 
 /**
@@ -33,12 +32,6 @@ export class UbahPage extends BasePage {
       if (text) return text
     }
     return ''
-  }
-
-  /** Opens the edit screen from the Transaksi list via the row's edit affordance. */
-  async openFromDaftar(daftar: DaftarPage, categoryId: string): Promise<void> {
-    await daftar.tapEdit(categoryId)
-    await this.waitForScreen()
   }
 
   async isSaveEnabled(): Promise<boolean> {

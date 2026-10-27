@@ -174,11 +174,14 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
       if (text.startsWith('KATEGORI')) name = child
       if (text === formatRp(10_000)) amount = child
     }
-    expect(name).toBeDefined()
-    expect(amount).toBeDefined()
-    const nameBox = await (name as WebdriverIO.Element).getLocation()
-    const nameSize = await (name as WebdriverIO.Element).getSize()
-    const amountBox = await (amount as WebdriverIO.Element).getLocation()
+    // Guard-narrowing instead of casts after toBeDefined(): a missing child
+    // is a layout-contract break and fails with its own message.
+    if (!name || !amount) {
+      throw new Error('Row rendered neither a KATEGORI label nor the amount text')
+    }
+    const nameBox = await name.getLocation()
+    const nameSize = await name.getSize()
+    const amountBox = await amount.getLocation()
     expect(nameBox.x + nameSize.width).toBeLessThanOrEqual(amountBox.x + 1)
   })
 

@@ -41,6 +41,14 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > truncated log pipe and the case did NOT reproduce — the two candidate specs (TC-VAL,
 > TC-AMT) both pass standalone and in the clean re-run, so it was a one-off flake on a
 > simulator that was still shutting down a previous WDA session, not a harness defect.
+>
+> The full **iOS `@regression`** suite was then run as one invocation after every test case
+> was given a type tag (2026-10-27, log: `/tmp/ios_regression_type.log`):
+> **13 spec files passed + 1 skipped (`navigation.ios`, which is `@sanity` and so correctly
+> outside the filter) — 109 passing + 5 skipped = 114 cases, in 25m 07s**. The 5 skips are
+> the known ones (TC-PERF-05, TC-BACKUP-04, TC-LIST-07/08 ×2). This is the end-to-end proof
+> that mocha's `grep` still scopes a run correctly now that the tag lives on each `it()`
+> title rather than only on the `describe()`.
 
 ---
 

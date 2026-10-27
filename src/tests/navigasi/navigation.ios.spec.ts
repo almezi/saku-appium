@@ -113,7 +113,9 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
 
   it('TC-NAV-08 20 rapid tab switches cause no freeze @sanity', async () => {
     const cycle = [tags.navDaftar, tags.navTambah, tags.navRingkasan]
-    for (const tab of Array.from({ length: 20 }, (_, i) => cycle[i % cycle.length])) {
+    for (let i = 0; i < 20; i++) {
+      const tab = cycle[i % cycle.length]
+      if (tab === undefined) continue
       await iosByTag(tab).click()
     }
     // A frozen app would surface as a command timeout instead of a displayed

@@ -100,6 +100,6 @@ function iosChildTextsFromSource(xml: string, identifier: string): string[] {
   )
   const segment = next === -1 ? rest.slice(0, 10_000) : rest.slice(0, next)
   return [...segment.matchAll(/label="([^"]+)"/g)]
-    .map((m) => m[1].replace(/&amp;/g, '&').trim())
+    .map((m) => (m[1] ?? '').replace(/&amp;/g, '&').trim())
     .filter((t) => t.length > 0 && t !== identifier)
 }

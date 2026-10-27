@@ -57,10 +57,11 @@ export async function readAmount(el: ChainablePromiseElement): Promise<number> {
   // The value node renders after the label ("MASUK" -> "Rp 250.000"), so the
   // last digit-bearing text wins.
   const withDigits = texts.filter((t) => /\d/.test(t))
-  if (withDigits.length === 0) {
+  const last = withDigits.at(-1)
+  if (!last) {
     throw new Error(`No amount text found on element (tried node, content-desc, children)`)
   }
-  return parseAmountText(withDigits[withDigits.length - 1])
+  return parseAmountText(last)
 }
 
 /**
@@ -116,14 +117,15 @@ export async function iosReadAmount(el: ChainablePromiseElement): Promise<number
   if (withDigits.length === 0) {
     withDigits = (await iosTextsInside(el)).filter((t) => /\d/.test(t))
   }
-  if (withDigits.length === 0) {
-    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children, rect)`)
-  }
   // Prefer a currency-shaped candidate: day headers also render a date
   // ("27 Okt 2026"), which would otherwise win the last-digit rule.
   const currency = withDigits.filter((t) => /Rp\s?\d/.test(t))
   const pool = currency.length > 0 ? currency : withDigits
-  return parseAmountText(pool[pool.length - 1])
+  const last = pool.at(-1)
+  if (!last) {
+    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children, rect)`)
+  }
+  return parseAmountText(last)
 }
 
 /**
@@ -145,13 +147,14 @@ export async function iosAmountText(el: ChainablePromiseElement): Promise<string
   if (withDigits.length === 0) {
     withDigits = (await iosTextsInside(el)).filter((t) => /\d/.test(t))
   }
-  if (withDigits.length === 0) {
-    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children, rect)`)
-  }
   // Same currency preference as iosReadAmount (skips a day header's date).
   const currency = withDigits.filter((t) => /Rp\s?\d/.test(t))
   const pool = currency.length > 0 ? currency : withDigits
-  return pool[pool.length - 1]
+  const last = pool.at(-1)
+  if (!last) {
+    throw new Error(`No amount text found on element (tried node, value/label attrs, static-text children, rect)`)
+  }
+  return last
 }
 
 /** A node of the XCUITest page-source dump, with its frame. */
@@ -181,7 +184,7 @@ export async function iosPageNodes(): Promise<IosPageNode[]> {
   const xml = await driver.getPageSource()
   const nodes: IosPageNode[] = []
   for (const match of xml.matchAll(/<XCUIElementType([A-Za-z]+)\b([^>]*)>/g)) {
-    const attrs = match[2].replace(/\/$/, '')
+    const attrs = (match[2] ?? '').replace(/\/$/, '')
     nodes.push({
       type: `XCUIElementType${match[1]}`,
       name: iosXmlAttr(attrs, 'name'),
@@ -242,7 +245,7 @@ export function iosColumnTexts(container: IosPageNode, texts: IosPageNode[]): st
 function iosXmlAttr(attrs: string, name: string): string {
   const match = attrs.match(new RegExp(`\\b${name}="([^"]*)"`))
   if (!match) return ''
-  return match[1]
+  return (match[1] ?? '')
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&lt;/g, '<')

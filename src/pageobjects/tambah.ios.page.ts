@@ -152,7 +152,11 @@ export class TambahIosPage extends BaseIosPage {
       // Not on the visible page — step back one month (Saku allows no future
       // dates, so stepping back is always the right direction).
       const prev = await $$('-ios predicate string: label == "Change to previous month"')
-      await prev[0].click()
+      const prevButton = prev[0]
+      if (!prevButton) {
+        throw new Error('iOS date-picker "Change to previous month" button not found')
+      }
+      await prevButton.click()
       await driver.pause(400)
     }
     throw new Error(`Date cell "${label[0]}" never became visible in the iOS date picker`)
@@ -233,7 +237,8 @@ export class TambahIosPage extends BaseIosPage {
    */
   async getAccountText(): Promise<string> {
     const children = await iosExtractChildTexts(iosByTag(tags.tambah.selectAccount))
-    if (children.length > 0) return children[0]
+    const first = children.at(0)
+    if (first !== undefined) return first
     const own = ((await iosByTag(tags.tambah.selectAccount).getText().catch(() => '')) || '').trim()
     return own.replace(/,\s*Buka pilihan$/, '').trim()
   }

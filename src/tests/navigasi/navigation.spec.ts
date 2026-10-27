@@ -84,7 +84,9 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
 
   it('TC-NAV-08 20 rapid tab switches cause no ANR @sanity', async () => {
     const cycle = [tags.navDaftar, tags.navTambah, tags.navRingkasan]
-    for (const tab of Array.from({ length: 20 }, (_, i) => cycle[i % cycle.length])) {
+    for (let i = 0; i < 20; i++) {
+      const tab = cycle[i % cycle.length]
+      if (tab === undefined) continue
       await byTag(tab).click()
     }
     // An ANR would surface here as a UiAutomator2 timeout instead of a

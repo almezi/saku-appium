@@ -65,7 +65,8 @@ describe('TC-EXP — add expense (Phase 1) @regression', () => {
   it('TC-EXP-06 expense on the default account Tunai is recorded correctly @regression', async () => {
     // Rows never show the account; the edit form's account selector does.
     await daftar.open()
-    await ubah.openFromDaftar(daftar, categories.expense.dailyFood)
+    await daftar.tapEdit(categories.expense.dailyFood)
+    await ubah.waitForScreen()
     expect(await tambah.getAccountText()).toBe('Tunai')
     await ubah.tapBack()
     await daftar.waitForScreen()
