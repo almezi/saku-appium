@@ -20,8 +20,8 @@ Track completion of every test task from `progress.md`. Check `[x]` when a test 
 > dialog typing; app-side investigation only if that proves insufficient).
 >
 > Platform status (2026-10-27): Android — complete (137/146 passing, 9 skipped per retry policy);
-> iOS — partial (TC-NAV 8/8, TC-INC 9/9, TC-EXP 8/8, TC-BUDGET 11/11 passing on the iPhone 18 Pro
-> sim — 36 cases across 4 specs; remaining sub-phases not yet ported).
+> iOS — partial (TC-NAV 8/8, TC-INC 9/9, TC-EXP 8/8, TC-BUDGET 11/11, TC-KAT 13/13 passing on the
+> iPhone 18 Pro sim — 49 cases across 5 specs; remaining sub-phases not yet ported).
 
 ---
 
@@ -254,6 +254,51 @@ object `src/pageobjects/anggaran.ios.page.ts`.
 - [x] TC-KAT-15: Back button returns to previous screen
 
 **Spec:** `src/tests/kategori/category-management.spec.ts` | **Agent:** ZCode (GLM-5.3) — 15/15 MCP-verified + **11/13 passing, 2 skipped under wdio 2026-10-25** (TC-KAT-08/10 = dialog self-dismiss flake, `BUG_Found_04.md`; fixes en route: `before` seed for the empty-month button hiding, comb-search `scrollToRow` replacing the unreliable UiScrollable `scrollIntoView`, tag-based `rowText` via child texts, `toggleHidden` scrolls first; all row/action/search/back/mark tags verified live on v2.2)
+
+**Spec (iOS):** `src/tests/kategori/category-management.ios.spec.ts` — **13/13 passing under wdio 2026-10-27**
+(iPhone 18 Pro sim, iOS 27.0, Appium 3.8.0 @ :4725, XCUITest 12.21; run via `npm run test:kategori:ios`,
+2 runs to green, 2m42s). Same case split as the Android spec (13 `it` blocks cover TC-KAT-01…15) and the
+same page-object method names; page object `src/pageobjects/kategori.ios.page.ts`. The two Android skips
+**run and pass on iOS**: TC-KAT-08 and TC-KAT-10 are not skipped here (see ⑤).
+
+> iOS findings behind the kategori port (verified live 2026-10-27):
+> ① **Compose flattens tagged rows**: `kategori_row_<id>` lands on an EMPTY `XCUIElementTypeOther`
+> and the row's name / "Bawaan · N transaksi" render as SIBLINGS inside the list node, so row text is
+> read by **geometry** (static texts whose center falls inside the row's rect), same class of read as
+> the Anggaran port.
+> ② **Default rows have no pencil/trash**: `KelolaKategoriScreen.kt` composes the edit/delete buttons
+> only for `!row.isDefault`, so the rename/delete cases run against a custom category created through
+> the "Tambah kategori" form; its row id is runtime-generated (`cus_pem_<epochMs>`) and is read back
+> from the new row's eye toggle tag.
+> ③ **The list viewport is its own node (y 268..816 of a 402×874 screen)** — title/back 82-130, type
+> toggle 150-198, search field 206-254. Rows are composed a bit beyond that band, and a row's container
+> node is pruned while the row is clipped under the header, while its action buttons stay composed —
+> so scrolling and visibility checks anchor on the eye toggle and require it INSIDE the band, not
+> merely in the tree.
+> ④ **A swipe that starts in the sticky header band scrolls nothing**: verified live, finger
+> 262→611 leaves the list untouched while 350→700 scrolls it. The first wdio run failed TC-KAT-03/04,
+> 05, 06, 07, 09/10 on exactly that — the old comb's return sweep started at y=0.3h (262), so a list
+> parked at the bottom never came back, and every later case cascaded (TC-KAT-05 aborted before
+> switching back to Pemasukan, so TC-KAT-06 filtered the *expense* list for "gaj" and the custom-row
+> lookup found nothing). `scrollToRow` is now rect-driven: direction from the row's own state, flipped
+> whenever a swipe leaves the top row's y unchanged (that is what distinguishes "pinned at the end"
+> from "the other end" for a row that is not composed at all), with both gesture ends kept inside
+> y 0.4h..0.72h.
+> ⑤ **The rename dialog is a Compose AlertDialog inside the main tree** (unlike the bottom sheets): its
+> field/buttons are tagged, the field is **prefilled** with the custom name (Android opens empty), and
+> the keyboard shifts the dialog up ~145 px instead of dismissing it — so BUG_Found_04's self-dismiss
+> flake does not reproduce here. The shared `iosDismissKeyboard` dead-zone tap at y=30 would land on
+> the dialog scrim and close the dialog, so dialog typing dismisses the keyboard with the Return IME
+> action instead. TC-KAT-09 (empty name blocked, dialog stays open) passes the same way.
+> ⑥ **A tap on the eye can be swallowed while the list settles** (seen live: the label never changed
+> and the write had not landed), so `setHidden` re-reads the state before each retry (max 3, 6 s wait)
+> instead of blind-clicking. The label is readable in both states ("Sembunyikan kategori" /
+> "Tampilkan kategori") but is only populated for rows inside the band — hence the read retry.
+> ⑦ No system BACK: leaving taps `component_button_back`; the category picker sheet has no cancel
+> button and is dismissed by tapping the scrim above it. Ringkasan's Kelola button is hidden on an
+> empty month (UI_SPEC 6.3), so `before` seeds one income via `createTransactionIos`.
+> ⑧ Income tab renders **9** default rows (salary, freelance, bonus_thr, investment, sales, refund,
+> transfer_in, gift, other) — the Android note above lists only 7 (it omits sales/transfer_in).
 
 > Verified live (emulator-5554, Appium 3.8.0 @ :4725, app v2.2): ① `kategori.page.ts` tag contract is
 > accurate for this build — `kategori_row_<id>`, `_edit_`, `_hide_` (one toggle tag for both hide and

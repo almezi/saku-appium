@@ -26,6 +26,9 @@ export const kategoriTags = {
   rowDelete: (categoryId: string) => `kategori_row_delete_${categoryId}`,
   addButton: 'kategori_add_button',
   deleteSheet: 'kategori_delete_sheet',
+  // "Tambah kategori" (new-category) screen; the rename dialog shares the
+  // form name/save/cancel tags but not this root.
+  formScreen: 'kategori_form_screen',
   // Rename dialog (verified live): tagged field and buttons, no text
   // fallbacks needed despite being a Compose dialog.
   formName: 'kategori_form_name',
