@@ -1,14 +1,8 @@
 /**
- * TC-A11Y — accessibility (Phase 3.E), distilled from the MCP-verified run on
- * 2026-10-26 (7/7 pass; see progress.md). Structural checks read the
- * UiAutomator tree (helpers in a11y-parse.ts); the contrast measurement
- * (TC-A11Y-04) is pixel-based and lives in scripts/contrast_check.py:
- *
- *   scripts/contrast_check.py shot.png 53,375,187,416 53,1342,480,1390
- *
- * Verified live on v2.2: labels/helper measure 6.77-6.85:1 (the app renders
- * its dark theme on this emulator; light theme could not be force-selected
- * via `cmd uimode` or ui_night_mode).
+ * TC-A11Y — accessibility (Phase 3.E). Structural checks read the UiAutomator
+ * tree (a11y-parse.ts); contrast is measured out-of-band by
+ * scripts/contrast_check.py (6.77-6.85:1 on v2.2; the app renders dark theme
+ * regardless of system night mode).
  */
 import { byTag } from '../../helpers/locators'
 import { tags } from '../../config/tags'

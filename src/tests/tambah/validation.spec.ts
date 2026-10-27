@@ -1,20 +1,9 @@
 /**
- * TC-VAL — form validation (Phase 3.A), distilled from the MCP-verified run
- * on 2026-10-26 (17/17 pass; see progress.md). Interaction facts encoded here:
- *
- * - Keyboard input (`driver.keys`) is the rejection-test path: the amount
- *   field's InputFilter drops every non-digit (letters, symbols, '.', '-',
- *   'e'), so only digits land.
- * - Element `setValue` (UiObject2 setText) is the only path that can inject
- *   emoji / unicode notes; it also clear+sets, which makes it the "reset
- *   amount" primitive.
- * - Backspace must be sent as native keycode 67 — W3C \uE003 keys are a
- *   silent no-op on this Compose field.
- * - The amount clamps at 12 digits (10^12-1), 0 counts as "not set", and a
- *   valid form hides the helper element entirely.
- *
- * Categories are unique per saved row so `openFromDaftar(cat)` and row
- * lookups stay unambiguous when several rows share the list.
+ * TC-VAL — form validation (Phase 3.A). Full run notes live in progress.md;
+ * constraints the tests rely on: the amount filter drops every non-digit
+ * (letters/symbols/'.'/'-'), native keycode 67 is the only working backspace
+ * (W3C \uE003 is a no-op here), and element setValue is the only path that
+ * injects emoji/unicode notes.
  */
 import { byTag } from '../../helpers/locators'
 import { tags } from '../../config/tags'

@@ -1,6 +1,7 @@
 import { byTag } from './locators'
 import { tags } from '../config/tags'
 import { TambahPage, type TransactionFormInput } from '../pageobjects/tambah.page'
+import { TambahIosPage } from '../pageobjects/tambah.ios.page'
 
 /**
  * UI-driven data setup: creates a transaction through the Tambah form.
@@ -10,6 +11,14 @@ import { TambahPage, type TransactionFormInput } from '../pageobjects/tambah.pag
  */
 export async function createTransaction(input: TransactionFormInput): Promise<void> {
   const tambah = new TambahPage()
+  await tambah.open()
+  await tambah.fillForm(input)
+  await tambah.save()
+}
+
+/** iOS twin of createTransaction: same input contract, iOS locators. */
+export async function createTransactionIos(input: TransactionFormInput): Promise<void> {
+  const tambah = new TambahIosPage()
   await tambah.open()
   await tambah.fillForm(input)
   await tambah.save()

@@ -1,21 +1,8 @@
 /**
- * TC-ROT — rotation & config change (Phase 3.D), distilled from the
- * MCP-verified run on 2026-10-26 (see progress.md). Verified app behavior:
- *
- * - Form values (amount, category, note) survive a full landscape round
- *   trip. Caveat (BUG_Found_05): in landscape the note field and save button
- *   are NOT composed at all — the form is unsavable until portrait returns.
- * - Daftar keeps its exact scroll position across rotation (top visible row
- *   unchanged).
- * - Ringkasan lays out in landscape without crashing; balance stays correct.
- * - Dark mode (`cmd uimode night yes`) renders every checked screen readable.
- * - Backgrounding the app and resuming keeps the unsaved form intact.
- * - 200% font scale renders the whole form; the bottom-nav labels clip
- *   mid-word without ellipsis (BUG_Found_06), so this spec only asserts the
- *   form body.
- *
- * System settings (uimode, font_scale) are reset in after() so later suites
- * inherit defaults.
+ * TC-ROT — rotation & config change (Phase 3.D). Run notes in progress.md;
+ * known defects in BUG_Found_05 (landscape Tambah has no note/save) and
+ * BUG_Found_06 (200% font clips nav labels). This spec asserts only the
+ * passing behavior; system settings are reset in after().
  */
 import { execSync } from 'node:child_process'
 import { categories } from '../../config/categories'

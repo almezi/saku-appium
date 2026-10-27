@@ -1,16 +1,8 @@
 /**
- * TC-PERS — persistence (Phase 3.C), distilled from the MCP-verified run on
- * 2026-10-26 (5/5 pass; see progress.md). Verified app behavior:
- *
- * - Kill + relaunch: tab resets to Tambah, month resets to current, all
- *   committed transactions survive (totals unchanged).
- * - A save tapped immediately before force-stop may or may not commit —
- *   either is acceptable; the assertion is "no crash, DB still readable".
- * - Reinstall clears all data (empty state returns).
- *
- * PERS-04's kill race: click save and terminateApp() without waiting for the
- * toast — the process dies within ms of the commit, which is the same race
- * the adb tap+force-stop probe exercised live.
+ * TC-PERS — persistence (Phase 3.C). Run notes in progress.md. Contract:
+ * kill/relaunch keeps committed data and resets tab + month; a save raced
+ * with force-stop may commit or not — assert only that the DB stays readable;
+ * reinstall clears everything.
  */
 import { execSync } from 'node:child_process'
 import { byTag } from '../../helpers/locators'

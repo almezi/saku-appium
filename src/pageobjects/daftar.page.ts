@@ -188,4 +188,33 @@ export class DaftarPage extends BasePage {
     await byTag(tags.component.sheetConfirm).click()
     await byTag(tags.daftar.deleteSheet).waitForDisplayed({ reverse: true, timeout: 10_000 })
   }
+
+  /**
+   * One raw-touch swipe of the list content (~40 % of the screen). Raw W3C
+   * actions, not `mobile: scrollGesture` — a silent no-op on this Compose
+   * LazyColumn (verified live, see the 1.E note in progress.md). Same
+   * pattern as kategori.page.swipeList; public because the bulk-scroll test
+   * drives it directly.
+   */
+  async swipeList(direction: 'up' | 'down'): Promise<void> {
+    const { width, height } = await driver.getWindowSize()
+    const x = Math.floor(width / 2)
+    const yStart = direction === 'up' ? Math.floor(height * 0.7) : Math.floor(height * 0.3)
+    const yEnd = direction === 'up' ? Math.floor(height * 0.3) : Math.floor(height * 0.7)
+    await driver.performActions([
+      {
+        type: 'pointer',
+        id: 'finger1',
+        parameters: { pointerType: 'touch' },
+        actions: [
+          { type: 'pointerMove', duration: 0, x, y: yStart },
+          { type: 'pointerDown', button: 0 },
+          { type: 'pause', duration: 150 },
+          { type: 'pointerMove', duration: 500, x, y: yEnd },
+          { type: 'pointerUp', button: 0 },
+        ],
+      },
+    ])
+    await driver.pause(400)
+  }
 }

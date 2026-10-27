@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
-# Measure UI transition latency by polling screenshots for a visible change.
-# Usage: perf_measure.sh tap <x> <y> [udid]
-# Prints the elapsed ms between the tap and the first changed frame. The
-# screencap poll interval (~100-200ms on the emulator) is INCLUDED in the
-# printed number, so it is an upper bound: if it prints < threshold the
-# transition is guaranteed under threshold.
+# Measure transition latency by polling screenshots for a visible change.
+# Usage: perf_measure.sh <x> <y> [udid]
+# Prints ms from tap to first changed frame — an upper bound (includes one
+# ~100-200ms screencap poll), so < threshold implies truly under threshold.
 set -euo pipefail
 X="${1:?usage: perf_measure.sh tap <x> <y> [udid]}"
 Y="${2:?}"
