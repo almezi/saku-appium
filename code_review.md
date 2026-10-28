@@ -401,6 +401,41 @@ rather than fixing it.
 > assertions; `await el.waitForDisplayed()` **only inside page objects** as a precondition.
 > Sweep the 105 call sites.
 
+> **Status:** ✅ **swept 2026-10-28** — `b6152aa` (29 files, +215/−214). `toBeDisplayed()` **0 → 212**
+> (Android 120 / iOS 92); the 109 spec-level `isDisplayed()` assertions are gone, leaving 9 `.isDisplayed()`
+> calls that are boolean branches or the page objects' own `isDisplayed()` helpers — not assertions.
+>
+> Checked statically, because a 210-site mechanical sweep fails quietly rather than loudly: all 212 are
+> `await`ed (an un-awaited `expect()` asserts nothing and still turns the test green); no `{ timeout }`
+> misuse survives (v6 matchers take `{ wait }`); and the 157 bare `toBeDisplayed()` sites keep the budget
+> of the `waitForDisplayed()` calls they replaced, because `@wdio/runner` seeds the expect defaults with
+> `setDefaultOptions({ wait: config.waitforTimeout })` — so the matcher default here is the configured
+> `waitforTimeout: 15_000`, not the library's own 2 s. The 55 explicit budgets carried over exactly
+> 1:1 (18×30 s, 18×10 s, 9×45 s, 7×5 s, 3×15 s).
+>
+> Verified live on emulator-5554 / app v2.3, per screen, using `displayed="true"` — the same flag
+> UiAutomator2's `isDisplayed()` returns: Tambah 16/37 at launch (the remainder are sheet- and
+> dialog-only tags, correctly absent), Daftar 8/12, Ringkasan 15/18, Kategori (7 rows + hide
+> affordances + search + back), Anggaran 3/15 in its empty state and 6/9 once the form opens. Both
+> matcher directions were exercised on the delete sheet: `daftar_delete_sheet`,
+> `component_sheet_button_confirm` and `_cancel` are displayed while it is open and absent after
+> cancel, so `toBeDisplayed()` and `not.toBeDisplayed()` fail and pass as written. `byTag()`'s
+> `-android uiautomator` `resourceId()` form is the only strategy that resolves — the plain `id`
+> strategy returns "not located" against tags that are plainly in the hierarchy, so any new locator
+> must go through `byTag`.
+>
+> ⚠️ **Not closed:** the 3-consecutive-clean-run bar in §5 is still unmet — pass 1 reached 8 of 16
+> files, with budget 7/7, performance 4/4, navigation 8/8 green and the accessibility/persistence
+> failures traced to pre-existing platform limits (`execute/sync` not implemented; reinstall race),
+> not to this sweep.
+>
+> **Environment caveat for whoever runs the gate:** the emulator exposes **one** uiautomator2
+> instrumentation slot. A second concurrent Appium session — even a read-only interactive MCP one —
+> tears down the instrumentation the running suite owns, and both sides then report HTTP 500
+> "instrumentation process is not running", which looks exactly like a broken locator. `adb shell
+> uiautomator dump` is not a workaround; it fails while the instrumentation is alive. Check
+> `pgrep -fl "wdio run|am instrument"` before attaching.
+
 #### S9 — Fixed sleeps used as synchronization
 55+ `driver.pause()` calls across the suite. Three are 6,000–6,500 ms in
 `delete-undo.spec.ts` (lines 66, 88, 157), used to outlast the app's 5-second undo toast.
@@ -502,7 +537,7 @@ structural convention in the project is undocumented in the agent instructions.
 | **O4** | TC-INC-09 re-implements `save()` inline | ✅ **fixed 2026-10-28** — `add-income.spec.ts` calls `tambah.save()` (click + toast wait, the same two steps) |
 | **O5** | `tsconfig` `types` redundant (`webdriverio` + `@wdio/globals/types`); `noUncheckedIndexedAccess` not enabled | ✅ **fixed 2026-10-28** — redundant `webdriverio` entry removed from `types`; `noUncheckedIndexedAccess` enabled and the ~32 surfaced sites fixed with guards (no non-null assertions). Behavior-neutral by construction; device gate still applies |
 | **O6** | `ubah.openFromDaftar(daftar: DaftarPage, …)` couples page objects | ✅ **fixed 2026-10-28** — `openFromDaftar` deleted from both Ubah twins; all 28 spec call sites (14 Android + 14 iOS) now navigate via `daftar.tapEdit(categoryId)` + `ubah.waitForScreen()`. Zero page-object cross-imports remain, so the future `no-restricted-imports` lint rule has nothing to flag |
-| **N1** | Mixed `waitForDisplayed()` / `expect(...)` assertion styles | 🔴 **escalated** → now **S8** (105 vs 109 vs 0) |
+| **N1** | Mixed `waitForDisplayed()` / `expect(...)` assertion styles | 🔴 **escalated** → now **S8** (105 vs 109 vs 0) — ✅ **swept 2026-10-28** (`b6152aa`, 212 `toBeDisplayed()` sites; see S8 status) |
 | **N2** | Convoluted `Array.from({length:20})` loop | ✅ **fixed 2026-10-28** — both navigation twins use a plain indexed loop |
 | **N3** | 3 `as WebdriverIO.Element` casts after `toBeDefined()` guards | ✅ **fixed 2026-10-28** — `transaction-list.spec.ts` narrows with a guard-throw (better failure message) instead of casts |
 
@@ -525,7 +560,9 @@ considered green:
 4. **After S5/S6/S7 land:** re-run `ringkasan`, `kategori`, `anggaran`, `backup` on both
    platforms; these are pure refactors and must be behavior-neutral.
 5. **After S8/S9 land:** confirm no new flakes across 3 consecutive emulator runs (the
-   assertion-style sweep touches 105 sites).
+   assertion-style sweep touches 105 sites). — *S8 landed 2026-10-28 as 212 sites; this bar is
+   **not yet met**. Pass 1 reached 8 of 16 spec files, and the sweep was separately verified
+   screen-by-screen on device (see the S8 status block). S9 is untouched.*
 
 ---
 
