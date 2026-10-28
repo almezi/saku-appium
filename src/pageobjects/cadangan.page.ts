@@ -13,7 +13,7 @@ import { SCREEN_READY, SURFACE_DISMISS, SYSTEM_SHEET } from "../config/timeouts"
  * The v2.3 redesign dropped the `cadangan_screen` tag along with the status
  * card, import entry, import result/error and warning strip tags — those
  * surfaces render as untagged output now and are read by text (see
- * BUG_Found_15.md). Export behaviour is unchanged: tapping an export button
+ * bugs/BUG_Found_15.md). Export behaviour is unchanged: tapping an export button
  * writes `cache/backups/saku-cadangan.csv|.json` inside the app's private
  * storage and then opens the system share sheet (package
  * com.android.intentresolver); the file is already on disk while the sheet

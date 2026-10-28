@@ -30,7 +30,7 @@ import { MONTH_LABEL_RECOMPOSE, SWIPE_ANIM } from "../config/settles";
  *  - container text reads (`comparisonTexts`, `emptyStateTexts`) go through
  *    the page-source frame, not a child query: Compose hoists a tagged
  *    container's strings OUT of the container node on iOS, so the node is an
- *    empty `Other` and its texts are siblings (BUG_Found_13.md) — the same
+ *    empty `Other` and its texts are siblings (bugs/BUG_Found_13.md) — the same
  *    reason `anggaran.ios.page.ts` and `daftar.ios.page.ts` read by geometry;
  *  - `breakdownBarRatio` cannot be the Android fill/container measurement:
  *    the iOS bar is a drawing-only node with no accessibility fill (measured

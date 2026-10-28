@@ -42,8 +42,8 @@ lives in a separate repository — there is no `gradlew` here.
 When any agent (human or AI) discovers a bug during test execution, it must:
 
 1. **Stop** the current sub-phase execution (do not continue testing the same flow).
-2. **Create** a bug report file in the repo root, copying `BUG_FOUND.template.md`. The
-   **first** bug is `BUG_FOUND.md`; every later one is `BUG_Found_<NN>.md` where `NN` is
+2. **Create** a bug report file in `bugs/`, copying `BUG_FOUND.template.md`. The
+   **first** bug is `bugs/BUG_Found_01.md`; every later one is `bugs/BUG_Found_<NN>.md` where `NN` is
    the next free number (02, 03, … 18). Never overwrite an existing report.
 3. **Reference** the bug in `progress.md` by marking the affected test case with `~[BUG]`
    instead of `[x]`.
@@ -89,7 +89,7 @@ include a `## Status` line stating `Open` or `Fixed`.
 
 - **Never skip a bug** — if a test fails unexpectedly, investigate and report it.
 - **One bug per file** — if multiple bugs are found, create multiple files
-  (`BUG_Found_02.md`, `BUG_Found_03.md`, …).
+  (`bugs/BUG_Found_02.md`, `bugs/BUG_Found_03.md`, …).
 - **Do not delete** bug files — they are the record of known issues.
 - **Reference the bug ID** when discussing test failures in team messages.
 - **Check existing bug files** before starting a sub-phase to avoid duplicating known
@@ -116,27 +116,28 @@ include a `## Status` line stating `Open` or `Fixed`.
 ├── pr_review.md     # Historical review of PR #3
 ├── progress.md      # Test execution checklist (mark [x]/~[BUG]~)
 ├── IOS_PHASE1_HANDOFF.md  # iOS Phase 1 port handoff notes
-├── BUG_FOUND.template.md   # Bug report template
-├── BUGS.md                 # Index of all filed bugs — start here
+├── BUG_FOUND.template.md   # Bug report template (new reports go in bugs/)
 │
-├── BUG_FOUND.md     # Bug #01 — TECNO real-device deadlock
-├── BUG_Found_02.md  # Bug #02 — SAF picker drive (TC-BACKUP-04)
-├── BUG_Found_03.md  # Bug #03 — vanishing committed transaction (TC-BACKUP-06)
-├── BUG_Found_04.md  # Bug #04 — rename-dialog self-dismiss under WDIO (TC-KAT-08/10, TC-LIST-07)
-├── BUG_Found_05.md  # Bug #05 — landscape rotation defect (Android)
-├── BUG_Found_06.md  # Bug #06 — nav-label clipping at 200% font scale (Android)
-├── BUG_Found_07.md  # Bug #07 — category-sheet lookup failure (TC-PERF) — fixed via text-label lookup
-├── BUG_Found_08.md  # Bug #08 — iOS build blocker: xcodebuild SIGTRAP on malformed Saku.xcscheme
-├── BUG_Found_09.md  # Bug #09 — pull-to-refresh not implemented (TC-LIST-11)
-├── BUG_Found_10.md  # Bug #10 — iOS backup import (TC-BACKUP-04)
-├── BUG_Found_11.md  # Bug #11 — iOS date-picker day-first label ordering
-├── BUG_Found_12.md  # Bug #12 — iOS memory stability across add/delete cycles (TC-PERF-05)
-├── BUG_Found_13.md  # Bug #13 — iOS tagged container renders strings as siblings
-├── BUG_Found_14.md  # Bug #14 — iOS numeric keypad Delete key is a silent no-op (TC-AMT-06)
-├── BUG_Found_15.md  # Bug #15 — v2.3 drops six Cadangan test tags on both platforms
-├── BUG_Found_16.md  # Bug #16 — UiScrollable cannot scroll the Tambah category sheet (TC-SUM-12, TC-EXP-08)
-├── BUG_Found_17.md  # Bug #17 — category label drift: "Obat-obatan" vs contracted "Obat-obat"
-├── BUG_Found_18.md  # Bug #18 — TC-VAL-17: no tambah_helper node after saving with the keyboard up
+├── bugs/                   # All filed bug reports + index
+│   ├── BUGS.md             # Index of all filed bugs — start here
+│   ├── BUG_Found_01.md     # Bug #01 — TECNO real-device deadlock
+│   ├── BUG_Found_02.md     # Bug #02 — SAF picker drive (TC-BACKUP-04)
+│   ├── BUG_Found_03.md     # Bug #03 — vanishing committed transaction (TC-BACKUP-06)
+│   ├── BUG_Found_04.md     # Bug #04 — rename-dialog self-dismiss under WDIO (TC-KAT-08/10, TC-LIST-07)
+│   ├── BUG_Found_05.md     # Bug #05 — landscape rotation defect (Android)
+│   ├── BUG_Found_06.md     # Bug #06 — nav-label clipping at 200% font scale (Android)
+│   ├── BUG_Found_07.md     # Bug #07 — category-sheet lookup failure (TC-PERF) — fixed via text-label lookup
+│   ├── BUG_Found_08.md     # Bug #08 — iOS build blocker: xcodebuild SIGTRAP on malformed Saku.xcscheme
+│   ├── BUG_Found_09.md     # Bug #09 — pull-to-refresh not implemented (TC-LIST-11)
+│   ├── BUG_Found_10.md     # Bug #10 — iOS backup import (TC-BACKUP-04)
+│   ├── BUG_Found_11.md     # Bug #11 — iOS date-picker day-first label ordering
+│   ├── BUG_Found_12.md     # Bug #12 — iOS memory stability across add/delete cycles (TC-PERF-05)
+│   ├── BUG_Found_13.md     # Bug #13 — iOS tagged container renders strings as siblings
+│   ├── BUG_Found_14.md     # Bug #14 — iOS numeric keypad Delete key is a silent no-op (TC-AMT-06)
+│   ├── BUG_Found_15.md     # Bug #15 — v2.3 drops six Cadangan test tags on both platforms
+│   ├── BUG_Found_16.md     # Bug #16 — UiScrollable cannot scroll the Tambah category sheet (TC-SUM-12, TC-EXP-08)
+│   ├── BUG_Found_17.md     # Bug #17 — category label drift: "Obat-obatan" vs contracted "Obat-obat"
+│   └── BUG_Found_18.md     # Bug #18 — TC-VAL-17: no tambah_helper node after saving with the keyboard up
 │
 ┕ root /            # Test infrastructure files
 │   ├── README.md

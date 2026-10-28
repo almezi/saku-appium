@@ -472,11 +472,10 @@ because those three Android modules happen to export a pure constant alongside t
 > sibling `src/config/tags.ts` split), then have the iOS pages import from `config/` like every
 > other tag consumer.
 >
-> **🟠 Partially fixed 2026-10-28:** `cadanganTags` moved into `src/config/tags.ts` (and trimmed
-> to the three tags app v2.3 still renders — see BUG_Found_15) during the backup-automation
-> update, killing the cadangan cross-import (`cadangan.ios.page.ts` now imports from `config/`).
-> `anggaranTags` (`anggaran.page.ts`) and `kategoriTags` (`kategori.page.ts`) remain in their
-> page objects and their iOS twins still import from the Android modules.
+> **✅ Fixed 2026-10-28 (S2 lint work):** all three tag maps now live in `src/config/tags.ts`
+> (`tags.anggaran`, `tags.kategori`, `tags.cadangan`). The iOS twins import from `config/` like
+> every other consumer — zero page-object cross-imports remain, and `eslint.config.mjs`
+> (`no-restricted-imports`, landed with S2) fails the build if one is ever reintroduced.
 
 #### S6 — Rect-containment logic exists in three copies
 `containsCenter` is **verbatim duplicated** in `anggaran.ios.page.ts:10` and

@@ -125,7 +125,7 @@ describe("TC-KAT — category management (Phase 2) @regression", () => {
   // and typing under WebdriverIO (kategori_form_name gone for the full 15 s
   // waitForExist right after waitForDisplayed passed). Same signature as the
   // TC-LIST-07 skip in 1.D — dialog + keyboard-recompose flake, identical
-  // flow works via Appium MCP set_value. See BUG_Found_04.md; revisit with
+  // flow works via Appium MCP set_value. See bugs/BUG_Found_04.md; revisit with
   // the setValue-based entry noted there.
 
   it.skip("TC-KAT-10 cancelling the dialog leaves the category unchanged @regression", async () => {

@@ -10,7 +10,7 @@ Consolidated test data, execution plan, examples, and results template.
 > see `HANDOVER.md` §3 and `README.md`); live per-sub-phase status is in
 > `progress.md`, the full catalogue of designed cases is in
 > `test-cases-simple-money-tracker.md`, and known issues are indexed in
-> `BUGS.md` (details in the `BUG_FOUND*.md` / `BUG_Found_*.md` files).
+> `bugs/BUGS.md` (details in the `bugs/BUG_Found_*.md` files).
 >
 > **Current scale:** 30 spec files (16 Android + 14 iOS), 254 test cases
 > (137 + 117), 148 unique test-case ids, 195 cases in the catalogue, and
@@ -1905,7 +1905,7 @@ Test results are collected during automated test execution and reported in a str
 > differs from the live catalog. TC-LIST-11 here ("No stale or duplicate
 > items") is not the catalogued TC-LIST-11, and "TC-LIST-10: Pull-to-refresh
 > works" predates the retirement — pull-to-refresh is out of scope in
-> `UI_SPEC.md` §7 (see `BUG_Found_09.md`). Authoritative list:
+> `UI_SPEC.md` §7 (see `bugs/BUG_Found_09.md`). Authoritative list:
 > `test-cases-simple-money-tracker.md` §J.
 - TC-LIST-01: Empty month handled  
 - TC-LIST-02: Day header with weekday + date + total  

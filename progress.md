@@ -6,7 +6,7 @@ when a test case passes. Each agent should update only the sub-phases they own.
 **Markers:** `[x]` passing · `[ ]` not yet done or skipped · `[~[BUG]~]` blocked by a filed
 defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 
-**Bug index:** `BUGS.md` lists all 14 filed defects with their state and fix ownership.
+**Bug index:** `bugs/BUGS.md` lists all 14 filed defects with their state and fix ownership.
 
 ## Quick Summary
 
@@ -19,11 +19,11 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 
 > Note: 3 tasks in 1.D, TC-KAT-08/10 in 2.B, and TC-BACKUP-04/06 in 2.C are marked **SKIPPED**
 > (3-failure rule) and stay counted in "Remaining" until unblocked. Fix ownership per bug file:
-> `BUG_FOUND.md` → **mixed / blocked** (HiOS↔uiautomator2; investigate app-side + harness, run on
-> emulator meanwhile) · `BUG_Found_02.md` → **automation code** (SAF picker drive; app verified
-> fine) · `BUG_Found_03.md` → **app code** (WAL invalidation silently discards data; TRUNCATE
-> journal mode / checkpoint-on-stop) · `BUG_Found_04.md` → **automation code** (setValue-based
-> dialog typing; app-side investigation only if that proves insufficient) · `BUG_Found_10.md` →
+> `bugs/BUG_Found_01.md` → **mixed / blocked** (HiOS↔uiautomator2; investigate app-side + harness, run on
+> emulator meanwhile) · `bugs/BUG_Found_02.md` → **automation code** (SAF picker drive; app verified
+> fine) · `bugs/BUG_Found_03.md` → **app code** (WAL invalidation silently discards data; TRUNCATE
+> journal mode / checkpoint-on-stop) · `bugs/BUG_Found_04.md` → **automation code** (setValue-based
+> dialog typing; app-side investigation only if that proves insufficient) · `bugs/BUG_Found_10.md` →
 > **automation code** (iOS document picker is out-of-process; app verified fine).
 >
 > Platform status (2026-10-27): Android — complete (137/146 passing, 9 skipped per retry policy);
@@ -31,8 +31,8 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > TC-KAT 13/13, TC-BACKUP 5/5 passing on the iPhone 18 Pro sim — 71 cases across 9 specs; plus
 > the whole of **Phase 3**: TC-VAL 17/17, TC-AMT 7/7, TC-PERS 5/5, TC-ROT 6/6, TC-A11Y 7/7,
 > TC-PERF 4/4 (+1 skipped) — 46 more cases across 6 specs, so 117 cases across 15 specs on
-> iOS; TC-BACKUP-04 and TC-PERF-05 are skipped on iOS, see `BUG_Found_10.md` /
-> `BUG_Found_12.md`; the remaining sub-phases — TC-SUM, TC-DEL/TC-UNDO — are not yet ported).
+> iOS; TC-BACKUP-04 and TC-PERF-05 are skipped on iOS, see `bugs/BUG_Found_10.md` /
+> `bugs/BUG_Found_12.md`; the remaining sub-phases — TC-SUM, TC-DEL/TC-UNDO — are not yet ported).
 >
 > The whole Phase 3 iOS suite was re-run as ONE invocation (all six specs, a fresh Appium
 > session per spec) and came back **6/6 spec files, 46 passing + 1 skipped in 13m 14s**
@@ -83,7 +83,7 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > lazy-populated: first `tambah_screen` lookups 404 right after session start, so the `before`
 > hook waits 45 s. ④ Build blocker found en route: `xcodebuild` SIGTRAP-crashed parsing the shared
 > `Saku.xcscheme` (malformed `container:$.xcodeproj` LaunchAction reference from app-repo commit
-> `0a50aa4`) — fixed in the app repo working tree, filed as `BUG_Found_08.md`. ⑤ Environment:
+> `0a50aa4`) — fixed in the app repo working tree, filed as `bugs/BUG_Found_08.md`. ⑤ Environment:
 > this machine's `xcode-select` → CommandLineTools (no iOS SDK), so every iOS entry point must
 > export `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (wdio.ios.conf.ts does it
 > automatically); the appium-mcp embedded server inherits the broken env and cannot create local
@@ -94,7 +94,7 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 >
 > ~[BUG] 2026-10-25: real-device re-runs of TC-NAV on TECNO CM7 (HiOS/Android 16) are
 > blocked — uiautomator2 instrumentation deadlocks when the app is foreground (3
-> consecutive failures, retry limit reached). See `BUG_FOUND.md`. Emulator passes 8/8.
+> consecutive failures, retry limit reached). See `bugs/BUG_Found_01.md`. Emulator passes 8/8.
 
 ### 1.B — Add Income (TC-INC) — 9 tasks
 
@@ -124,7 +124,7 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 - [~[BUG]~] TC-EXP-08: Expense > balance → balance negative `−Rp` — **FAILING 2026-10-28**
   (2/2, `/tmp/m5_tambah.log`, `/tmp/m5_exp_solo.log`; last green 2026-10-24): `selectCategory`
   cannot reach the below-fold row "Bahan Bakar" — `scrollIntoView` never scrolls the v2.3
-  category sheet. See `BUG_Found_16.md`. Not the M5/M6 sweep (pre-sweep code fails identically).
+  category sheet. See `bugs/BUG_Found_16.md`. Not the M5/M6 sweep (pre-sweep code fails identically).
 
 **Spec:** `src/tests/tambah/add-expense.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
 
@@ -142,7 +142,7 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 - [ ] TC-LIST-08: Scroll 100+ items, no crash — **SKIPPED** (failed 4×): seeding 100 items through the real form (~12 s/item) exceeds the 20-min test timeout; blocked on the app's unimplemented `test_seed` intent
 - [x] TC-LIST-09: `daftar_summary_masuk` = sum income in month
 - [x] TC-LIST-10: `daftar_summary_keluar` = sum expense in month
-- ~~TC-LIST-11: Pull-to-refresh → data still correct~~ — **RETIRED 2026-10-27**, not skipped: pull-to-refresh is out of scope in the app's `UI_SPEC.md` §7 (the list is a reactive local query, so there is nothing to re-fetch). Spec block and iOS placeholder removed; see `BUG_Found_09.md`.
+- ~~TC-LIST-11: Pull-to-refresh → data still correct~~ — **RETIRED 2026-10-27**, not skipped: pull-to-refresh is out of scope in the app's `UI_SPEC.md` §7 (the list is a reactive local query, so there is nothing to re-fetch). Spec block and iOS placeholder removed; see `bugs/BUG_Found_09.md`.
 
 **Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24; re-validated on device 2026-10-25 (9 passing incl. seed, 0 failing) after helper fixes from the review remediation. Counts are of the 11-case set at the time; TC-LIST-11 was retired on 2026-10-27, so the live set is 10.
 
@@ -152,10 +152,10 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > Android). Two harness defects had to be fixed first (both filed, both fixed — not skipped):
 > ① the Material3 date picker labels its day cells in the DEVICE's day-first order
 > ("Tuesday, 27 October 2026"), so `selectDate()` now matches both orderings plus the "Today, "
-> prefix (`BUG_Found_11.md`); ② Compose renders a tagged container's strings as SIBLINGS on iOS —
+> prefix (`bugs/BUG_Found_11.md`); ② Compose renders a tagged container's strings as SIBLINGS on iOS —
 > the empty state, the day header, the transaction row and the edit header are read by GEOMETRY
 > from one page-source dump now, and the day header is read column by column (weekday + date at
-> the left, total at the right) to restore the Android reading order (`BUG_Found_13.md`).
+> the left, total at the right) to restore the Android reading order (`bugs/BUG_Found_13.md`).
 
 
 ### 1.E — Summary / Ringkasan (TC-SUM) — 13 tasks
@@ -172,16 +172,16 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 - [~[BUG]~] TC-SUM-10: Empty month → all zeros, no NaN/Infinity — **FAILING 2026-10-28** as a
   **cascade** (2/2): `prevMonth()` runs after the TC-SUM-12/11 failures leave the flow off
   Ringkasan, so `ringkasan_month_switcher_label` isn't composed (`ringkasan.page.ts:221`). Root
-  case is `BUG_Found_16.md`; this case is not independently broken.
+  case is `bugs/BUG_Found_16.md`; this case is not independently broken.
 - [~[BUG]~] TC-SUM-11: Large values format with separators, no clipping — **FAILING 2026-10-28**
   as a **cascade** (2/2): its expected balance includes the TC-SUM-12 expense that was never
   created — `Expected: "Rp 1.499.900.000" / Received: "Rp 1.500.200.000"`, exactly the missing
-  300 000. Root case is `BUG_Found_16.md`.
+  300 000. Root case is `bugs/BUG_Found_16.md`.
 - [~[BUG]~] TC-SUM-12: Negative balance renders `−Rp` not `Rp -` — **FAILING 2026-10-28**
   (2/2, `/tmp/m5_ringkasan.log`, `/tmp/m5_ringkasan2.log`; last green 2026-10-24): the primary
   failure of this trio. `selectCategory('exp_transport_public')` → "Transportasi Umum" is below
   the sheet's initial 9-row window and `UiScrollable.scrollIntoView` does not scroll it
-  (`tambah.page.ts:96`, 10 000 ms = `ELEMENT_PRESENT`). See `BUG_Found_16.md`. Identical on
+  (`tambah.page.ts:96`, 10 000 ms = `ELEMENT_PRESENT`). See `bugs/BUG_Found_16.md`. Identical on
   pre-sweep code (`/tmp/ab_sum.log`) — not the M5/M6 sweep.
 - [x] TC-SUM-13: Scroll to bottom → all sections render
 
@@ -203,8 +203,8 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > **iOS run 2026-10-27:** ported as `src/tests/transaksi/edit-transaction.ios.spec.ts` — **8/8
 > passing** (iPhone 18 Pro sim / iOS 27.0, `npm run test:edit:ios`, 1m 9.1s). iOS adaptations:
 > the edit screen's header title is a SIBLING of the tagged `ubah_header` node, so it is read from
-> the header's frame (`BUG_Found_13.md`); the date step goes through the Material3 date picker,
-> whose day cells carry the device's day-first label order (`BUG_Found_11.md`); and TC-EDIT-05
+> the header's frame (`bugs/BUG_Found_13.md`); the date step goes through the Material3 date picker,
+> whose day cells carry the device's day-first label order (`bugs/BUG_Found_11.md`); and TC-EDIT-05
 > runs last here as well — the previous-month view is where the row-action taps stop registering
 > under WDIO, so the case that moves an item to another month is the last one in the file.
 
@@ -304,16 +304,16 @@ object `src/pageobjects/anggaran.ios.page.ts`.
 - [x] TC-KAT-05: Expense list: default categories (daily_*, education_*, ...)
 - [x] TC-KAT-06: Search field filters by name
 - [x] TC-KAT-07: Edit (pencil) opens "Ubah kategori" dialog, field placeholder "1–20 karakter"
-- [x] TC-KAT-08: Rename category → list row + breakdown + transactions update — ~[BUG]~ **SKIPPED** (3× under wdio 2026-10-25): the rename dialog self-dismisses before typing (same signature as TC-LIST-07); app-side rename verified working via MCP. See `BUG_Found_04.md`
+- [x] TC-KAT-08: Rename category → list row + breakdown + transactions update — ~[BUG]~ **SKIPPED** (3× under wdio 2026-10-25): the rename dialog self-dismisses before typing (same signature as TC-LIST-07); app-side rename verified working via MCP. See `bugs/BUG_Found_04.md`
 - [x] TC-KAT-09: Rename empty/invalid → blocked or "Ubah" disabled
-- [x] TC-KAT-10: Cancel edit dialog → no change — ~[BUG]~ **SKIPPED** (3× under wdio 2026-10-25): same dialog self-dismiss flake as TC-KAT-08. See `BUG_Found_04.md`
+- [x] TC-KAT-10: Cancel edit dialog → no change — ~[BUG]~ **SKIPPED** (3× under wdio 2026-10-25): same dialog self-dismiss flake as TC-KAT-08. See `bugs/BUG_Found_04.md`
 - [x] TC-KAT-11: Hide (eye-slash) toggles category visibility
 - [x] TC-KAT-12: Hidden category not shown in picker
 - [x] TC-KAT-13: Category shows "Bawaan · N transaksi" count
 - [x] TC-KAT-14: Category mark color renders
 - [x] TC-KAT-15: Back button returns to previous screen
 
-**Spec:** `src/tests/kategori/category-management.spec.ts` | **Agent:** ZCode (GLM-5.3) — 15/15 MCP-verified + **11/13 passing, 2 skipped under wdio 2026-10-25** (TC-KAT-08/10 = dialog self-dismiss flake, `BUG_Found_04.md`; fixes en route: `before` seed for the empty-month button hiding, comb-search `scrollToRow` replacing the unreliable UiScrollable `scrollIntoView`, tag-based `rowText` via child texts, `toggleHidden` scrolls first; all row/action/search/back/mark tags verified live on v2.2)
+**Spec:** `src/tests/kategori/category-management.spec.ts` | **Agent:** ZCode (GLM-5.3) — 15/15 MCP-verified + **11/13 passing, 2 skipped under wdio 2026-10-25** (TC-KAT-08/10 = dialog self-dismiss flake, `bugs/BUG_Found_04.md`; fixes en route: `before` seed for the empty-month button hiding, comb-search `scrollToRow` replacing the unreliable UiScrollable `scrollIntoView`, tag-based `rowText` via child texts, `toggleHidden` scrolls first; all row/action/search/back/mark tags verified live on v2.2)
 
 **Spec (iOS):** `src/tests/kategori/category-management.ios.spec.ts` — **13/13 passing under wdio 2026-10-27**
 (iPhone 18 Pro sim, iOS 27.0, Appium 3.8.0 @ :4725, XCUITest 12.21; run via `npm run test:kategori:ios`,
@@ -387,18 +387,18 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-BACKUP-01: Tap `daftar_backup_button` → backup/export UI opens
 - [x] TC-BACKUP-02: Export creates file / share sheet opens
 - [x] TC-BACKUP-03: Exported file contains current transactions
-- [x] TC-BACKUP-04: Import backup restores data (if exists) — **UNBLOCKED 2026-10-28** (v2.3 update): the scripted SAF drive now passes under WDIO — the roots-drawer race that flaked 3× on 2026-10-25 is closed by a verify-retry that waits for the pushed file row itself (`openDownloadsRoot`, see backup.spec.ts). 2 consecutive green runs on the Pixel_10 / API 37 / app v2.3 (48.5 s, 60.3 s). Original skip context: `BUG_Found_02.md` (now marked Fixed — the blocker was harness-side drive flakiness, not the app; the app's import was always fine)
+- [x] TC-BACKUP-04: Import backup restores data (if exists) — **UNBLOCKED 2026-10-28** (v2.3 update): the scripted SAF drive now passes under WDIO — the roots-drawer race that flaked 3× on 2026-10-25 is closed by a verify-retry that waits for the pushed file row itself (`openDownloadsRoot`, see backup.spec.ts). 2 consecutive green runs on the Pixel_10 / API 37 / app v2.3 (48.5 s, 60.3 s). Original skip context: `bugs/BUG_Found_02.md` (now marked Fixed — the blocker was harness-side drive flakiness, not the app; the app's import was always fine)
 - [x] TC-BACKUP-05: Cancel export → no side effects
-- [x] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked — **GREEN 2026-10-28** (v2.3 update): passes on the Pixel_10 / API 37 (2 consecutive runs) with the v2.3 empty-list entry (`daftar_empty_state_secondary`) and the new empty-CSV assertion. The v2.2-era skip was the WAL data-loss defect in `BUG_Found_03.md` — that app-side bug stays **Open** (it is a general data-integrity risk, not specific to this flow); this case no longer depends on it
+- [x] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked — **GREEN 2026-10-28** (v2.3 update): passes on the Pixel_10 / API 37 (2 consecutive runs) with the v2.3 empty-list entry (`daftar_empty_state_secondary`) and the new empty-CSV assertion. The v2.2-era skip was the WAL data-loss defect in `bugs/BUG_Found_03.md` — that app-side bug stays **Open** (it is a general data-integrity risk, not specific to this flow); this case no longer depends on it
 
 **Spec:** `src/tests/transaksi/backup.spec.ts` (executed 2026-10-25: 4/6 passing, 2 blocked per retry policy) | **Agent:** ZCode (GLM-5.3) — live MCP verification + scripted wdio execution
 **Spec (iOS):** `src/tests/transaksi/backup.ios.spec.ts` (executed 2026-10-27: 5/5 running cases passing, TC-BACKUP-04 skipped per the retry policy) | `npm run test:backup:ios` | **Agent:** Qoder
 
-> **iOS port (2026-10-27, iPhone 18 Pro sim / iOS 27.0, app v2.3, Appium 3.8.0 + XCUITest 12.21):** TC-BACKUP-01/02/03/05/06 green in 36 s; TC-BACKUP-04 is `it.skip`-ed — the iOS document picker is out-of-process and invisible to XCUITest, the iOS analogue of `BUG_Found_02.md` (see `BUG_Found_10.md`). Live-MCP-verified facts baked into the port: ① the Cadangan screen carries NO tag on this build except `cadangan_export_csv` / `cadangan_export_json` — `cadangan_screen`, `cadangan_status_card`, `cadangan_import_button`, `cadangan_import_result`, `cadangan_import_error` and `cadangan_warning` exist in TestTags.kt but are attached to no node, so the screen is anchored on the "Cadangan" title and the status/warning are read as rendered output (the status line is ONE StaticText "n transaksi  ·  n akun  ·  n kategori", two spaces around the middle dot); ② export writes `Documents/saku-cadangan.csv|.json` INSIDE the app's data container — there is no `run-as` equivalent, so the files are read from the host via `xcrun simctl get_app_container` (the container UUID changes on every reinstall, so it is resolved per read); the CSV is byte-identical to Android's (UTF-8 BOM + `date,type,amount,category,account,note`); ③ the share popover (`UIActivityViewController`) IS published to XCUITest (`PopoverDismissRegion` covers the whole screen, caption `LP.CaptionBar.TopCaption` renders "saku-cadangan"), so it is both detectable and dismissible — iOS has no `driver.back()`; ④ the import picker (`UIDocumentPickerViewController`) publishes NOTHING: the page source after tapping "Pulihkan dari cadangan" holds only the app's own nodes while a host screenshot shows the picker on screen, and coordinate taps are not delivered to its window (3 attempts: 2 via `perform_actions`, 1 via `gesture tap` on the "Browse" tab) — so the case is skipped, not fixed; ⑤ the EMPTY Transaksi list renders a different layout with NO `daftar_backup_button` — the same `onOpenBackup` action moves to the empty state's secondary button (`daftar_empty_state_secondary`), which is how TC-BACKUP-06 reaches Cadangan (the Android TC-BACKUP-06 path, still skipped per `BUG_Found_03.md`, will need the same correction when it is unblocked).
+> **iOS port (2026-10-27, iPhone 18 Pro sim / iOS 27.0, app v2.3, Appium 3.8.0 + XCUITest 12.21):** TC-BACKUP-01/02/03/05/06 green in 36 s; TC-BACKUP-04 is `it.skip`-ed — the iOS document picker is out-of-process and invisible to XCUITest, the iOS analogue of `bugs/BUG_Found_02.md` (see `bugs/BUG_Found_10.md`). Live-MCP-verified facts baked into the port: ① the Cadangan screen carries NO tag on this build except `cadangan_export_csv` / `cadangan_export_json` — `cadangan_screen`, `cadangan_status_card`, `cadangan_import_button`, `cadangan_import_result`, `cadangan_import_error` and `cadangan_warning` exist in TestTags.kt but are attached to no node, so the screen is anchored on the "Cadangan" title and the status/warning are read as rendered output (the status line is ONE StaticText "n transaksi  ·  n akun  ·  n kategori", two spaces around the middle dot); ② export writes `Documents/saku-cadangan.csv|.json` INSIDE the app's data container — there is no `run-as` equivalent, so the files are read from the host via `xcrun simctl get_app_container` (the container UUID changes on every reinstall, so it is resolved per read); the CSV is byte-identical to Android's (UTF-8 BOM + `date,type,amount,category,account,note`); ③ the share popover (`UIActivityViewController`) IS published to XCUITest (`PopoverDismissRegion` covers the whole screen, caption `LP.CaptionBar.TopCaption` renders "saku-cadangan"), so it is both detectable and dismissible — iOS has no `driver.back()`; ④ the import picker (`UIDocumentPickerViewController`) publishes NOTHING: the page source after tapping "Pulihkan dari cadangan" holds only the app's own nodes while a host screenshot shows the picker on screen, and coordinate taps are not delivered to its window (3 attempts: 2 via `perform_actions`, 1 via `gesture tap` on the "Browse" tab) — so the case is skipped, not fixed; ⑤ the EMPTY Transaksi list renders a different layout with NO `daftar_backup_button` — the same `onOpenBackup` action moves to the empty state's secondary button (`daftar_empty_state_secondary`), which is how TC-BACKUP-06 reaches Cadangan (the Android TC-BACKUP-06 path, still skipped per `bugs/BUG_Found_03.md`, will need the same correction when it is unblocked).
 
 > Executed 2026-10-25 (emulator-5554 Pixel_10 API 37, cold-booted after a mid-boot wedge; app v2.2; wdio-managed Appium @ :4725): TC-BACKUP-01/02/03/05 pass; 04/06 hit the 3-failure retry limit (see BUG_Found_02/03). Live-MCP-verified facts baked into the spec: ① export writes `cache/backups/saku-cadangan.csv|.json` and opens the system share sheet (`com.android.intentresolver`); the file survives while the sheet is up and is readable via `adb shell run-as`. ② CSV = UTF-8 BOM + header `date,type,amount,category,account,note` (notes and empty notes round-trip; `,50000,` style amounts). ③ "Cadangan terakhir" updates the moment the export writes the file — cancelling the share sheet does NOT revert it to "belum pernah" (correct: the backup exists), so TC-BACKUP-05 asserts no-data-change instead of the timestamp. ④ Import (Saku JSON only) returns "1 transaksi ditambahkan, 0 dilewati karena sudah ada." and bumps "N transaksi tersimpan" — import restores data without counting as a backup. ⑤ The SAF picker opens on MediaStore-indexed "Recent" (freshly pushed files invisible) — navigate Show roots → Downloads for a filesystem listing. Harness fixes en route: `typeIntoTaggedField` now waits for field composition (cold-start race), TC-01 navigates to Daftar before the backup button, TC-06 backs out of the picker/Cadangan (no bottom bar there) before opening Daftar. Environment incidents this session: emulator wedged mid-boot (`settings` service gone — restarted clean) and the unmanaged :4725 server died mid-repro (replaced by the wdio-managed server).
 
-> **Automation updated for app v2.3 (2026-10-28, emulator-5554 Pixel_10 API 37, Appium 3.6.0 @ :4723 via Appium MCP session c313790a):** the emulator had been upgraded from v2.2 to v2.3 since the last run, and v2.3 redesigns Cadangan — six of the nine TESTABILITY.md tags (`cadangan_screen`, `cadangan_status_card`, `cadangan_import_button`, `cadangan_import_result`, `cadangan_import_error`, `cadangan_warning`) render no node on **both** platforms (filed as `BUG_Found_15.md`, same family as the v2.2 category-sheet regression in `BUG_Found_07.md`). Live-MCP-probed facts the update bakes in: ① only `daftar_backup_button` (transaction-bearing lists only), `cadangan_export_csv`, `cadangan_export_json` and `component_button_back` still render — the Android page now anchors screen detection on the export card (renders with 0 transactions too) and resolves the import button ("Pulihkan dari cadangan") and warning strip ("Hanya tersimpan di perangkat ini") by unique text, the same documented exception as the iOS port; ② the status card became ONE TextView `"N transaksi  ·  N akun  ·  N kategori"` (no "tersimpan"), with "Belum pernah" (capital B) and a Perlu/Aman pill; ③ **import renders no result surface at all** — no result/error node, no toast (probed twice, immediate dumps) — so TC-BACKUP-04 now asserts the status-line count; ④ an identical re-import adds nothing; ⑤ the emptied list has no `daftar_backup_button` — `daftar_empty_state_secondary` ("Impor dari cadangan") opens Cadangan (Android twin of the iOS `openFromEmptyDaftar`), which unblocks the v2.2-era TC-BACKUP-06 navigation gap; ⑥ export (file path, `com.android.intentresolver`) and the SAF drive (Show roots → Downloads → textContains row) are unchanged on API 37 — the picker flow probed green end-to-end via MCP. `cadanganTags` moved to `src/config/tags.ts` (code-review S5, killing the last cadangan page-object cross-import) and the iOS twin was converged to the Android API surface method-for-method (code-review M1: `statusTexts`/`statusText`/`warningCard`).
+> **Automation updated for app v2.3 (2026-10-28, emulator-5554 Pixel_10 API 37, Appium 3.6.0 @ :4723 via Appium MCP session c313790a):** the emulator had been upgraded from v2.2 to v2.3 since the last run, and v2.3 redesigns Cadangan — six of the nine TESTABILITY.md tags (`cadangan_screen`, `cadangan_status_card`, `cadangan_import_button`, `cadangan_import_result`, `cadangan_import_error`, `cadangan_warning`) render no node on **both** platforms (filed as `bugs/BUG_Found_15.md`, same family as the v2.2 category-sheet regression in `bugs/BUG_Found_07.md`). Live-MCP-probed facts the update bakes in: ① only `daftar_backup_button` (transaction-bearing lists only), `cadangan_export_csv`, `cadangan_export_json` and `component_button_back` still render — the Android page now anchors screen detection on the export card (renders with 0 transactions too) and resolves the import button ("Pulihkan dari cadangan") and warning strip ("Hanya tersimpan di perangkat ini") by unique text, the same documented exception as the iOS port; ② the status card became ONE TextView `"N transaksi  ·  N akun  ·  N kategori"` (no "tersimpan"), with "Belum pernah" (capital B) and a Perlu/Aman pill; ③ **import renders no result surface at all** — no result/error node, no toast (probed twice, immediate dumps) — so TC-BACKUP-04 now asserts the status-line count; ④ an identical re-import adds nothing; ⑤ the emptied list has no `daftar_backup_button` — `daftar_empty_state_secondary` ("Impor dari cadangan") opens Cadangan (Android twin of the iOS `openFromEmptyDaftar`), which unblocks the v2.2-era TC-BACKUP-06 navigation gap; ⑥ export (file path, `com.android.intentresolver`) and the SAF drive (Show roots → Downloads → textContains row) are unchanged on API 37 — the picker flow probed green end-to-end via MCP. `cadanganTags` moved to `src/config/tags.ts` (code-review S5, killing the last cadangan page-object cross-import) and the iOS twin was converged to the Android API surface method-for-method (code-review M1: `statusTexts`/`statusText`/`warningCard`).
 >
 > **Executed 2026-10-28 (emulator-5554 Pixel_10 API 37, app v2.3 pulled via SAKU_APK override, SAKU_APPIUM_PORTS unset → wdio-managed server @ :4725):** run 1: TC-BACKUP-01/02/03/05 green; 04 failed at the Downloads navigation — the roots drawer's slide-in animation races the `text("Downloads")` tap under WDIO (failure screenshot shows the picker still on Recent) — fixed by `openDownloadsRoot` verify-retry (wait for the pushed file row itself, re-toggle the drawer per attempt); 06 failed only as a cascade. Runs 2 and 3: **6/6 green** (48.5 s / 60.3 s). The junit reporter (O2) wrote `reports/junit-results-0-0.xml` (tests=6, failures=0) — verified on-device after fixing v9's `outputFileFormat` contract (it must be a function; the default stream name is `.log`).
 
@@ -429,7 +429,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
   (`/tmp/m5_tambah.log` parallel, `/tmp/m5_val_solo.log` solo, `/tmp/ab_val.log` solo on
   **pre-sweep** code → same result, so not the M5/M6 sweep): after the save there is no
   `tambah_helper` node, so the "form reset" read at `validation.spec.ts:191` cannot resolve.
-  App-vs-harness split not yet determined. See `BUG_Found_18.md`. Marked, **not yet `it.skip`-ed**
+  App-vs-harness split not yet determined. See `bugs/BUG_Found_18.md`. Marked, **not yet `it.skip`-ed**
   — the skip changes suite behaviour and interacts with the iOS twin's parity baseline, so it is
   left for a human decision.
 
@@ -477,7 +477,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 > key only works while the software keyboard is up: the app dismisses the keyboard when the
 > category sheet closes and the dismissed keyboard stays in the tree with `visible="false"`
 > (measured live: the Keyboard node at y=891 on an 874-pt screen), so a tap on its Delete key
-> changes nothing (`BUG_Found_14.md`).
+> changes nothing (`bugs/BUG_Found_14.md`).
 
 ### 3.C — Persistence (TC-PERS) — 5 tasks
 
@@ -507,7 +507,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-ROT-05: App backgrounded → resumed, no data loss
 - [~[BUG]~] TC-ROT-06: Font scale 200% → no clipped text
 
-**Spec:** `src/tests/app/rotation.spec.ts` | **Agent:** ZCode agent (Appium MCP run, Phase 3.D, 2026-10-26) — 5/6 passing, TC-ROT-06 blocked by `BUG_Found_06.md`
+**Spec:** `src/tests/app/rotation.spec.ts` | **Agent:** ZCode agent (Appium MCP run, Phase 3.D, 2026-10-26) — 5/6 passing, TC-ROT-06 blocked by `bugs/BUG_Found_06.md`
 
 > **iOS run 2026-10-27:** ported as `src/tests/app/rotation.ios.spec.ts` — **6/6 passing**
 > (iPhone 18 Pro sim / iOS 27.0, `npm run test:rot:ios`, 2m 54.2s). iOS adaptations measured live
@@ -553,7 +553,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-PERF-02: Tab switch < 500ms
 - [x] TC-PERF-03: List scroll completes without freeze (timing budget < 60s)
 - [x] TC-PERF-04: Save transaction < 1s
-- [ ] TC-PERF-05: No memory growth after 50 add/delete cycles — **SKIPPED** (2026-10-26): BUG_Found-07 fixed (selectCategory now uses text-label lookup), but 50 UI-driven add/delete cycles exceed the 180s mocha timeout, and the `test_seed` intent is debug-only. See `BUG_Found_07.md`.
+- [ ] TC-PERF-05: No memory growth after 50 add/delete cycles — **SKIPPED** (2026-10-26): BUG_Found-07 fixed (selectCategory now uses text-label lookup), but 50 UI-driven add/delete cycles exceed the 180s mocha timeout, and the `test_seed` intent is debug-only. See `bugs/BUG_Found_07.md`.
   - Out-of-band attempt (scripts/perf_memcycles.sh, ZCode agent): baseline PSS 112480 kB captured, ~30/50 cycles completed across two runs — cut short by three emulator crashes (host-GPU ColorBuffer hang x2, then an adb drop on swiftshader). Re-run when a stable emulator is available; no app-side defect observed.
 
 **Spec:** `src/tests/app/performance.spec.ts` | **Agent:** Kilo (senior QA) — TC-PERF-01–04 all passing 2026-10-26 on emulator-5554 (emulator-5554, Android 37, Appium 3.8.0 @ :4725, APK v2.2). BUG_Found-07 fixed via text-label category lookup; `src/config/category-labels.ts` mapping all 36 IDs.

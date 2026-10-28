@@ -108,7 +108,7 @@ export const tags = {
   // the iOS build) — only the daftar entry button and the two export cards
   // still render; the screen root, status card, import button, import
   // result/error and warning strip are resolved as rendered output by the
-  // page objects (see BUG_Found_15.md).
+  // page objects (see bugs/BUG_Found_15.md).
   cadangan: {
     daftarEntryButton: "daftar_backup_button",
     exportCsv: "cadangan_export_csv",

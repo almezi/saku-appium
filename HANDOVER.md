@@ -74,8 +74,8 @@ npm run test:navigasi:ios                # one iOS spec
 The iOS page objects are separate implementations (`*.ios.page.ts`) with their own
 quirks — most notably, Compose renders a tagged container's strings as **siblings** on
 iOS, so text must be read by **geometry from one page-source dump**, never by nested
-tree traversal. `IOS_PHASE1_HANDOFF.md` documents the port; `BUG_Found_11.md`,
-`BUG_Found_13.md` and `BUG_Found_14.md` record the specific iOS defects found along the
+tree traversal. `IOS_PHASE1_HANDOFF.md` documents the port; `bugs/BUG_Found_11.md`,
+`bugs/BUG_Found_13.md` and `bugs/BUG_Found_14.md` record the specific iOS defects found along the
 way.
 
 ### Environment overrides (when you need them)
@@ -179,7 +179,7 @@ saku-appium/
 ├── README.md                    # Quickstart + layout
 ├── HANDOVER.md                  # This file
 ├── code_review.md               # Senior QA review — known weak points
-├── BUGS.md                      # Index of all filed bugs
+├── bugs/                        # All 18 bug reports + BUGS.md index
 └── AGENTS.md                    # Operating rules (commit style, bug protocol)
 ```
 
@@ -470,17 +470,17 @@ same type.
   `adb -s emulator-5554 emu kill`, then relaunch
   `emulator @Pixel_10 -no-snapshot-load -no-window` and wait for `sys.boot_completed=1`.
   Happened 2026-10-25 after a spontaneous framework crash; also implicated in
-  BUG_Found_03.md's data loss.
+  bugs/BUG_Found_03.md's data loss.
 - **System surfaces (share sheet, SAF DocumentsUI) have no test tags** → text /
   content-desc locators are the sanctioned exception there, but know their traps:
   DocumentsUI opens on MediaStore-indexed "Recent" (a freshly `adb push`ed file is
   invisible — navigate "Show roots" → "Downloads" for a filesystem listing), the roots
   drawer is itself scrollable so `UiScrollable` can race it, and stale-retries can
   double-tap the hamburger closed. See `backup.spec.ts` TC-BACKUP-04 and
-  `BUG_Found_02.md`.
+  `bugs/BUG_Found_02.md`.
 - **A save the app acknowledged (toast + count + export) later vanishes from the DB**
   → un-checkpointed WAL loss under the wdio harness, seen twice on 2026-10-25;
-  do NOT burn retries — file it (see `BUG_Found_03.md`) and pull the DB
+  do NOT burn retries — file it (see `bugs/BUG_Found_03.md`) and pull the DB
   (`run-as … cat databases/simplemoneytracker.db*`) to confirm.
 
 ### Real-device prerequisites (TECNO CM7 & other OEM phones)
@@ -502,14 +502,14 @@ adb -s <udid> shell dumpsys deviceidle whitelist +io.appium.uiautomator2.server.
 adb -s <udid> shell dumpsys deviceidle whitelist +id.almezi.simplemoneytracker_kt
 ```
 
-**Known blocker (BUG_FOUND.md):** on the TECNO CM7 (HiOS, Android 16) the
+**Known blocker (bugs/BUG_Found_01.md):** on the TECNO CM7 (HiOS, Android 16) the
 uiautomator2 instrumentation deadlocks whenever the Saku app is foreground — the
 first hierarchy command hangs, then the instrumentation "crashes". The app works
 fine manually and the same APK passes on the Android 16 emulator, so treat real-device
 runs on this phone as blocked until the bug is resolved; use `emulator-5554` for now.
 
-**Active 2.C blockers (2026-10-25):** `BUG_Found_02.md` (SAF picker drive under WDIO —
-app import itself is fine) and `BUG_Found_03.md` (committed transaction vanishing from
+**Active 2.C blockers (2026-10-25):** `bugs/BUG_Found_02.md` (SAF picker drive under WDIO —
+app import itself is fine) and `bugs/BUG_Found_03.md` (committed transaction vanishing from
 the DB mid-session — Critical/P1, needs app-side or fresh-emulator investigation).
 Suite status per sub-phase lives in `progress.md`.
 
@@ -577,7 +577,7 @@ The app is in Indonesian; you'll see these in tags, tests, and screens.
 - `code_review.md` — the senior QA review of this harness. Read §S1–§S22 and §M1–§M14
   before refactoring — they list the known weak points, so you do not have to rediscover
   them.
-- `BUGS.md` — index of all 14 filed defects, with a "patterns worth knowing" section.
+- `bugs/BUGS.md` — index of all 14 filed defects, with a "patterns worth knowing" section.
 - `docs/` — deeper architecture/design notes and the iOS migration plan.
 - `IOS_PHASE1_HANDOFF.md` — how the iOS port was done, and the iOS-specific quirks.
 - `test-cases-simple-money-tracker.md` — the full catalogued test-case backlog (Phases 1–3).

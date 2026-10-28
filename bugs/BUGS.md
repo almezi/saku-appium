@@ -18,7 +18,7 @@ file; the numbering is continuous and files are never deleted or renumbered.
 
 | # | File | Platform | Severity / Priority | State | One-line summary |
 |---|---|---|---|---|---|
-| 01 | [BUG_FOUND.md](BUG_FOUND.md) | Android | Major / P2 | Open | TECNO real-device deadlock under uiautomator2; no confirmed fix path — emulator-only workaround |
+| 01 | [BUG_Found_01.md](BUG_Found_01.md) | Android | Major / P2 | Open | TECNO real-device deadlock under uiautomator2; no confirmed fix path — emulator-only workaround |
 | 02 | [BUG_Found_02.md](BUG_Found_02.md) | Android | Major / P2 | Fixed | SAF picker drive blocks TC-BACKUP-04; app itself is fine (verified via MCP) → drawer race closed by verify-retry drive |
 | 03 | [BUG_Found_03.md](BUG_Found_03.md) | Android | Critical / P1 | Open | A committed transaction silently vanishes from the DB on the next clean reopen (WAL loss) |
 | 04 | [BUG_Found_04.md](BUG_Found_04.md) | Android | Major / P2 | Open | "Ubah kategori" dialog self-dismisses under WDIO between open and typing |

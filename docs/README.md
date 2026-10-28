@@ -49,7 +49,7 @@ test scope. Do not duplicate their content in new places without a reason.
 | `test-cases-simple-money-tracker.md` | Catalogue of 195 designed test cases |
 | `progress.md` | Execution checklist — which cases have actually run |
 | `code_review.md` | Senior QA review of the harness (structure, conventions, maintainability) |
-| `BUGS.md` | Index of the 14 filed defects |
+| `bugs/BUGS.md` | Index of the 14 filed defects |
 
 ## Reading order for a new engineer
 

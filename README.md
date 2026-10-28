@@ -197,7 +197,7 @@ objects** (7 screen twins + the Android/iOS base classes), **142 unique test-cas
 ### Notes
 
 - Test data setup goes through the real UI (`createTransaction` helper). The `test_seed` / `test_now` intent extras in TESTABILITY.md are not implemented in the app yet; seed-based specs (TC-SEED) wait on that.
-- Execution status per sub-phase lives in `progress.md`. Known issues are filed as `BUG_FOUND.md` … `BUG_Found_18.md` (index: `BUGS.md`); see `code_review.md` for the current state of each.
+- Execution status per sub-phase lives in `progress.md`. Known issues are filed as `bugs/BUG_Found_01.md` … `bugs/BUG_Found_18.md` (index: `bugs/BUGS.md`); see `code_review.md` for the current state of each.
 - **Two Android specs have no iOS twin**: `transaksi/delete-undo.spec.ts` (destructive flow) and `transaksi/backup.spec.ts` has one but with different case coverage (`TC-BUDGET` vs `TC-BUD` prefix divergence — see M3).
 
 ## Generated test cases
@@ -343,7 +343,7 @@ Now you can use the Appium MCP tools to drive the simulator:
 | `code_review.md` | Senior QA review — structure, conventions, maintainability | Before refactoring; see **S1**–**S22**, **M1**–**M14** |
 | `pr_review.md` | Review of PR #3 (historical) | Looking back at that PR |
 | `IOS_PHASE1_HANDOFF.md` | iOS Phase 1 port handoff notes | Continuing the iOS port |
-| `BUGS.md` | Index of all 14 filed defects (newest last) | A test fails and you need precedent |
-| `BUG_FOUND.md` … `BUG_Found_18.md` | The 18 bug reports themselves | Full reproduction steps for one defect |
+| `bugs/BUGS.md` | Index of all 14 filed defects (newest last) | A test fails and you need precedent |
+| `bugs/BUG_Found_01.md` … `bugs/BUG_Found_18.md` | The 18 bug reports themselves | Full reproduction steps for one defect |
 | `docs/` | Product/design/development docs (see `docs/README.md`) | Understanding the app itself |
 | `improve/` | Design package — design system and screen specs | Doing UI work |

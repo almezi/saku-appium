@@ -34,7 +34,7 @@ import { APP_COLD_START_IOS, ELEMENT_PRESENT } from "../../config/timeouts";
  *    its remote view is NOT published to the accessibility tree (unlike the
  *    share popover) and coordinate taps do not reach it either, so neither
  *    element queries nor blind taps can select a file. Verified live 3×;
- *    see BUG_Found_10.md — the iOS analogue of Android's BUG_Found_02;
+ *    see bugs/BUG_Found_10.md — the iOS analogue of Android's BUG_Found_02;
  *  - M1 convergence (2026-10-28) — the iOS twin exposes the same public API
  *    as the Android twin (statusTexts/statusText/warningCard renames); only
  *    the locator layer differs.
@@ -144,7 +144,7 @@ describe("TC-BACKUP — backup & export (Phase 2) on iOS @regression", () => {
   });
 
   // The import picker cannot be driven on iOS: see the file header and
-  // BUG_Found_10.md. Skipped per the repo's iOS-blocked-case convention
+  // bugs/BUG_Found_10.md. Skipped per the repo's iOS-blocked-case convention
   // (same shape as TC-LIST-07/08), not because the app is at fault.
   it.skip("TC-BACKUP-04 importing a backup restores its transactions (skipped on iOS: system file picker is out-of-process) @regression", async () => {});
 

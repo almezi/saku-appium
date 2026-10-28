@@ -23,7 +23,7 @@
 >
 > The remaining open engineering debt from this review is tracked in `code_review.md`
 > (findings **S1**–**S22** and **M1**–**M14**), and the two backup cases that failed here
-> are still tracked as `BUG_Found_02.md` (SAF picker drive) and `BUG_Found_03.md`
+> are still tracked as `bugs/BUG_Found_02.md` (SAF picker drive) and `bugs/BUG_Found_03.md`
 > (vanishing committed transaction).
 
 ## Verdict

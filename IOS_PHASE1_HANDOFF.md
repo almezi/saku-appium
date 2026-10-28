@@ -78,16 +78,16 @@ Page objects: `base`, `tambah`, `daftar`, `ringkasan`, `ubah`, `anggaran`, `kate
   return nothing — read by **geometry from one page-source dump** instead. The dump order
   is also not the visual order (a day header dumps weekday → total → date), so split the
   frame in half and read the left column first to restore the Android reading order.
-  See `BUG_Found_13.md` and `src/helpers/elements.ts` (`iosStaticTexts`, `iosTextsInRect`,
+  See `bugs/BUG_Found_13.md` and `src/helpers/elements.ts` (`iosStaticTexts`, `iosTextsInRect`,
   `iosColumnTexts`).
 - The Material3 date picker labels its day cells in the **device's** day-first order
   ("Monday, 26 October 2026"), so `Intl.DateTimeFormat('en-US')` never matched — match
-  both renderings. See `BUG_Found_11.md`.
+  both renderings. See `bugs/BUG_Found_11.md`.
 - There is **no `component_toast` tag on iOS** — the save is confirmed by the **form reset**
   (amount cleared + save re-disabled), which is what the Android TC-INC-08 also asserts.
 - The numeric keypad's Delete key is a silent no-op after the category sheet closes (the
   dismissed keyboard lingers in the tree with `visible="false"`). Use the hardware
-  backspace (U+E003), the twin of Android's DEL keycode 67. See `BUG_Found_14.md`.
+  backspace (U+E003), the twin of Android's DEL keycode 67. See `bugs/BUG_Found_14.md`.
 - The app is **PORTRAIT-ONLY** (`UISupportedInterfaceOrientations`) and WDA **cannot rotate**
   an iOS simulator — the W3C orientation endpoint answers "Unable To Rotate Device" and
   `mobile: rotate` is not implemented by appium-xcuitest-driver 12.21. Rotation cases are
@@ -101,7 +101,7 @@ Page objects: `base`, `tambah`, `daftar`, `ringkasan`, `ubah`, `anggaran`, `kate
 - `mobile: scrollGesture` is not implemented by appium-xcuitest-driver 12.21 — a sweep uses
   `mobile: scroll`.
 - `dumpsys meminfo` has no simulator counterpart, so TC-PERF-05 cannot run on iOS
-  (`BUG_Found_12.md`).
+  (`bugs/BUG_Found_12.md`).
 - iOS interaction budgets sit at ~2× Android's because every interaction crosses the WDA
   boundary (a tap alone costs ~0.4 s) — the iOS budgets are 1.5 s / 2 s / 8 s.
 
@@ -167,4 +167,4 @@ The Android-side edits inside `src/helpers/input.ts`
 (setValueIntoTaggedField), `src/pageobjects/kategori.page.ts`, `src/pageobjects/daftar.page.ts`
 (swipeList). TC-LIST-11 is no longer parked work: it was retired on 2026-10-27 across
 `transaction-list.spec.ts`, `transaction-list.ios.spec.ts`, the catalog, `progress.md`
-and `BUG_Found_09.md`. When committing iOS work, `git add` explicit paths only.
+and `bugs/BUG_Found_09.md`. When committing iOS work, `git add` explicit paths only.
