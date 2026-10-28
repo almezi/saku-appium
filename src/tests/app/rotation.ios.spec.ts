@@ -36,6 +36,8 @@ import { IOS_BUNDLE_ID } from '../../helpers/ios-app'
 import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
 import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
 import { RingkasanIosPage } from '../../pageobjects/ringkasan.ios.page'
+import { APPEARANCE_SETTLE_IOS, BACKGROUND_RESUME, SCROLL_SETTLE, TEXT_SIZE_SETTLE_IOS } from '../../config/settles'
+import { APP_COLD_START_IOS } from '../../config/timeouts'
 
 const tambah = new TambahIosPage()
 const daftar = new DaftarIosPage()
@@ -44,20 +46,20 @@ const ringkasan = new RingkasanIosPage()
 /** Switches the system appearance and lets the app re-render. */
 async function setAppearance(style: 'light' | 'dark'): Promise<void> {
   await driver.execute('mobile: setAppearance', { style })
-  await driver.pause(2_000)
+  await driver.pause(APPEARANCE_SETTLE_IOS)
 }
 
 /** Switches the system Dynamic Type size category. */
 async function setContentSize(size: string): Promise<void> {
   await driver.execute('mobile: setContentSize', { size })
-  await driver.pause(1_000)
+  await driver.pause(TEXT_SIZE_SETTLE_IOS)
 }
 
 /** Kills and relaunches the app (the content size is read at launch). */
 async function restartApp(): Promise<void> {
   await driver.terminateApp(IOS_BUNDLE_ID)
   await driver.activateApp(IOS_BUNDLE_ID)
-  await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
+  await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: APP_COLD_START_IOS })
 }
 
 describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', () => {
@@ -101,7 +103,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
   it('TC-ROT-02 a configuration change on Transaksi retains the exact scroll position @regression', async () => {
     await daftar.open()
     await daftar.swipeList('up')
-    await driver.pause(500)
+    await driver.pause(SCROLL_SETTLE)
     const before = (await daftar.rowAmountTextsInOrder())[0]
     await setAppearance('dark')
     await expect(daftar.screen).toBeDisplayed()
@@ -141,7 +143,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
       categoryId: categories.income.salary,
     })
     await driver.execute('mobile: backgroundApp', { seconds: 3 })
-    await driver.pause(1_000)
+    await driver.pause(BACKGROUND_RESUME)
     expect(await tambah.getAmountText()).toBe('Rp 9.911')
   })
 

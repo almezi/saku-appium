@@ -8,9 +8,15 @@ This repo is the **test harness**, not the app. The app (`id.almezi.simplemoneyt
 lives in a separate repository — there is no `gradlew` here.
 
 - **Install deps**: `npm install` (Appium is a local dependency; no global install)
-- **Typecheck**: `npm run typecheck` — covers `src/**/*.ts` and `wdio.conf.ts`.
-  **`wdio.ios.conf.ts` is NOT included**; see `code_review.md` finding **S1**.
-- **Unit tests**: `npm run test:unit` — 18 tests, no device required
+- **Typecheck**: `npm run typecheck` — covers `src/**/*.ts`, `wdio.conf.ts` and
+  `wdio.ios.conf.ts`. (The old `code_review.md` **S1** gap — iOS config excluded — is closed;
+  `tsconfig.json` `include` lists all three.)
+- **Unit tests**: `npm run test:unit` — 20 tests, no device required. Two of them are
+  guardrails over the source tree: the test-type taxonomy (see **Test Types**) and the timing
+  contract (see **Wait budgets and settle pauses**).
+- **Twin parity**: `npm run check:parity` — no device required. Compares each
+  `X.page.ts` against `X.ios.page.ts`, asserts one `TC-<AREA>-<NN>` id names exactly one case
+  per platform, and that spec twins share their ids. See **Android / iOS Twin Convention**.
 - **Run tests locally**: `npm test` (Android) / `npm run test:ios` (iOS). Per-area
   scripts are listed in `README.md`; `HANDOVER.md` §3 explains how to run them.
 - **Run one test type**: `npm run test:sanity` / `test:regression` / `test:integration`
@@ -38,7 +44,7 @@ When any agent (human or AI) discovers a bug during test execution, it must:
 1. **Stop** the current sub-phase execution (do not continue testing the same flow).
 2. **Create** a bug report file in the repo root, copying `BUG_FOUND.template.md`. The
    **first** bug is `BUG_FOUND.md`; every later one is `BUG_Found_<NN>.md` where `NN` is
-   the next free number (02, 03, … 14). Never overwrite an existing report.
+   the next free number (02, 03, … 18). Never overwrite an existing report.
 3. **Reference** the bug in `progress.md` by marking the affected test case with `~[BUG]`
    instead of `[x]`.
 4. **Notify** all other agents via team broadcast or mailbox so they can avoid the same area.
@@ -56,7 +62,7 @@ Copy the template from `BUG_FOUND.template.md` and fill every field:
 | **Additional Notes** | Extra context, workarounds, related test cases affected |
 
 The template's field order is the required order. Reports already exist in three
-variants — bullet lists (01–04, 10–14), tables (05–06, 08–09) — all following the
+variants — bullet lists (01–04, 10–18), tables (05–06, 08–09) — all following the
 template's section order. **Use the bullet-list form** for new reports, and always
 include a `## Status` line stating `Open` or `Fixed`.
 
@@ -99,6 +105,9 @@ include a `## Status` line stating `Open` or `Fixed`.
 ```
 ├── docs/          # Technical documentation (specs, architecture) — see docs/README.md
 ├── improve/       # Design system and screen specs
+├── scripts/       # Tooling that is NOT the test runner: check_parity.mjs +
+│                  # parity-baseline.json (the twin-parity gate), contrast_check.py,
+│                  # perf_measure.sh, perf_memcycles.sh, seed_transactions.sh
 ├── TESTABILITY.md   # Test tag contracts (read this first)
 ├── UI_SPEC.md       # UI behavior spec (read this too)
 ├── AGENTS.md        # Agent operating instructions (this file)
@@ -124,6 +133,10 @@ include a `## Status` line stating `Open` or `Fixed`.
 ├── BUG_Found_12.md  # Bug #12 — iOS memory stability across add/delete cycles (TC-PERF-05)
 ├── BUG_Found_13.md  # Bug #13 — iOS tagged container renders strings as siblings
 ├── BUG_Found_14.md  # Bug #14 — iOS numeric keypad Delete key is a silent no-op (TC-AMT-06)
+├── BUG_Found_15.md  # Bug #15 — v2.3 drops six Cadangan test tags on both platforms
+├── BUG_Found_16.md  # Bug #16 — UiScrollable cannot scroll the Tambah category sheet (TC-SUM-12, TC-EXP-08)
+├── BUG_Found_17.md  # Bug #17 — category label drift: "Obat-obatan" vs contracted "Obat-obat"
+├── BUG_Found_18.md  # Bug #18 — TC-VAL-17: no tambah_helper node after saving with the keyboard up
 │
 ┕ root /            # Test infrastructure files
 │   ├── README.md
@@ -149,13 +162,61 @@ Rules:
   `src/pageobjects/kategori.ios.page.ts` violates this (it imports the Android tag map
   — see `code_review.md` finding **S5**).
 - **When you add a screen method, add it to both twins.** The public method surfaces are
-  expected to match; today they have drifted (`code_review.md` findings **M1**–**M2**).
+  expected to match; the residual drift is itemised in `scripts/parity-baseline.json`.
 - **When you add a test case, add it to both spec twins**, and reuse the same
-  `TC-<AREA>-<NN>` id on both platforms.
+  `TC-<AREA>-<NN>` id on both platforms. Never reuse an id for a second case on the same
+  platform — a defect report naming it must identify one case.
 - Android spec files live at `src/tests/<area>/<name>.spec.ts`; iOS at the same path with
   `.ios.spec.ts` inserted before `.spec.ts`.
 - iOS runs through `wdio.ios.conf.ts` (`npm run test:ios`); Android through
   `wdio.conf.ts` (`npm test`).
+
+### The parity gate
+
+`npm run check:parity` (`scripts/check_parity.mjs`) enforces the last three rules mechanically,
+and it is a **ratchet**, not a report: drift you have not explained fails the run.
+
+- **Hard failures, never baselined** — a `TC-` id defined more than once on one platform
+  (the **M4** signature), and a spec pair with **zero** shared ids across platforms (the **M3**
+  signature).
+- **Ratcheted drift** — recorded in `scripts/parity-baseline.json` with a `reason` naming the
+  close action. A NEW gap fails; a gap that has been CLOSED but is still listed **also** fails,
+  so the baseline can only live as long as the debt does.
+- After changing twins deliberately: `npm run check:parity -- --update`, then justify every new
+  entry in `scripts/parity-baseline.json`. `--update` carries existing reasons over per group.
+
+Read the limitations before trusting a green run (they are in the script header): titles are
+parsed, not executed, so an `it()` inside a loop is one call site and `${id}`-built titles
+(`transaction-list.spec.ts:220`) resolve to no id. Private/protected members and either base
+class's surface are excluded — the check compares what specs can CALL.
+
+## Wait budgets and settle pauses
+
+Numbers that bound time do not belong at a call site (the **M5**/**M6** finding): a bare
+`15_000` cannot say whether it means the same thing as the `15_000` two files over.
+
+| Kind | Where it lives | Examples | What it is |
+|---|---|---|---|
+| **Deadline** — a `waitFor…`/`toBe…({ wait })` ceiling | `src/config/timeouts.ts` | `SCREEN_READY`, `ELEMENT_PRESENT`, `COMPOSITION_WAIT`, `SYSTEM_SHEET`, `SURFACE_DISMISS`, `DEFAULT_TIMEOUT` | Returns as soon as the condition holds; a wider number only costs time on a failure |
+| **Sleep** — a `driver.pause()` | `src/config/settles.ts` | `STALE_RETRY`, `SWIPE_ANIM`, `MONTH_LABEL_RECOMPOSE`, `UNDO_TOAST_EXPIRY` | Blocks for the full duration every run |
+
+Rules:
+
+- **Never write a numeric `timeout:`/`wait:`/`interval:`, a numeric `timeout =` default
+  parameter, or a numeric `driver.pause(N)`.** `npm run test:unit` fails on it
+  (`src/config/__tests__/timing-literals.test.ts`), and the same test fails on a constant in
+  either module that nothing waits on.
+- Pick by **intent**, not by number. If no name fits, add one — with a doc line saying what it
+  waits for and why it is that size. Do not reuse a constant just because the number matches.
+- `DEFAULT_TIMEOUT` is the suite fallback — it is what both runner configs pass to
+  `waitforTimeout`. Call sites still name their budget.
+- A `_QUICK`/`_SLOW` twin is not a tier to choose from. It marks two sites with the same intent
+  and different numbers, kept visible for **S9**. Same for the `_ANDROID`/`_IOS` pairs.
+- Re-tuning a number is a deliberate change: change the constant, not the call site, and say why
+  in the commit. `code_review.md` **S9** tracks the sleep-as-synchronization debt.
+- Out of scope by design: `duration:` inside a W3C `performActions` gesture (part of the swipe's
+  shape), and the runner configs' mocha `timeout: 180_000` / `connectionRetryTimeout` (not UI
+  waits).
 
 ## Test Types
 
@@ -198,4 +259,8 @@ When two documents disagree, resolve in this order:
 4. **`src/config/tags.ts`** — the machine-readable mirror of the contract.
 5. **`src/config/test-types.ts`** — the test-type vocabulary (`@sanity` / `@regression` /
    `@integration`) and the guardrail that enforces it.
-6. Everything else (this file, `README.md`, `progress.md`) is descriptive.
+6. **`src/config/timeouts.ts` / `src/config/settles.ts`** — the timing vocabulary: every wait
+   budget and every settle pause, named by intent. A new number at a call site is rejected by
+   `npm run test:unit`; if a budget really must change, change the constant (**S9** owns the
+   re-tuning, not the call sites).
+7. Everything else (this file, `README.md`, `progress.md`) is descriptive.

@@ -1,11 +1,12 @@
 import { byTag } from '../../helpers/locators'
 import { tags } from '../../config/tags'
+import { APP_COLD_START } from '../../config/timeouts'
 
 const APP_ID = 'id.almezi.simplemoneytracker_kt'
 
 describe('TC-NAV — smoke & navigation @sanity', () => {
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
   })
 
   it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => {
@@ -61,7 +62,7 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
     // On the start tab, BACK backgrounds the app; it must return cleanly.
     await driver.back()
     await driver.activateApp(APP_ID)
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
   })
 
   it('TC-NAV-07 selected tab state persists on re-tap @sanity', async () => {
@@ -92,6 +93,6 @@ describe('TC-NAV — smoke & navigation @sanity', () => {
     // An ANR would surface here as a UiAutomator2 timeout instead of a
     // displayed screen; assert the app still responds and settles.
     await byTag(tags.navTambah).click()
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
   })
 })

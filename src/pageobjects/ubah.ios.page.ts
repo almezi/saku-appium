@@ -3,6 +3,7 @@ import { iosPageNodes, iosStaticTexts, iosTextsInRect } from '../helpers/element
 import { tags } from '../config/tags'
 import { BaseIosPage } from './base.ios.page'
 import type { ChainablePromiseElement } from '../types'
+import { SCREEN_READY } from '../config/timeouts'
 
 /**
  * Ubah transaksi (edit) on iOS. Shares its form fields with Tambah — the
@@ -49,7 +50,7 @@ export class UbahIosPage extends BaseIosPage {
   /** Saving returns to the Transaksi list. */
   async save(): Promise<void> {
     await this.saveButton.click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: 15_000 })
+    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
   }
 
   async tapDelete(): Promise<void> {
@@ -59,6 +60,6 @@ export class UbahIosPage extends BaseIosPage {
   /** Leaving without saving returns to the Transaksi list. */
   async tapBack(): Promise<void> {
     await super.tapBack()
-    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: 15_000 })
+    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
   }
 }

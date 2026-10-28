@@ -4,6 +4,8 @@ import { extractChildTexts, readAmount } from '../helpers/elements'
 import { formatMonthYear, parseMonthLabel, shiftMonthYear } from '../helpers/months'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
+import { MONTH_LABEL_RECOMPOSE, STALE_RETRY, SWIPE_ANIM } from '../config/settles'
+import { ELEMENT_PRESENT, SURFACE_DISMISS } from '../config/timeouts'
 
 export class DaftarPage extends BasePage {
   constructor() {
@@ -57,7 +59,7 @@ export class DaftarPage extends BasePage {
       // the click returns the old value, and re-clicking on it steps two
       // months. Settle first, then let a failed read surface instead of
       // masking it as "unchanged".
-      await driver.pause(300)
+      await driver.pause(MONTH_LABEL_RECOMPOSE)
       const after = parseMonthLabel(await this.monthLabel())
       if (after.monthIndex === target.monthIndex && after.year === target.year) return
       // Only retry the still-showing-old-month case (the silent no-op). A
@@ -104,7 +106,7 @@ export class DaftarPage extends BasePage {
         await scrollToTagMatches(tagPattern).click()
         return
       } catch {
-        await driver.pause(500)
+        await driver.pause(STALE_RETRY)
       }
     }
     throw new Error(`Row action ${tagPattern} could not be clicked`)
@@ -140,7 +142,7 @@ export class DaftarPage extends BasePage {
         // retry's catch, not escaped past it.
         return await extractChildTexts(row)
       } catch {
-        await driver.pause(500)
+        await driver.pause(STALE_RETRY)
       }
     }
     throw new Error(`Row texts for "${snippet}" could not be read`)
@@ -197,9 +199,9 @@ export class DaftarPage extends BasePage {
 
   /** Confirms the open delete sheet ("Hapus transaksi?") and waits for it to close. */
   async confirmDeleteSheet(): Promise<void> {
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: 10_000 })
+    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: ELEMENT_PRESENT })
     await byTag(tags.component.sheetConfirm).click()
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ reverse: true, timeout: 10_000 })
+    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS })
   }
 
   /**
@@ -228,6 +230,6 @@ export class DaftarPage extends BasePage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
 }

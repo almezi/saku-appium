@@ -5,6 +5,8 @@ import { accounts, type TransactionType } from '../config/categories'
 import { categoryLabels } from '../config/category-labels'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
+import { SHEET_CLOSE_SETTLE } from '../config/settles'
+import { COMPOSITION_WAIT, ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK } from '../config/timeouts'
 
 export interface TransactionFormInput {
   type?: TransactionType
@@ -82,7 +84,7 @@ export class TambahPage extends BasePage {
      }
 
      const pager = byTag(tags.tambah.categoryPager)
-     await pager.waitForExist({ timeout: 15_000 })
+     await pager.waitForExist({ timeout: COMPOSITION_WAIT })
      await pager.click()
 
      // UiScrollable finds the row whether it's already visible or below the
@@ -91,13 +93,13 @@ export class TambahPage extends BasePage {
        `android=new UiScrollable(new UiSelector().scrollable(true))` +
          `.scrollIntoView(new UiSelector().text("${label}"))`,
      )
-     await item.waitForDisplayed({ timeout: 10_000 })
+     await item.waitForDisplayed({ timeout: ELEMENT_PRESENT })
      await item.click()
 
      // The sheet closes on selection. The label text also renders in the form's
      // category pager afterwards, so a reverse-wait on the text node is
      // unreliable — a short settle pause lets the dismiss animation finish.
-     await driver.pause(500)
+     await driver.pause(SHEET_CLOSE_SETTLE)
    }
 
   async selectAccount(accountId: string): Promise<void> {
@@ -121,7 +123,7 @@ export class TambahPage extends BasePage {
       year: 'numeric',
     }).format(date)
     await byTag(tags.tambah.selectDate).click()
-    await byTag(tags.tambah.datePicker).waitForDisplayed({ timeout: 10_000 })
+    await byTag(tags.tambah.datePicker).waitForDisplayed({ timeout: ELEMENT_PRESENT })
     const cell = $(`android=new UiSelector().textContains("${label}")`)
     // The wanted month is already open for near-today dates; step back a
     // month at most (covers yesterday on the 1st) via the picker's prev arrow.
@@ -131,7 +133,7 @@ export class TambahPage extends BasePage {
       )
       await prev.click()
     }
-    await cell.waitForDisplayed({ timeout: 5_000 })
+    await cell.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK })
     await cell.click()
     await byTag(tags.tambah.datePickerOk).click()
     await byTag(tags.tambah.datePicker).waitForDisplayed({ reverse: true })
@@ -155,7 +157,7 @@ export class TambahPage extends BasePage {
   /** Saves and waits for the confirmation toast (the app stays on Tambah). */
   async save(): Promise<void> {
     await this.saveButton.click()
-    await byTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 })
+    await byTag(tags.component.toast).waitForDisplayed({ timeout: ELEMENT_PRESENT })
   }
 
   async getAmountText(): Promise<string> {

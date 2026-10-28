@@ -9,6 +9,7 @@ import {
   formatRp,
   formatSavingsRate,
 } from '../../helpers/money'
+import { APP_COLD_START } from '../../config/timeouts'
 
 const EXPENSE = 50_000
 const SALARY = 200_000
@@ -21,7 +22,7 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
   const ringkasan = new RingkasanPage()
 
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
     // Expense first: the income-0 savings state (TC-SUM-05) is only
     // reachable before any income exists.
     await createTransaction({

@@ -1,6 +1,7 @@
 import { iosByTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import type { ChainablePromiseElement } from '../types'
+import { SCREEN_READY_IOS } from '../config/timeouts'
 
 /**
  * iOS twin of BasePage: same screen-wait contract, resolved with iosByTag
@@ -18,7 +19,7 @@ export class BaseIosPage {
     return iosByTag(this.screenTag)
   }
 
-  async waitForScreen(timeout = 30_000): Promise<void> {
+  async waitForScreen(timeout = SCREEN_READY_IOS): Promise<void> {
     await this.screen.waitForDisplayed({ timeout })
   }
 

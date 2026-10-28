@@ -10,6 +10,7 @@ import { createTransaction } from '../../helpers/transactions'
 import { TambahPage } from '../../pageobjects/tambah.page'
 import { DaftarPage } from '../../pageobjects/daftar.page'
 import { RingkasanPage } from '../../pageobjects/ringkasan.page'
+import { APPEARANCE_SETTLE_ANDROID, BACKGROUND_RESUME, ORIENTATION_SETTLE, SCROLL_SETTLE, TEXT_SIZE_SETTLE_ANDROID } from '../../config/settles'
 
 const UDID = process.env.ANDROID_UDID ?? 'emulator-5554'
 const adb = (cmd: string) => execSync(`adb -s ${UDID} shell ${cmd}`)
@@ -52,11 +53,11 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
       note: 'rotasi',
     })
     await driver.setOrientation('LANDSCAPE')
-    await driver.pause(1_000)
+    await driver.pause(ORIENTATION_SETTLE)
     expect(await tambah.getAmountText()).toBe('Rp 12.000')
     await expect(tambah.screen).toBeDisplayed()
     await driver.setOrientation('PORTRAIT')
-    await driver.pause(1_000)
+    await driver.pause(ORIENTATION_SETTLE)
     expect(await tambah.getAmountText()).toBe('Rp 12.000')
     expect(await tambah.getNoteText()).toBe('rotasi')
   })
@@ -72,13 +73,13 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     }
     await daftar.open()
     await swipeUp()
-    await driver.pause(500)
+    await driver.pause(SCROLL_SETTLE)
     const before = (await daftar.rowAmountTextsInOrder())[0]
     await driver.setOrientation('LANDSCAPE')
-    await driver.pause(1_000)
+    await driver.pause(ORIENTATION_SETTLE)
     await expect(daftar.screen).toBeDisplayed()
     await driver.setOrientation('PORTRAIT')
-    await driver.pause(1_000)
+    await driver.pause(ORIENTATION_SETTLE)
     const after = (await daftar.rowAmountTextsInOrder())[0]
     expect(after).toBe(before)
   })
@@ -87,23 +88,23 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
     await ringkasan.open()
     const balance = await ringkasan.balanceValue()
     await driver.setOrientation('LANDSCAPE')
-    await driver.pause(1_000)
+    await driver.pause(ORIENTATION_SETTLE)
     await expect(ringkasan.screen).toBeDisplayed()
     expect(await ringkasan.balanceValue()).toBe(balance)
     await driver.setOrientation('PORTRAIT')
-    await driver.pause(1_000)
+    await driver.pause(ORIENTATION_SETTLE)
   })
 
   it('TC-ROT-04 dark mode keeps the summary and form readable @regression', async () => {
     adb('cmd uimode night yes')
-    await driver.pause(1_500)
+    await driver.pause(APPEARANCE_SETTLE_ANDROID)
     await ringkasan.open()
     await expect(ringkasan.screen).toBeDisplayed()
     expect(await ringkasan.balanceText()).toMatch(/^Rp/)
     await tambah.open()
     expect(await tambah.isSaveEnabled()).toBe(false)
     adb('cmd uimode night no')
-    await driver.pause(1_500)
+    await driver.pause(APPEARANCE_SETTLE_ANDROID)
   })
 
   it('TC-ROT-05 backgrounding and resuming keeps the unsaved form intact @regression', async () => {
@@ -113,13 +114,13 @@ describe('TC-ROT — rotation & config change (Phase 3.D) @regression', () => {
       categoryId: categories.income.salary,
     })
     await driver.background(6)
-    await driver.pause(1_000)
+    await driver.pause(BACKGROUND_RESUME)
     expect(await tambah.getAmountText()).toBe('Rp 9.911')
   })
 
   it('TC-ROT-06 200% font scale renders the form without clipped fields @regression', async () => {
     adb('settings put system font_scale 2.0')
-    await driver.pause(2_000)
+    await driver.pause(TEXT_SIZE_SETTLE_ANDROID)
     await tambah.open()
     expect(await tambah.getAmountText()).toBe('Rp 0')
     await expect(tambah.screen).toBeDisplayed()

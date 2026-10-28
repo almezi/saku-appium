@@ -3,6 +3,8 @@ import { barFillRatio, extractChildTexts, readAmount } from '../helpers/elements
 import { formatMonthYear, parseMonthLabel, shiftMonthYear } from '../helpers/months'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
+import { MONTH_LABEL_RECOMPOSE, STALE_RETRY, SWIPE_ANIM } from '../config/settles'
+import { ELEMENT_PRESENT } from '../config/timeouts'
 
 /** Non-empty text attributes of the subtree under the node with `resourceId`. */
 function childTextsFromSource(xml: string, resourceId: string): string[] {
@@ -142,7 +144,7 @@ export class RingkasanPage extends BasePage {
         // UiScrollable can resolve a ghost reference when the row never
         // composes — confirm existence for a clear failure instead of an
         // opaque child-enumeration error.
-        await item.waitForExist({ timeout: 10_000 })
+        await item.waitForExist({ timeout: ELEMENT_PRESENT })
         // WDIO v9 types the `$$` chainable's `length` as Promise<number>;
         // spread the awaited result into a real array before indexing.
         const viewList = [
@@ -158,7 +160,7 @@ export class RingkasanPage extends BasePage {
       } catch {
         // Stale element or mid-recompose ghost — back off before the fresh
         // re-query (same error-path pause as DaftarPage.tapRowAction).
-        await driver.pause(500)
+        await driver.pause(STALE_RETRY)
       }
     }
     throw new Error(`Breakdown item ${categoryId} has no measurable bar views`)
@@ -188,7 +190,7 @@ export class RingkasanPage extends BasePage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
 
   /**
@@ -225,7 +227,7 @@ export class RingkasanPage extends BasePage {
       // the click returns the old value, and re-clicking on it steps two
       // months. Settle first, then let a failed read surface instead of
       // masking it as "unchanged".
-      await driver.pause(300)
+      await driver.pause(MONTH_LABEL_RECOMPOSE)
       const after = parseMonthLabel(await this.monthLabel())
       if (after.monthIndex === target.monthIndex && after.year === target.year) return
       // Only retry the still-showing-old-month case (the silent no-op). A

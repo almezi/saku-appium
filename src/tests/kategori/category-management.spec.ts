@@ -6,6 +6,7 @@ import { TambahPage } from '../../pageobjects/tambah.page'
 import { RingkasanPage } from '../../pageobjects/ringkasan.page'
 import { KategoriPage } from '../../pageobjects/kategori.page'
 import { typeIntoTaggedField } from '../../helpers/input'
+import { APP_COLD_START, ELEMENT_PRESENT } from '../../config/timeouts'
 
 /**
  * TC-KAT — Kelola kategori: defaults, search, rename, hide (Phase 2).
@@ -37,7 +38,7 @@ describe('TC-KAT — category management (Phase 2) @regression', () => {
   const kategori = new KategoriPage()
 
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
     // Un-hides Ringkasan's Kelola button on an otherwise empty month (see
     // the file comment); the category screens under test never read it.
     await createTransaction({
@@ -94,7 +95,7 @@ describe('TC-KAT — category management (Phase 2) @regression', () => {
     expect(before).toBeGreaterThan(1)
     // "gaj" matches only "Gaji" (income tab, case-insensitive).
     await kategori.search('gaj')
-    await expect(kategori.row(categories.income.salary)).toBeDisplayed({ wait: 10_000 })
+    await expect(kategori.row(categories.income.salary)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     const after = await kategori.categoryRowCount()
     expect(after).toBe(1)
     expect(await kategori.row(categories.income.freelance).isExisting()).toBe(false)
@@ -169,7 +170,7 @@ describe('TC-KAT — category management (Phase 2) @regression', () => {
     await kategori.tapBack()
     await tambah.open()
     await byTag(tags.tambah.categoryPager).click()
-    await expect(byTag(tags.tambah.categorySheetRoot)).toBeDisplayed({ wait: 10_000 })
+    await expect(byTag(tags.tambah.categorySheetRoot)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     expect(
       await byTag(tags.tambah.categoryItem(categories.income.gift)).isExisting(),
     ).toBe(false)

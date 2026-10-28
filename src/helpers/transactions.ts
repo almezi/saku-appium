@@ -2,6 +2,7 @@ import { byTag } from './locators'
 import { tags } from '../config/tags'
 import { TambahPage, type TransactionFormInput } from '../pageobjects/tambah.page'
 import { TambahIosPage } from '../pageobjects/tambah.ios.page'
+import { ELEMENT_PRESENT_QUICK } from '../config/timeouts'
 
 /**
  * UI-driven data setup: creates a transaction through the Tambah form.
@@ -32,6 +33,6 @@ export function uniqueNote(prefix: string): string {
 /** Waits for the undo toast action ("Urungkan") and taps it. */
 export async function tapUndoAction(): Promise<void> {
   const action = byTag(tags.component.toastAction)
-  await action.waitForDisplayed({ timeout: 5_000 })
+  await action.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK })
   await action.click()
 }

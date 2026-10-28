@@ -1,18 +1,48 @@
-import { $$ } from '@wdio/globals'
 import { iosByTag } from '../helpers/locators'
-import { iosAmountText, iosReadAmount } from '../helpers/elements'
+import {
+  iosAmountText,
+  iosExtractChildTexts,
+  iosPageNodes,
+  iosReadAmount,
+  iosStaticTexts,
+  iosTextsInside,
+  iosTextsInRect,
+} from '../helpers/elements'
+import { formatMonthYear, parseMonthLabel, shiftMonthYear } from '../helpers/months'
 import { tags } from '../config/tags'
+import type { ChainablePromiseElement } from '../types'
 import { BaseIosPage } from './base.ios.page'
+import { MONTH_LABEL_RECOMPOSE, SWIPE_ANIM } from '../config/settles'
 
 /**
- * Ringkasan (summary) on iOS — accessibility-id twin of RingkasanPage,
- * kept to the pieces the TC-INC/TC-EXP port needs.
+ * Ringkasan (summary) on iOS — accessibility-id twin of RingkasanPage. The
+ * public method surface matches the Android page one-to-one, so a Ringkasan
+ * spec reads the same on both platforms.
  *
  * breakdownItemTexts ports the Android page-source-dump trick: deep
  * LazyColumn rows stale between find and read, so the row's texts are parsed
  * from one atomic `getPageSource()` XML. The iOS dump labels the same texts
  * differently — identifiers on the `name` attribute, rendered strings on
  * `label` — so the slice-and-extract keys off those.
+ *
+ * Two reads keep their iOS mechanics rather than the Android ones, because
+ * the Android mechanics do not exist on this platform:
+ *  - container text reads (`comparisonTexts`, `emptyStateTexts`) go through
+ *    the page-source frame, not a child query: Compose hoists a tagged
+ *    container's strings OUT of the container node on iOS, so the node is an
+ *    empty `Other` and its texts are siblings (BUG_Found_13.md) — the same
+ *    reason `anggaran.ios.page.ts` and `daftar.ios.page.ts` read by geometry;
+ *  - `breakdownBarRatio` cannot be the Android fill/container measurement:
+ *    the iOS bar is a drawing-only node with no accessibility fill (measured
+ *    for the Anggaran bars, see `anggaran.ios.page.ts` `barWidth`). The share
+ *    is instead taken from the row's rendered percentage text, so the method
+ *    keeps the Android contract (0…1 fraction) — at the precision the label
+ *    is rounded to.
+ *
+ * Not exercised on a simulator yet (IOS_PHASE1_HANDOFF.md §1.E): the
+ * month-switcher, comparison-card and empty-state reads below are ports of
+ * proven iOS mechanics from sibling page objects, not live-verified
+ * Ringkasan observations.
  */
 export class RingkasanIosPage extends BaseIosPage {
   constructor() {
@@ -42,6 +72,32 @@ export class RingkasanIosPage extends BaseIosPage {
   }
 
   /**
+   * Raw savings-rate text as rendered ("37,5%", "—" when income is 0). The
+   * digit-free "—" is the point: `iosAmountText` throws on it, so this reads
+   * the node's rendered text through the same candidate order without
+   * filtering for digits.
+   */
+  async savingsText(): Promise<string> {
+    return iosRenderedText(iosByTag(tags.ringkasan.savingsValue))
+  }
+
+  async monthLabel(): Promise<string> {
+    return iosByTag(tags.ringkasan.monthLabel).getText()
+  }
+
+  // Click-wait audit, same verdict as the Android twins: the button belongs
+  // to the Ringkasan screen this page is already on (open() ends in
+  // waitForScreen), and the WDIO command auto-wait bridges post-transition
+  // composition lag. Arrival on the target screen is asserted by the caller.
+  async openAnggaran(): Promise<void> {
+    await iosByTag(tags.ringkasan.anggaranButton).click()
+  }
+
+  async openKelolaKategori(): Promise<void> {
+    await iosByTag(tags.ringkasan.kelolaButton).click()
+  }
+
+  /**
    * Rendered texts of a breakdown category row — name, percentage and
    * formatted amount (e.g. ["Makanan & Minuman", "100%", "Rp 75.000"]).
    * Slices the page source from the row's `name="<tag>"` to the next
@@ -62,6 +118,59 @@ export class RingkasanIosPage extends BaseIosPage {
     throw new Error(`Breakdown item ${categoryId} not found in the iOS page source`)
   }
 
+  /**
+   * The category share as a 0…1 fraction, read from the row's rendered
+   * percentage text instead of bar geometry — see the class note on why the
+   * Android fill/container measurement has no iOS counterpart.
+   *
+   * @param categoryId Category id of the row's test tag — see
+   * tags.ringkasan.categoryItem.
+   */
+  async breakdownBarRatio(categoryId: string): Promise<number> {
+    const texts = await this.breakdownItemTexts(categoryId)
+    const percent = texts.find((text) => /^\d+%$/.test(text))
+    if (!percent) {
+      throw new Error(
+        `Breakdown item ${categoryId} renders no percentage text: ${JSON.stringify(texts)}`,
+      )
+    }
+    return Number.parseInt(percent, 10) / 100
+  }
+
+  /**
+   * Rendered texts of the "Pemasukan vs pengeluaran" comparison card.
+   * Scrolling stands in for Android's `scrollToTag` (no UiScrollable on iOS):
+   * the card can sit below the fold and is then not composed yet.
+   */
+  async comparisonTexts(): Promise<string[]> {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const texts = await this.textsInsideTag(tags.ringkasan.comparison)
+      if (texts.length > 0) return texts
+      await this.scrollContentDown()
+    }
+    return []
+  }
+
+  /**
+   * Child texts of the empty state (title, hint, action label), read without
+   * scrolling — same reasoning as Android: the empty state replaces the whole
+   * content area, so it always sits on screen.
+   */
+  async emptyStateTexts(): Promise<string[]> {
+    return this.textsInsideTag(tags.ringkasan.emptyState)
+  }
+
+  /**
+   * Labels rendered inside the frame of the node tagged `tag`, from ONE page
+   * source dump. Returns [] when the node has not composed yet.
+   */
+  private async textsInsideTag(tag: string): Promise<string[]> {
+    const nodes = await iosPageNodes()
+    const host = nodes.find((node) => node.name === tag)
+    if (!host) return []
+    return iosTextsInRect(host, iosStaticTexts(nodes))
+  }
+
   /** One swipe upward over the summary content (same mechanics as Android). */
   async scrollContentDown(): Promise<void> {
     const { width, height } = await driver.getWindowSize()
@@ -80,8 +189,76 @@ export class RingkasanIosPage extends BaseIosPage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
+
+  /**
+   * Swipes to the bottom of the summary list so the expense-breakdown rows
+   * (the last section) compose before they are read — the iOS twin of the
+   * Android `scrollToBottom`, with swipes standing in for UiScrollable.
+   */
+  async scrollToBottom(): Promise<void> {
+    for (let i = 0; i < 3; i++) {
+      await this.scrollContentDown()
+    }
+  }
+
+  /**
+   * Month switching with a verify-retry — the iOS twin of the Android
+   * `switchMonth`, kept identical including the R1 guard: the switch is
+   * verified against the PARSED target (month, year), so a click that
+   * double-registered fails loudly instead of passing on "label changed".
+   */
+  private async switchMonth(arrow: string, direction: 'prev' | 'next'): Promise<void> {
+    const before = await this.monthLabel()
+    const start = parseMonthLabel(before)
+    const target = shiftMonthYear(start, direction)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await iosByTag(arrow).click()
+      // Recomposition is not instantaneous: a label read immediately after the
+      // click returns the old value, and re-clicking on it steps two months.
+      await driver.pause(MONTH_LABEL_RECOMPOSE)
+      const after = parseMonthLabel(await this.monthLabel())
+      if (after.monthIndex === target.monthIndex && after.year === target.year) return
+      if (after.monthIndex !== start.monthIndex || after.year !== start.year) {
+        throw new Error(
+          `Month switch via ${arrow} landed on "${formatMonthYear(after)}" instead of "${formatMonthYear(target)}"`,
+        )
+      }
+    }
+    throw new Error(
+      `Month switch via ${arrow} did not reach ${formatMonthYear(target)} from "${before}"`,
+    )
+  }
+
+  async prevMonth(): Promise<void> {
+    await this.switchMonth(tags.ringkasan.monthPrev, 'prev')
+  }
+
+  async nextMonth(): Promise<void> {
+    await this.switchMonth(tags.ringkasan.monthNext, 'next')
+  }
+}
+
+/**
+ * Rendered text of an iOS tagged node without requiring digits ("" when the
+ * node renders nothing). The candidate order is the one `iosAmountText`
+ * documents — the tag usually lands on an accessible=false wrapper whose own
+ * getText() is empty, the string sits on `value`/`label`, and Compose can
+ * hoist it to a sibling inside the node's frame.
+ */
+async function iosRenderedText(el: ChainablePromiseElement): Promise<string> {
+  const own = ((await el.getText().catch(() => '')) || '').trim()
+  if (own) return own
+  for (const attr of ['value', 'label'] as const) {
+    const value = ((await el.getAttribute(attr).catch(() => '')) || '').trim()
+    if (value) return value
+  }
+  const children = await iosExtractChildTexts(el)
+  const child = children[0]
+  if (child) return child
+  const inside = await iosTextsInside(el)
+  return inside[0] ?? ''
 }
 
 /**

@@ -6,6 +6,7 @@ import { categories } from '../../config/categories'
 import { createTransactionIos, uniqueNote } from '../../helpers/transactions'
 import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
 import { CadanganIosPage } from '../../pageobjects/cadangan.ios.page'
+import { APP_COLD_START_IOS, ELEMENT_PRESENT } from '../../config/timeouts'
 
 /**
  * TC-BACKUP on iOS — 1:1 port of backup.spec.ts (the Android spec is the
@@ -80,7 +81,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
   const cadangan = new CadanganIosPage()
 
   before(async () => {
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START_IOS })
     // Seed one income so the status card reports "1 transaksi" and the export
     // files have a known single row to assert on.
     await createTransactionIos({
@@ -155,7 +156,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     // Remove the seed to reach the empty state.
     await daftar.tapDelete(categories.income.salary)
     await daftar.confirmDeleteSheet()
-    await expect(iosByTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
+    await expect(iosByTag(tags.daftar.emptyState)).toBeDisplayed({ wait: ELEMENT_PRESENT })
 
     // The empty list has no `daftar_backup_button`; its empty state carries the
     // same onOpenBackup action on the secondary button.

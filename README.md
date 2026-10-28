@@ -53,9 +53,45 @@ XCUITest driver — `npm run test:ios` starts its own Appium server. Per-spec iO
 shortcuts exist for `list`, `edit`, `backup`, `val`, `amt`, `pers`, `rot`, `perf`,
 `a11y`, `anggaran`, `kategori`, and `navigasi`.
 
-**`wdio.ios.conf.ts` is not covered by `tsc --noEmit`** — `tsconfig.json` includes only
-`src/**/*.ts` and `wdio.conf.ts`. Run `npm run typecheck` with that file added before
-trusting the iOS config. See `code_review.md` finding **S1**.
+`wdio.ios.conf.ts` **is** covered by `npm run typecheck` — `tsconfig.json` includes
+`src/**/*.ts`, `wdio.conf.ts` and `wdio.ios.conf.ts`. (The `code_review.md` finding **S1** gap
+that used to exclude it is closed.)
+
+### Twin parity gate
+
+The suite keeps every screen twice — `X.page.ts` / `X.ios.page.ts`, `name.spec.ts` /
+`name.ios.spec.ts` — and that pairing drifts silently when only one side is edited.
+`npm run check:parity` needs no device and fails on:
+
+| Check | Catches |
+|---|---|
+| Public method surface of each page-object twin | a screen API added on one platform only (**M1/M2**) |
+| One `TC-<AREA>-<NN>` id → one case, per platform | a defect report that cannot name the failed case (**M4**) |
+| Spec twins share a common id set, and never an *empty* one | `TC-BUD` vs `TC-BUDGET` (**M3**) |
+| Every `X.spec.ts` has a `.ios.spec.ts` | a flow that exists on Android only |
+
+Explained drift is recorded in [`scripts/parity-baseline.json`](scripts/parity-baseline.json)
+with a `reason` and a **ratchet**: a new gap fails, and a gap closed while still listed also
+fails. After a deliberate twin change, re-baseline with
+`npm run check:parity -- --update` and justify the new entries. `AGENTS.md` → *The parity gate*
+covers the parser's limitations.
+
+### Timing constants
+
+No call site writes a number for time. Two config modules hold them, split by what the number
+*does* (`code_review.md` findings **M5**/**M6**):
+
+| Module | Holds | Examples |
+|---|---|---|
+| [`src/config/timeouts.ts`](src/config/timeouts.ts) | wait **deadlines** — the ceiling on a `waitFor…` / `toBe…({ wait })` | `SCREEN_READY` 15 s, `SCREEN_READY_IOS` 30 s, `ELEMENT_PRESENT` 10 s, `COMPOSITION_WAIT`, `SYSTEM_SHEET`, `DEFAULT_TIMEOUT` (= the runner configs' `waitforTimeout`) |
+| [`src/config/settles.ts`](src/config/settles.ts) | **sleeps** — `driver.pause()`, which costs the full duration every run | `STALE_RETRY`, `SWIPE_ANIM`, `MONTH_LABEL_RECOMPOSE`, `UNDO_TOAST_EXPIRY`, `ORIENTATION_SETTLE` |
+
+`npm run test:unit` enforces it (`src/config/__tests__/timing-literals.test.ts`, TypeScript AST):
+an inline numeric `timeout:`/`wait:`/`interval:`, a numeric `timeout =` default parameter or a
+numeric `pause(N)` under `src/` fails the build, and so does a constant nothing waits on. Pick a
+name by **intent**, never because the number matches; a `_QUICK`/`_SLOW` twin is a recorded
+inconsistency for **S9** to re-tune, not a menu. `AGENTS.md` → *Wait budgets and settle pauses*
+is the full contract.
 
 ### Test types
 
@@ -74,7 +110,7 @@ it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => { … })
 | `@integration` | Cases that span screens or flows at once (a delete must move the list, the summary AND the breakdown) | `src/tests/transaksi/delete-undo.spec.ts` |
 
 All the cases in a file share one type, so a file is never half-in and half-out of a
-filtered run. Today that is 262 cases: 16 `@sanity`, 237 `@regression`, 9 `@integration`.
+filtered run. Today that is 263 cases: 16 `@sanity`, 238 `@regression`, 9 `@integration`.
 
 Run one type on either platform — the scripts set `TEST_GREP`, which both runner configs
 pass to mocha's `grep`:
@@ -146,20 +182,22 @@ src/tests/tambah/add-income.spec.ts ←→  src/tests/tambah/add-income.ios.spec
 ```
 
 The two halves are **independent implementations**, not generated from a shared base.
-They are expected to expose the same public method surface, but today they have drifted
-(see `code_review.md` § Maintainability, findings M1–M4). When you add a screen
-method, add it to **both** twins.
+They are expected to expose the same public method surface, and `npm run check:parity` fails
+the run when they drift (residual, explained drift is itemised in
+`scripts/parity-baseline.json` — the worst remaining is `kategori`, finding **M13**). When you
+add a screen method, add it to **both** twins.
 
-Current scale: **30 spec files** (16 Android + 14 iOS), **254 test cases**
-(137 Android + 117 iOS) plus 8 `it.skip` cases — **262 cases in all**, every one of them
-type-tagged — **16 page objects** (8 screens × 2 platforms), **148 unique
-test-case IDs** across 19 prefixes, **6 helper modules** (+ 3 unit-test files under
-`src/helpers/__tests__/` and `src/config/__tests__/`), and **4 config modules**.
+Current scale (measured 2026-10-28): **30 spec files** (16 Android + 14 iOS), **263 test
+cases** (141 Android + 122 iOS), 8 of them `it.skip`, every one type-tagged — **16 page
+objects** (7 screen twins + the Android/iOS base classes), **142 unique test-case IDs** across
+17 prefixes, **7 helper modules**, and **6 config modules** (`tags`, `categories`,
+`category-labels`, `test-types`, `timeouts`, `settles`). Four unit-test files under
+`src/helpers/__tests__/` and `src/config/__tests__/` guard the tree itself.
 
 ### Notes
 
 - Test data setup goes through the real UI (`createTransaction` helper). The `test_seed` / `test_now` intent extras in TESTABILITY.md are not implemented in the app yet; seed-based specs (TC-SEED) wait on that.
-- Execution status per sub-phase lives in `progress.md`. Known issues are filed as `BUG_FOUND.md` … `BUG_Found_14.md`; see `code_review.md` for the current state of each.
+- Execution status per sub-phase lives in `progress.md`. Known issues are filed as `BUG_FOUND.md` … `BUG_Found_18.md` (index: `BUGS.md`); see `code_review.md` for the current state of each.
 - **Two Android specs have no iOS twin**: `transaksi/delete-undo.spec.ts` (destructive flow) and `transaksi/backup.spec.ts` has one but with different case coverage (`TC-BUDGET` vs `TC-BUD` prefix divergence — see M3).
 
 ## Generated test cases
@@ -306,6 +344,6 @@ Now you can use the Appium MCP tools to drive the simulator:
 | `pr_review.md` | Review of PR #3 (historical) | Looking back at that PR |
 | `IOS_PHASE1_HANDOFF.md` | iOS Phase 1 port handoff notes | Continuing the iOS port |
 | `BUGS.md` | Index of all 14 filed defects (newest last) | A test fails and you need precedent |
-| `BUG_FOUND.md` … `BUG_Found_14.md` | The 14 bug reports themselves | Full reproduction steps for one defect |
+| `BUG_FOUND.md` … `BUG_Found_18.md` | The 18 bug reports themselves | Full reproduction steps for one defect |
 | `docs/` | Product/design/development docs (see `docs/README.md`) | Understanding the app itself |
 | `improve/` | Design package — design system and screen specs | Doing UI work |

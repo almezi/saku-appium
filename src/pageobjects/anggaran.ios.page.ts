@@ -4,6 +4,8 @@ import { tags } from '../config/tags'
 import { anggaranTags } from './anggaran.page'
 import { BaseIosPage } from './base.ios.page'
 import type { ChainablePromiseElement } from '../types'
+import { SHEET_CLOSE_SETTLE_QUICK, STALE_RETRY_QUICK, SWIPE_ANIM } from '../config/settles'
+import { COMPOSITION_WAIT, ELEMENT_PRESENT, SCREEN_READY, SURFACE_DISMISS } from '../config/timeouts'
 
 type Rect = { x: number; y: number; width: number; height: number }
 
@@ -89,7 +91,7 @@ export class AnggaranIosPage extends BaseIosPage {
   /** Opens the shared budget form ("Anggaran baru" / "Ubah anggaran"). */
   async openForm(): Promise<void> {
     await this.addButton.click()
-    await this.formScreen.waitForDisplayed({ timeout: 15_000 })
+    await this.formScreen.waitForDisplayed({ timeout: SCREEN_READY })
   }
 
   async isFormDisplayed(): Promise<boolean> {
@@ -109,7 +111,7 @@ export class AnggaranIosPage extends BaseIosPage {
   async selectFormCategory(categoryId: string): Promise<void> {
     await this.formCategory.click()
     const sheet = iosByTag(anggaranTags.formCategorySheet)
-    await sheet.waitForExist({ timeout: 15_000 })
+    await sheet.waitForExist({ timeout: COMPOSITION_WAIT })
     await iosByTag(anggaranTags.formCategoryOption(categoryId)).click()
     await this.waitForSheetClosed(anggaranTags.formCategorySheet)
   }
@@ -127,20 +129,20 @@ export class AnggaranIosPage extends BaseIosPage {
   /** "Simpan anggaran"; waits for the form to close back onto Anggaran. */
   async saveForm(): Promise<void> {
     await this.formSave.click()
-    await this.formScreen.waitForExist({ timeout: 15_000, reverse: true })
+    await this.formScreen.waitForExist({ timeout: SCREEN_READY, reverse: true })
     await this.waitForScreen()
   }
 
   /** "Ubah" on the budget row for `categoryId`. */
   async tapRowEdit(categoryId: string): Promise<void> {
     await iosByTag(anggaranTags.rowEdit(categoryId)).click()
-    await this.formScreen.waitForDisplayed({ timeout: 15_000 })
+    await this.formScreen.waitForDisplayed({ timeout: SCREEN_READY })
   }
 
   /** Row "Hapus": opens the screen-level confirmation sheet. */
   async tapRowDelete(categoryId: string): Promise<void> {
     await iosByTag(anggaranTags.rowDelete(categoryId)).click()
-    await iosByTag(anggaranTags.screenDeleteSheet).waitForExist({ timeout: 15_000 })
+    await iosByTag(anggaranTags.screenDeleteSheet).waitForExist({ timeout: COMPOSITION_WAIT })
   }
 
   async isDeleteSheetDisplayed(): Promise<boolean> {
@@ -156,10 +158,10 @@ export class AnggaranIosPage extends BaseIosPage {
   async deleteFromForm(): Promise<void> {
     await this.formDelete.click()
     const sheet = iosByTag(anggaranTags.deleteSheet)
-    await sheet.waitForExist({ timeout: 15_000 })
+    await sheet.waitForExist({ timeout: COMPOSITION_WAIT })
     await iosByTag(tags.component.sheetConfirm).click()
     await this.waitForSheetClosed(anggaranTags.deleteSheet)
-    await this.formScreen.waitForExist({ timeout: 15_000, reverse: true })
+    await this.formScreen.waitForExist({ timeout: SCREEN_READY, reverse: true })
     await this.waitForScreen()
   }
 
@@ -179,7 +181,7 @@ export class AnggaranIosPage extends BaseIosPage {
     const row = this.row(categoryId)
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await row.waitForExist({ timeout: 10_000 })
+        await row.waitForExist({ timeout: ELEMENT_PRESENT })
         const texts = await this.textsInside(await this.rectOf(row))
         if (texts.length > 0) return texts.join(' ')
       } catch {
@@ -192,7 +194,7 @@ export class AnggaranIosPage extends BaseIosPage {
 
   /** Texts of the total card: label, spent amount, "Rp X dari Rp Y". */
   async totalCardTexts(): Promise<string[]> {
-    await this.totalCard.waitForExist({ timeout: 10_000 })
+    await this.totalCard.waitForExist({ timeout: ELEMENT_PRESENT })
     return this.textsInside(await this.rectOf(this.totalCard))
   }
 
@@ -235,7 +237,7 @@ export class AnggaranIosPage extends BaseIosPage {
     const host = iosByTag(tag)
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await host.waitForExist({ timeout: 10_000 })
+        await host.waitForExist({ timeout: ELEMENT_PRESENT })
         const rect = await this.rectOf(host)
         const nodes = await $$('-ios predicate string: type == "XCUIElementTypeOther"')
         let widest = 0
@@ -250,7 +252,7 @@ export class AnggaranIosPage extends BaseIosPage {
       } catch {
         // Stale handle — retry on a fresh query.
       }
-      await driver.pause(300)
+      await driver.pause(STALE_RETRY_QUICK)
     }
     throw new Error(`No measurable progress-bar node under "${tag}"`)
   }
@@ -276,8 +278,8 @@ export class AnggaranIosPage extends BaseIosPage {
 
   /** A settle pause lets the dismiss animation start before the reverse wait. */
   private async waitForSheetClosed(rootTag: string): Promise<void> {
-    await driver.pause(400)
-    await iosByTag(rootTag).waitForExist({ timeout: 10_000, reverse: true })
+    await driver.pause(SHEET_CLOSE_SETTLE_QUICK)
+    await iosByTag(rootTag).waitForExist({ timeout: SURFACE_DISMISS, reverse: true })
   }
 
   private async scrollContentUp(): Promise<void> {
@@ -297,6 +299,6 @@ export class AnggaranIosPage extends BaseIosPage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
 }

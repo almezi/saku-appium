@@ -46,8 +46,8 @@ lists what still needs a device to close.
 | Lint / format automation | 🔴 **absent** — conventions live only in prose |
 | Dependency posture | 🟠 **drifted** — 33 advisories (7 critical) vs 2 accepted |
 | CI gate | 🔴 **absent** — all verification is manual |
-| Typecheck coverage | 🟠 `wdio.ios.conf.ts` excluded from `tsc` |
-| Spec ↔ iOS parity | 🟠 2 Android specs have no iOS twin |
+| Typecheck coverage | ✅ **closed** — `tsconfig.json` `include` lists `src/**/*.ts`, `wdio.conf.ts` **and** `wdio.ios.conf.ts` (**S1** fixed; `README.md`/`AGENTS.md` still claimed exclusion until 2026-10-28) |
+| Spec ↔ iOS parity | 🟠 2 Android specs have no iOS twin — **now machine-checked**: `npm run check:parity` (**M7**) |
 | Documentation currency | ✅ **refreshed 2026-10-27** — all 32 `.md` files fact-checked, 0 broken references (was: stale layout, missing iOS half, wrong counts, duplicated sections) |
 | Duplicate helpers | 🟠 3 copies of rect-containment, 2 of iOS amount extraction |
 | **Maintainability** | 🟠 **B** — strong bones, but **twins have drifted** and *bus factor = 1* |
@@ -65,9 +65,9 @@ questions. Measured across seven dimensions.
 |---|---|---|
 | Modularity & layering | **A** | 4 clean layers, acyclic import graph |
 | Coupling / fan-in | **A−** | `tags.ts` fan-in 46, fan-out 0 — the ideal shape |
-| Twin API consistency | **C** | **44 %–100 % method parity**, screen by screen |
-| Test-case identity | **C+** | `TC-BUD`/`TC-BUDGET` → **0 shared ids**; 1 id maps to 8 cases |
-| Magic-number discipline | **C** | **124 inline timeout literals**, 9 distinct values, 0 centralized |
+| Twin API consistency | ~~**C**~~ → **B** | *Was:* **44 %–100 % method parity**, screen by screen. **2026-10-28:** `ringkasan` (M2) and `cadangan` (M1) closed → five of seven screens now expose **every** Android name on iOS; the gaps are `kategori` 13/15 and `daftar` 17/19 shared, worst case `kategori` (**M13**, granularity not locators). **Enforced by `npm run check:parity`** (**M7**) — drift can no longer accumulate silently |
+| Test-case identity | ~~**C+**~~ → **A−** | *Was:* `TC-BUD`/`TC-BUDGET` → **0 shared ids**; 1 id mapped to 8 cases. **2026-10-28:** M3/M4/M11 fixed, **0 duplicate ids** across 259 id-bearing cases, every spec pair overlaps — and **M7** fails the build if either regresses |
+| Magic-number discipline | ~~**C**~~ → **A−** | *Was:* **124 inline timeout literals**, 9 distinct values, 0 centralized. **2026-10-28:** M5/M6 fixed — 128 budgets in `src/config/timeouts.ts`, 75 pauses in `src/config/settles.ts`, every number named and equal to the literal it replaced; **`npm run test:unit` rejects a new inline number.** Held back from A by the `_QUICK`/`_SLOW` twins it exposed: the numbers are now legible, not yet right (**S9**) |
 | Documentation currency | ~~**C−**~~ → **B** | *Was:* `AGENTS.md` layout stale; README omits the whole iOS half. **Fixed 2026-10-27** — all 32 `.md` files fact-checked, 0 broken refs. *Still unenforced* |
 | Bus factor | **D** | **1 author, 99/99 commits** — no second maintainer |
 | **Overall** | **B** | Solid structure, unsustained by the process around it |
@@ -78,60 +78,90 @@ The Android/iOS twin scheme is the project's signature structural idea, and it w
 **maintained by hand, by one person, with no compile-time or lint enforcement.** The cost is
 visible as API drift between twins.
 
-**Public method parity (Android page vs its iOS twin):**
+**Public method parity (Android page vs its iOS twin)** — the 2026-10-27 hand audit below is
+**superseded by `npm run check:parity`**, which produces these numbers mechanically. Same
+convention as the tool: counts exclude the base-class surface (`screen`, `waitForScreen`,
+`isDisplayed`, `tapBack`, `systemBack` — callable on both platforms either way), exclude
+`private`/`protected`, and count a getter as a member. So the 2026-10-27 columns read one to
+three names higher than these.
 
-| Screen | Android methods | iOS methods | Shared | Parity | Drift |
-|---|---|---|---|---|---|
-| `tambah` | 18 | 19 | 18 | **100 %** | ✅ |
-| `anggaran` | 15 | 29 | 15 | **100 %** | ✅ iOS adds 14 helpers |
-| `ubah` | 8 | 9 | 8 | **100 %** | ✅ |
-| `kategori` | 16 | 29 | 14 | **87 %** | ⚠️ Android-only: `renameInDialog`, `toggleHidden` |
-| `daftar` | 20 | 21 | 18 | **90 %** | ⚠️ Android-only: `emptyState`, `monthLabelEl` |
-| `ringkasan` | 18 | 8 | 8 | **44 %** | 🔴 **10 Android methods have no iOS twin** |
-| `cadangan` | 11 | 16 | 5 | **45 %** | 🔴 5 Android methods unmatched |
+| Screen | Android public | iOS public | Shared | Android-only | iOS-only | Status |
+|---|---|---|---|---|---|---|
+| `tambah` | 18 | 18 | 18 | — | — | ✅ 100 %, no gap (its one *apparent* gap is an indentation defect — see **M7**) |
+| `anggaran` | 15 | 28 | 15 | — | 13 | ✅ every Android name exists on iOS; iOS adds probes Android never needed |
+| `ubah` | 6 | 6 | 6 | — | — | ✅ 100 % |
+| `ringkasan` | 17 | 17 | 17 | — | — | ✅ **fixed 2026-10-28** (**M2**, was 8/18); ⚠️ never run on a simulator |
+| `cadangan` | 11 | 12 | 11 | — | 1 | ✅ **fixed 2026-10-28** (**M1**, was 5/11); the one iOS-only name is not portable |
+| `daftar` | 19 | 20 | 17 | 2 | 3 | ⚠️ `emptyState`/`monthLabelEl` vs `countTransactionRows`/`findTransactionRow`/`firstCardPosition` |
+| `kategori` | 15 | 28 | 13 | 2 | 15 | ⚠️ **worst remaining drift** (**M13**): `renameInDialog`/`toggleHidden` composites vs 15 step-level iOS helpers |
 
-`ringkasan` at 44 % and `cadangan` at 45 % are the outliers — and `cadangan` is the worst kind of
-drift: the Android class exposes `statusCard`, `statusTexts`, `warningCard`, `importResult`,
-`importError`, while the iOS class exposes a *different* set (`screen`, `screenText`,
-`shareSheetCaption`, `tapBack`, `dismissShareSheet`…). These are not twins with gaps; they are
-**two different abstractions wearing the same filename**. A spec written against one cannot be
-ported to the other by changing a locator — it needs rewriting.
+`cadangan` was the worst kind of drift, not a gap kind: the Android class exposed `statusCard`,
+`statusTexts`, `warningCard`, `importResult`, `importError` while the iOS class exposed a
+*different* set (`screen`, `screenText`, `shareSheetCaption`, `tapBack`,
+`dismissShareSheet`…)— **two different abstractions wearing the same filename**, so a spec
+written against one could not be ported by changing a locator. That is what **M1** converged
+(2026-10-28, during the v2.3 backup work); one non-portable iOS helper remains and is explained
+in the baseline. `ringkasan` was the same story at 44 % and is closed by **M2**. The live worst
+case is now `kategori` (**M13**): granularity differs, not locators.
 
-The same drift at the **test-case identity** level:
+The same drift at the **test-case identity** level, as the gate measures it (case count = `it()`
+call sites; id count = those whose title carries a literal `TC-` id):
 
-| Spec | Android TCs | iOS TCs | Shared |
-|---|---|---|---|
-| `anggaran/budget` | `TC-BUD-01…11` | `TC-BUDGET-01…11` | **0** — prefix divergence |
-| `transaksi/transaction-list` | 10 | 10 | 10 ✅ |
-| `kategori/category-management` | 14 | 13 | 13 — Android has an extra `TC-LIST-07` |
-| `transaksi/backup` | 6 | 7 | 6 — iOS adds `TC-LIST-07` |
-| `tambah/add-income`, `add-expense` | 9 / 8 | 10 / 9 | 9 / 8 — iOS adds `TC-NAV-06` |
-| `navigasi/navigation` | 8 | 9 | 8 — iOS adds `TC-PERS-02` |
+| Spec | Android cases / ids | iOS cases / ids | Shared | Diff |
+|---|---|---|---|---|
+| `anggaran/budget` | 8 / 8 | 11 / 11 | **8** ✅ | iOS-only `TC-BUDGET-03/04/05` — prefix converged 2026-10-28 (was **0**) |
+| `transaksi/transaction-list` | 12 / 10 | 12 / 11 | 10 ✅ | iOS-only `TC-LIST-08a`; Android's 2 id-less call sites are the loop-generated seed chunks (**M7** limitation) |
+| `app/accessibility` | 7 / 7 | 7 / 7 | 7 ✅ | none — and the pair the first checker *missed* (`TC-A11Y` has a digit in its area) |
+| `kategori/category-management` | 13 / 13 | 13 / 13 | 13 ✅ | none (the 2026-10-27 row claiming "Android 14, extra `TC-LIST-07`" was wrong on both counts) |
+| `transaksi/backup` | 6 / 6 | 6 / 6 | 6 ✅ | none |
+| `transaksi/edit-transaction` | 8 / 8 | 8 / 8 | 8 ✅ | none |
+| `tambah/add-income` · `add-expense` | 9 / 9 · 8 / 8 | 9 / 9 · 8 / 8 | 9 · 8 ✅ | none |
+| `tambah/validation` · `amount-input` | 17 / 17 · 7 / 7 | 17 / 17 · 7 / 7 | 17 · 7 ✅ | none |
+| `navigasi/navigation` | 8 / 8 | 8 / 8 | 8 ✅ | none |
+| `app/persistence` · `rotation` · `performance` | 5 / 5 · 6 / 6 · 5 / 5 | 5 / 5 · 6 / 6 · 5 / 5 | 5 · 6 · 5 ✅ | none |
+| `ringkasan/summary` | 13 | **no iOS twin** | — | baselined; **M2** gave the page object full parity first |
+| `transaksi/delete-undo` | 9 / 9 | **no iOS twin** | — | baselined; needs an iOS undo path |
 
 Two findings here are **more than cosmetic**:
 
-1. **`TC-BUD` vs `TC-BUDGET`** — 11 test cases exist on each platform with **zero shared
-   identifiers**. Any cross-platform defect triage, coverage dashboard, or "is this bug fixed
-   on both platforms?" query silently fails. The Android spec also *merges* two cases into one
-   `it()` (`TC-BUD-03/07`), so the two platforms don't even have the same number of atomic cases.
+1. ~~**`TC-BUD` vs `TC-BUDGET`**~~ — ✅ **fixed 2026-10-28**: the Android spec now uses the
+   catalogue prefix `TC-BUDGET` (the form used by `test-cases-simple-money-tracker.md` §Q,
+   `progress.md` 2.A, `TESTING.md` and the iOS twin), and the merged `TC-BUD-03/07` `it()` is
+   split into `TC-BUDGET-06` (tap → form opens) and `TC-BUDGET-07` (set limit → row + total
+   card), matching the iOS granularity. 8 ids are now shared across the twins. **Residual:**
+   `TC-BUDGET-03`/`04`/`05` (total-card content, per-category card content, Ubah/Hapus) exist
+   only as iOS cases — Android covers 03/04 *inside* `TC-BUDGET-08`/`09`'s row-text
+   assertions and never as their own case, so the platforms share ids but not coverage.
 
-2. **One id → many cases.** `TC-LIST-08` is defined **8 times** in
+2. ~~**One id → many cases.**~~ `TC-LIST-08` was defined **8 times** in
    `transaction-list.spec.ts` — 7 generated bulk-chunk `it()` blocks (lines 207–229) plus a
-   separate `TC-LIST-08 scrolling 100+ items does not crash` (line 231). A defect report
-   citing "TC-LIST-08" cannot identify which case failed. The chunked cases need distinct
-   suffixes (`TC-LIST-08a`…`TC-LIST-08g`) or a shared id with a per-chunk discriminator.
+   separate `TC-LIST-08 scrolling 100+ items does not crash` (line 231), so a defect report
+   citing "TC-LIST-08" could not identify which case failed. ✅ **fixed 2026-10-28**: the
+   chunks carry the per-chunk suffixes `TC-LIST-08a`…`TC-LIST-08g` (derived from the loop
+   index, and used in the progress `console.log` tag too), and the bare `TC-LIST-08` stays on
+   the catalogue case it names — "scroll 100+ items, no crash". A title-level scan of all 30
+   spec files (263 `it()` titles, 259 of them carrying an id, grouped per platform) now reports
+   **zero intra-platform duplicates**.
 
    *Note:* ids appearing in more than one file are almost all **comment citations of precedent**
    (e.g. `category-management.spec.ts:126` — "TC-LIST-07 skip in 1.D") — that is good practice,
-   not a collision. The genuine intra-platform duplicate is `TC-LIST-08` alone.
+   not a collision. The genuine intra-platform duplicate was `TC-LIST-08` alone.
 
-**Root cause:** nothing enforces twin parity. A lint rule comparing the public method surface
-of `X.page.ts` vs `X.ios.page.ts` would catch every row in the table above automatically, the
-same way a typechecker catches a signature mismatch.
+**Root cause:** nothing enforced twin parity. ✅ **Closed 2026-10-28 by M7** —
+`npm run check:parity` (`scripts/check_parity.mjs`) now compares the public method surface of
+`X.page.ts` vs `X.ios.page.ts`, the `TC-` id sets of each spec pair, and the existence of the
+twins themselves, ratcheted by `scripts/parity-baseline.json`. It is not a lint rule (the repo
+still has no lint layer — **S2**), but it catches every row of both tables above automatically,
+the way a typechecker catches a signature mismatch.
 
 ### Magic-number discipline
 
-**124 inline `timeout:` literals across 44 files, 9 distinct values, zero centralized.**
+✅ **Fixed 2026-10-28 (M5 + M6).** Every wait budget and every settle pause in `src/` is now a
+named constant, and a guardrail rejects a new inline number.
+
+The original state: **124 inline `timeout:` literals across 44 files, 9 distinct values, zero
+centralized**, plus `driver.pause()` with **11 distinct durations**, several of them
+load-bearing (S9/M14).
 
 | Value | Uses | Likely intent |
 |---|---|---|
@@ -140,22 +170,66 @@ same way a typechecker catches a signature mismatch.
 | `30_000` | 19 | "iOS / cold-start wait" |
 | `5_000`, `6_000`, `20_000`, `45_000`, `60_000`, `2_000` | 25 | one-off |
 
-There is **no `src/config/timeouts.ts`**, and no `DEFAULT_TIMEOUT` constant anywhere in `src/`.
-The same wait budget is spelled `10_000` in one file and `15_000` in the next with nothing
-distinguishing them — a reviewer cannot tell whether a difference is deliberate or accidental.
-`BasePage.waitForScreen()` defaults to 15 s and `BaseIosPage.waitForScreen()` to 30 s, but both
-are hardcoded and both are overridden at ~40 call sites with raw literals, so the defaults are
-effectively decorative.
+The sweep measured the tree first, and the inventory came out slightly different from the
+table above — 128 budget sites rather than 124 (the extra 5 are **default-parameter** budgets:
+`BasePage.waitForScreen(timeout = 15_000)`, `BaseIosPage`/`CadanganIosPage` at `30_000`, and
+the two `waitForShareSheet(timeout = 15_000)`), in 43 files, over 10 distinct values
+(`100`, `300`, `2_000`, `5_000`, `6_000`, `10_000`, `15_000`, `30_000`, `45_000`, `60_000`; the
+`20_000` row above no longer exists in the tree) — and **75** `driver.pause()` sites in 18
+files over 14 distinct durations, not 55+.
 
-Compounding it: `driver.pause()` appears with **11 distinct durations** (200, 300, 400, 500,
-700, 800, 1 000, 2 000, 3 000, 5 000, 6 000) — several are load-bearing (see S9) and several
-are arbitrary.
+What landed:
 
-> **Fix:** add `src/config/timeouts.ts` exporting named budgets (`SCREEN_READY`,
-> `ELEMENT_PRESENT`, `COLD_START`, `SHEET_DISMISS`), then replace the 124 literals. This is
-> mechanical and behavior-preserving if each literal maps to its intended semantic bucket —
-> **except** the 30 s / 15 s split, which is a real Android/iOS difference and should stay
-> platform-specific.
+- **`src/config/timeouts.ts`** — 16 named deadlines (`APP_COLD_START`, `SCREEN_READY`,
+  `ELEMENT_PRESENT`, `COMPOSITION_WAIT`, `SYSTEM_SHEET`, `SURFACE_DISMISS`, `STATE_SYNC`,
+  `POLL_INTERVAL*`, …) plus the `DEFAULT_TIMEOUT` the finding asked for by name, which is now
+  literally what both runner configs pass to `waitforTimeout` (`wdio.conf.ts:203`,
+  `wdio.ios.conf.ts:93`) — the number an unparameterised `waitFor…` resolves to.
+- **`src/config/settles.ts`** — 32 named sleeps (`STALE_RETRY`, `SWIPE_ANIM`,
+  `MONTH_LABEL_RECOMPOSE`, `UNDO_TOAST_EXPIRY`, `ORIENTATION_SETTLE`, `SAF_DRAWER_SLIDE_IN`, …),
+  each documenting *what* it waits for and, where it matters, why it must stay a pause.
+  `UNDO_TOAST_EXPIRY`/`UNDO_TOAST_PASSED` now name the M14 load-bearing 6 s/6.5 s directly.
+- **Naming only — no number moved.** Every constant equals the literal it replaced. That was
+  checked twice: once by the sweep itself (it aborts if a constant's declared value ≠ the
+  literal at the site) and once by an independent pass that re-resolved every constant in the
+  rewritten tree back to a number and diffed the resulting timing sequence against the
+  pre-sweep snapshot — 202 timing lines, 0 differences, and no non-timing line changed.
+- **Same intent, different number is *visible*, not averaged.** The `_QUICK`/`_SLOW` twins
+  (`STALE_RETRY` 500/300/700, `SHEET_CLOSE_SETTLE` 500/400, `KEYBOARD_RETRY` 500/400,
+  `SCROLL_SETTLE` 500/200, `UNDO_TOAST_EXPIRY`/`_PASSED` 6 000/6 500) and the platform pairs
+  (`APPEARANCE_SETTLE_ANDROID` 1 500 vs `_IOS` 2 000, `TEXT_SIZE_SETTLE_ANDROID` 2 000 vs
+  `_IOS` 1 000, `APP_COLD_START` 30 s vs `_IOS` 45 s) each name an inconsistency for **S9** to
+  re-tune deliberately instead of silently.
+- **The gate:** `src/config/__tests__/timing-literals.test.ts` walks every `.ts` under `src/`
+  with the TypeScript AST and fails `npm run test:unit` on an inline numeric `timeout:`/
+  `wait:`/`interval:`, a numeric `timeout =` default parameter, or a numeric `pause()`
+  argument — and on a constant in either module that nothing waits on. AST rather than regex
+  because a doc comment that quotes `timeout: 15_000` is not a violation. Both directions were
+  probed against a temporary edit to a scanned file: a comment quoting `timeout: 15_000` and
+  `driver.pause(500)` leaves the check green, while a real `{ timeout: 10_000 }` and a real
+  `pause(300)` are named with their file and line.
+- **Device gate, and an A/B that closes it.** After the sweep: `test:anggaran` **8 passing**
+  (1m 26s) — the attempt before it, on a still-cold emulator, failed `TC-BUDGET-07` at
+  `anggaran.page.ts:128` ("still displayed after 10000ms"), which is `SURFACE_DISMISS`, the same
+  10 000 the literal carried, and it went green on a solo re-run. `test:tambah` **39 passing /
+  2 failing**, `test:ringkasan` **10 passing / 3 failing**. The 5 failures are *not* new: `src/`
+  was swapped for its **pre-sweep snapshot** (inline literals back, identical values) and the same
+  specs produced the **same failing ids with the same messages** (`/tmp/ab_sum.log`,
+  `/tmp/ab_val.log`), then the tree was restored and verified byte-identical (`rsync -cn`).
+  Root-caused live, and filed as `BUG_Found_16.md` (UiScrollable cannot scroll the v2.3 category
+  sheet → "Transportasi Umum"/"Bahan Bakar" unreachable), `BUG_Found_17.md` (one label drifted:
+  app says "Obat-obatan", the contract says "Obat-obat") and `BUG_Found_18.md` (TC-VAL-17, 3×).
+
+Deliberately out of scope: `duration:` inside a W3C `performActions` gesture (part of the
+swipe's shape, not a wait or a sleep), and the runner configs' `timeout: 180_000` (mocha,
+per case) and `connectionRetryTimeout: 180_000` (the Appium handshake) — neither is a UI wait,
+and folding them in would imply they re-tune together. Both are recorded in the header of
+`timeouts.ts` so a reader looking for "the case budget" finds the answer.
+
+> **What the original fix note got right:** "behavior-preserving if each literal maps to its
+> intended semantic bucket — except the 30 s / 15 s split, which is a real Android/iOS
+> difference and should stay platform-specific." That is how it was done: `SCREEN_READY`
+> (15 s) / `SCREEN_READY_IOS` (30 s), `APP_COLD_START` / `APP_COLD_START_IOS`.
 
 ### Documentation currency
 
@@ -204,37 +278,59 @@ it slipping.
 | # | Finding | Severity | Location |
 |---|---|---|---|
 | **M1** | `cadangan` twins are **not the same abstraction** — 5 Android methods unmatched, iOS exposes a disjoint API. A spec cannot be ported by swapping locators. | 🔴 Critical | `cadangan.page.ts`, `cadangan.ios.page.ts` — ✅ **fixed 2026-10-28** (converged API: `statusTexts`/`statusText`/`warningCard` renames + Android gaining `openFromEmptyDaftar`/`tapBack`/`waitForShareSheet`/`dismissShareSheet` during the v2.3 backup-automation update; `ringkasan` remains open as M2) |
-| **M2** | `ringkasan` twin at **44 % parity** — 10 Android methods (`breakdownBarRatio`, `comparisonTexts`, `emptyStateTexts`, `monthLabel`, `nextMonth`, `prevMonth`, `openAnggaran`, `openKelolaKategori`, `savingsText`, `scrollToBottom`) have no iOS equivalent, yet `RingkasanIosPage` is consumed by 7 iOS specs | 🔴 Critical | `ringkasan.page.ts` vs `ringkasan.ios.page.ts` |
-| **M3** | `TC-BUD` / `TC-BUDGET` prefix divergence → **0 shared ids** across 11 test cases on the two platforms | 🔴 Critical | `budget.spec.ts:25`, `budget.ios.spec.ts:40` |
-| **M4** | **One id maps to many test cases**: `TC-LIST-08` is defined **8×** in the Android spec (7 generated bulk chunks + 1 scroll test). A defect report citing `TC-LIST-08` cannot identify which case failed. | 🔴 Critical | `transaction-list.spec.ts:214,231` |
-| **M5** | **124 inline timeout literals**, 9 distinct values, no `config/timeouts.ts`, no `DEFAULT_TIMEOUT` | 🟠 Major | 44 files across `src/` |
-| **M6** | `driver.pause()` with **11 distinct durations**, several load-bearing — no named constants | 🟠 Major | `src/` (55+ sites) |
-| **M7** | No automated **twin-parity check** — the drift in M1/M2/M3/M4 is invisible until someone reads both files | 🟠 Major | (missing) |
+| **M2** | `ringkasan` twin at **44 % parity** — 10 Android methods (`breakdownBarRatio`, `comparisonTexts`, `emptyStateTexts`, `monthLabel`, `nextMonth`, `prevMonth`, `openAnggaran`, `openKelolaKategori`, `savingsText`, `scrollToBottom`) had no iOS equivalent, yet `RingkasanIosPage` is consumed by 7 iOS specs | 🔴 Critical | `ringkasan.ios.page.ts` — ✅ **fixed 2026-10-28**: all 10 ported, method surface now **18/18 shared**. `breakdownBarRatio` is the one deliberate *mechanism* divergence (iOS renders no bar fill — it reads the row's `%` label and keeps the Android 0…1 contract). ⚠️ **Not device-verified:** no simulator is booted, and no iOS spec calls the new methods yet — `summary.ios.spec.ts` (TC-SUM) is still unported (`IOS_PHASE1_HANDOFF.md` §1.E), so the first real check of this port is that port itself |
+| **M3** | `TC-BUD` / `TC-BUDGET` prefix divergence → **0 shared ids** across 11 test cases on the two platforms | 🔴 Critical | `budget.spec.ts` — ✅ **fixed 2026-10-28**: Android renamed to the catalogue prefix `TC-BUDGET`; the merged `TC-BUD-03/07` split into `-06`/`-07` (that was M11). 8 ids shared; iOS keeps 3 extra cases (`03`/`04`/`05`). **Verified on device:** `8 passing` for `budget.spec.ts` on emulator-5554 (Appium 3.x, app v2.2, 1m 14s) |
+| **M4** | **One id maps to many test cases**: `TC-LIST-08` was defined **8×** in the Android spec (7 generated bulk chunks + 1 scroll test). A defect report citing `TC-LIST-08` could not identify which case failed. | 🔴 Critical | `transaction-list.spec.ts` — ✅ **fixed 2026-10-28**: chunks renamed `TC-LIST-08a`…`TC-LIST-08g` (the 7 generated titles verified distinct); bare `TC-LIST-08` left on the catalogue scroll case. *Residual, found later the same day by the M7 gate:* the **iOS** twin defined `TC-LIST-08` twice as well (`seeds bulk items` + `scrolling 100+ items`) — the original scan was Android-side only. iOS seed placeholder is now `TC-LIST-08a`; with it, the gate reports **0 intra-platform duplicate ids on both platforms** (30 spec files, 263 `it()` titles, 259 of them carrying a literal `TC-` id) |
+| ~~**M5**~~ | ~~**124 inline timeout literals**, 9 distinct values, no `config/timeouts.ts`, no `DEFAULT_TIMEOUT`~~ — ✅ **fixed 2026-10-28**: 128 sites → `src/config/timeouts.ts` (16 budgets + `DEFAULT_TIMEOUT`), `DEFAULT_TIMEOUT` wired to `waitforTimeout` in both runner configs, new literals rejected by `test:unit` | 🟠 Major → **closed** | 43 files across `src/` |
+| ~~**M6**~~ | ~~`driver.pause()` with **11 distinct durations**, several load-bearing — no named constants~~ — ✅ **fixed 2026-10-28**: 75 sites (14 durations) → `src/config/settles.ts` (32 constants), each with what it waits for | 🟠 Major → **closed** | `src/` (75 sites, not 55+) |
+| **M7** | No automated **twin-parity check** — the drift in M1/M2/M3/M4 is invisible until someone reads both files | 🟠 Major | ✅ **fixed 2026-10-28**: `scripts/check_parity.mjs` + `npm run check:parity` (no device needed) + `scripts/parity-baseline.json`. It checks four invariants — page-object public surface per twin, one id → one case per platform, spec twins share a non-empty id set, and iOS twin files exist — as a **ratchet**: a new gap fails, and a closed gap left in the baseline *also* fails. It found a collision the M4 scan had missed (`transaction-list.ios.spec.ts:123-124` defined `TC-LIST-08` twice on iOS; the seed placeholder is now `TC-LIST-08a`) and a formatting defect (`tambah.page.ts:64-110` is indented 3 spaces, so an indent-trusting parser reports `selectCategory` as missing on Android — fixed in the parser, filed under **S2**). It also caught a bug **in the checker**: the first id pattern was `\bTC-[A-Z]+-\d+…`, which does not match `TC-A11Y-01` — an area segment may contain digits, and with it the entire accessibility pair (7 cases × 2 platforms) went unscanned while the gate reported green. |
 | **M8** | `README.md` Layout **omits the entire iOS half** — no `wdio.ios.conf.ts`, no `*.ios.*` | 🟠 Major | `README.md` — ✅ **fixed 2026-10-27** |
 | **M9** | `AGENTS.md` layout stale — lists 2 non-existent files, `BUG_Found_02..08` vs 13 actual, and **never documents the iOS twin convention** | 🟠 Major | `AGENTS.md:71-95` — ✅ **fixed 2026-10-27** |
 | **M10** | **Bus factor = 1** — 99/99 commits by one author, no rotation, no external PR | 🟠 Major | git history |
-| **M11** | Android `budget.spec.ts` **merges two test cases** into one `it()` (`TC-BUD-03/07`) — the platforms don't have matching atomic granularity | 🟡 Minor | `budget.spec.ts:47` |
+| **M11** | Android `budget.spec.ts` **merged two test cases** into one `it()` (`TC-BUD-03/07`) — the platforms don't have matching atomic granularity | 🟡 Minor | `budget.spec.ts` — ✅ **fixed 2026-10-28** with M3: `TC-BUDGET-06` (form opens) and `TC-BUDGET-07` (limit saved) are separate cases. Needed one API addition: Android `AnggaranPage.formScreen` (the iOS twin already had it) |
 | **M12** | 11 of 57 source files carry **no JSDoc** — mostly specs, plus `base.page.ts` | 🟡 Minor | `src/` |
 | **M13** | `kategori` twin: Android-only `renameInDialog`, `toggleHidden` have no iOS equivalent — yet `TC-KAT-08`/`TC-KAT-10` are `it.skip`-ped on Android and **run on iOS** | 🟡 Minor | `kategori.page.ts`, `category-management.ios.spec.ts` |
-| **M14** | 11 distinct `driver.pause()` durations include `6_000` ×3, load-bearing for the undo-toast expiry — the one place a named constant matters most | 🟡 Minor | `delete-undo.spec.ts:66,88,157` |
+| ~~**M14**~~ | ~~11 distinct `driver.pause()` durations include `6_000` ×3, load-bearing for the undo-toast expiry — the one place a named constant matters most~~ — ✅ **closed with M6**: the three sites are `UNDO_TOAST_EXPIRY` (6 s ×2) and `UNDO_TOAST_PASSED` (6.5 s ×1), each documented as "must stay a pause: the toast node can linger composed after expiry". *Measured: 14 distinct durations, and the 6 s group is 2 + 1 rather than 3 identical* | 🟡 Minor → **closed** | `delete-undo.spec.ts:66,88,157` |
 
 ### Recommended maintainability sequence
 
-1. **M7 + M3 + M4 — one script, three invariants.** A `npm run check:parity` that (a) diffs the
-   public method surface of each `X.page.ts` vs `X.ios.page.ts`, (b) asserts every `TC-` id is
-   unique across the whole suite, and (c) asserts every Android/iOS spec pair shares a common
-   id set. This converts M1–M4 from *silent* debt into *loud* debt, and it's ~60 lines of
-   Node. **Do this before M1/M2**, so the fixes are verifiable.
-2. **M5 — `src/config/timeouts.ts`.** Mechanical, behavior-preserving, and it makes M14
-   self-documenting.
+1. ~~**M7 — one script, three invariants**~~ — ✅ **landed 2026-10-28** as
+   `scripts/check_parity.mjs` / `npm run check:parity` (M3 and M4 are fixed; the script is what
+   keeps them fixed). It checks the three prescribed invariants plus a fourth the audit needed —
+   (a) the public method surface of each `X.page.ts` vs `X.ios.page.ts`, (b) one `TC-` id → one
+   case *per platform*, (c) every spec pair shares a **non-empty** id set, (d) every
+   `X.spec.ts`/`X.page.ts` has an iOS twin. (a)/(c-emptiness)/(d) are ratcheted through
+   `scripts/parity-baseline.json`, where every entry carries a `reason` and a named close action;
+   (b) and a *zero*-overlap pair are hard failures that cannot be baselined away. 450 lines of
+   dependency-free Node (the review's "~60 lines" estimate assumed no baseline mechanism and no
+   self-documenting header — the ratchet is what costs the extra lines), no device needed. The
+   throwaway scans written for M2/M4 became its two parsers, with
+   one correction worth knowing: the surface diff **must not trust indentation**, because
+   `tambah.page.ts:64-110` is indented 3 spaces and an indent-strict scan reported a method that
+   exists. Verified by injecting each failure mode into a scratch copy of `src/`: new gap, stale
+   baseline entry, duplicate id, zero-overlap pair — all four fail with an actionable message.
+   **~~Do this before M1/M2~~** — M1–M4 landed first, so the script started from a green
+   baseline: `ringkasan` 18/18 shared, `transaction-list` 10/10, `budget` 8 shared + 3 iOS-only,
+   0 duplicate ids.
+2. ~~**M5 — `src/config/timeouts.ts`.**~~ — ✅ **done 2026-10-28 together with M6**: 128 budget
+   sites → `timeouts.ts`, 75 pause sites → `settles.ts`, both behavior-preserving by
+   construction and enforced by a new `test:unit` guardrail; M14 is self-documenting as
+   `UNDO_TOAST_EXPIRY` / `UNDO_TOAST_PASSED`.
 3. ~~**M8 + M9 — regenerate the layout blocks**~~ — ✅ **done 2026-10-27**: `README.md` now
    documents the full tree with the twin convention and real counts; `AGENTS.md` gained
    **§ Android / iOS Twin Convention** and **§ Source-of-truth ordering**. The *same*
    argument as M7 applies — a docs link-checker in CI would keep them correct, where today
    they only were correct once.
-4. **M1 + M2 — converge `cadangan` and `ringkasan` twins.** Decide per screen whether the iOS
+4. ~~**M1 + M2 — converge `cadangan` and `ringkasan` twins.** Decide per screen whether the iOS
    twin should expose the Android API (preferred — it makes specs portable) or whether the
-   divergence is genuine and should be documented as such. **Right now it is neither.**
+   divergence is genuine and should be documented as such. **Right now it is neither.**~~ ✅
+   **done 2026-10-28** — M1 with `cadangan`, and M2 with `ringkasan` on the **preferred** branch:
+   the iOS twin now exposes the Android API (18/18 method names shared), so a Ringkasan spec
+   ports by swapping locators, not by rewriting. The single genuine divergence is
+   `breakdownBarRatio` and it is documented in the class note, with the mechanism that replaces
+   Android's fill/container geometry (the row's rendered `%` label) chosen so the *contract* — a
+   0…1 fraction — still matches. The remaining open twins are `anggaran` (10 iOS-only methods),
+   `kategori` (M13) and `tambah`/`daftar` gaps.
 5. **M10 — mitigate the bus factor.** Land M7/S2/S4 first so conventions are machine-checked;
    then ensure every hard-won platform quirk stays documented with its measurement date and
    its failure signature. The iOS helper comments already model the target quality.
@@ -282,13 +378,17 @@ Worth stating plainly, because it is above average for a mobile suite:
 
 ### 🔴 Critical — should be fixed before the next release of the harness
 
-#### S1 — `wdio.ios.conf.ts` is outside typecheck coverage
-`tsconfig.json` includes `["src/**/*.ts", "wdio.conf.ts"]`. The **entire iOS runner config is
-excluded** from `npm run typecheck`. It compiles clean in isolation today (I verified), but there
-is no guard — a typo in capability wiring lands as a runtime session-creation failure on a
-developer machine, not as a type error in CI.
+#### S1 — `wdio.ios.conf.ts` is outside typecheck coverage — ✅ **already closed; the finding text was stale**
+`tsconfig.json` includes `["src/**/*.ts", "wdio.conf.ts", "wdio.ios.conf.ts"]` (verified 2026-10-28),
+so the **fix below has landed** — this section described the pre-fix state. What was true then:
+The **entire iOS runner config was excluded** from `npm run typecheck`. It compiled clean in
+isolation, but with no guard a typo in capability wiring landed as a runtime session-creation
+failure on a developer machine rather than a type error in CI.
 
-> **Fix:** add `"wdio.ios.conf.ts"` to `include` (one line).
+> **Fix:** add `"wdio.ios.conf.ts"` to `include` (one line) — done. `README.md` and `AGENTS.md`
+> repeated this claim as current until 2026-10-28; both now state the coverage correctly. The
+> general lesson (the **Documentation currency** row above): a fixed finding must be re-checked
+> *in every doc that cites it*, not only in the code.
 
 #### S2 — No lint or format layer
 There is no ESLint, no Prettier, no `.editorconfig`, no `lint` npm script. For 8,883 LOC of
@@ -437,10 +537,17 @@ rather than fixing it.
 > `pgrep -fl "wdio run|am instrument"` before attaching.
 
 #### S9 — Fixed sleeps used as synchronization
-55+ `driver.pause()` calls across the suite. Three are 6,000–6,500 ms in
+~~55+~~ **75** `driver.pause()` calls across the suite (counted 2026-10-28 by the M6 inventory).
+Three are 6,000–6,500 ms in
 `delete-undo.spec.ts` (lines 66, 88, 157), used to outlast the app's 5-second undo toast.
 Fixed waits are the classic flake source and they inflate wall-clock time (≈18 s of pure sleep
 in one spec).
+
+**M6 changed the starting conditions, not the finding.** Every sleep is now a named constant in
+`src/config/settles.ts`, so this fix is no longer a hunt through 75 call sites for a magic
+number: it is a per-constant decision, and the sites that share a name must change together.
+The `_QUICK`/`_SLOW` pairs and the `_ANDROID`/`_IOS` pairs are where the same intent currently
+carries two different numbers — those are the first places to look.
 
 The comments show the real constraint — the toast node stays *composed* after expiry, so a
 disappearance wait is unreliable — which is a genuine problem, but the answer is polling on an
@@ -450,19 +557,24 @@ observable state (row count / summary total change), not a longer sleep.
 > cares about (e.g. `summaryIncome()` returning the pre-delete value).
 
 #### S10 — Root directory sprawl; bug-report casing is inconsistent
-**25 `.md` files sit in the repo root**, 14 of them bug reports (`BUG_FOUND.md`, `BUG_Found_02..13`)
+**25 `.md` files sit in the repo root** — **31 as of 2026-10-28**, since Bug #14 through #18
+landed —
+14 of them bug reports (`BUG_FOUND.md`, `BUG_Found_02..13`) (**18 now: `BUG_FOUND.md` +
+`BUG_Found_02..18`; 20 counting `BUG_FOUND.template.md` and the `BUGS.md` index**)
 alongside `README.md`, `AGENTS.md`, `TESTING.md`, `TESTABILITY.md`, `HANDOVER.md`, `progress.md`,
 `code_review.md`, `pr_review.md`, `UI_SPEC.md`, `IOS_PHASE1_HANDOFF.md`, `test-cases-*.md`.
 
 `AGENTS.md` prescribes one bug file per bug **at the root**, so this follows the documented
-protocol — but at 13 bug files the machine-generated artifacts are competing with the
+protocol — but at 18 bug files the machine-generated artifacts are competing with the
 hand-written docs for the same namespace, and the root is where a new contributor looks first.
+The count grows with every filing session, so this finding worsens by default until the protocol
+changes.
 
 Casing is also inconsistent: `BUG_FOUND.md` / `BUG_FOUND.template.md` (uppercase) vs
-`BUG_Found_02.md` … `BUG_Found_13.md` (mixed case). Any glob or sort that assumes one case will
+`BUG_Found_02.md` … `BUG_Found_18.md` (mixed case). Any glob or sort that assumes one case will
 misbehave.
 
-> **Fix:** move the 13 bug files to `bugs/`, keep `BUG_FOUND.template.md` at root (or move it
+> **Fix:** move the 18 bug files to `bugs/`, keep `BUG_FOUND.template.md` at root (or move it
 > too), and standardize the prefix to one casing. Update `AGENTS.md` §Bug Reporting Protocol and
 > its Directory Layout block to match.
 
@@ -545,12 +657,14 @@ structural convention in the project is undocumented in the agent instructions.
 
 ## Verification gate — still needs a device
 
-Static checks pass at the time of writing (`tsc --noEmit` exit 0 · `npm run test:unit` 17/17 ·
-`npm audit --omit=dev` 0). These **must** still be confirmed on hardware before the harness is
-considered green:
+Static checks pass at the time of writing (`tsc --noEmit` exit 0 · `npm run test:unit` 20/20 ·
+`npm run check:parity` green · `npm audit --omit=dev` 0). These **must** still be confirmed on
+hardware before the harness is considered green:
 
-1. **Never device-run to date:** `anggaran/budget.spec.ts`, `kategori/category-management.spec.ts`
-   (Phase 2 navigation repairs), `ringkasan/summary.spec.ts` TC-SUM-09 bar guard.
+1. **Never device-run to date:** `kategori/category-management.spec.ts` (Phase 2 navigation
+   repairs). *(Cleared on 2026-10-28: `anggaran/budget.spec.ts` 8/8 after the M3 rename and again
+   after the M5/M6 sweep; `ringkasan/summary.spec.ts` ran twice, **TC-SUM-09's bar guard green
+   both times** — the other three failures there are `BUG_Found_16`, identical on pre-sweep code.)*
 2. **iOS suite:** `wdio.ios.conf.ts` and the 14 iOS specs have not been exercised by a
    typechecked/green config path; the 6 iOS-tagged skips
    (`TC-BACKUP-04`, `TC-LIST-07`, `TC-LIST-08` ×2, `TC-PERF-05`, plus `TC-KAT-08/10` on Android)
@@ -563,6 +677,18 @@ considered green:
    assertion-style sweep touches 105 sites). — *S8 landed 2026-10-28 as 212 sites; this bar is
    **not yet met**. Pass 1 reached 8 of 16 spec files, and the sweep was separately verified
    screen-by-screen on device (see the S8 status block). S9 is untouched.*
+6. **M5/M6 sweep — device gate ✅ closed by A/B (2026-10-28).** The sweep touched 46 files under
+   `src/` plus both runner configs. Four Android groups were run: `anggaran` **8/8**, `tambah`
+   **39/41**, `ringkasan` **10/13**, and the failures were then re-run against the **pre-sweep**
+   snapshot, which reproduced the same ids with the same messages — the sweep is exonerated
+   directly, not by argument. What the runs *did* surface is filed as `BUG_Found_16`/`17`/`18`.
+   **Still owed:** an iOS run (no simulator is booted), and `kategori`/`backup`/`transaksi` on
+   Android.
+7. **Environment trap, needs a decision:** the emulator carries app **v2.3 (versionCode 5)**
+   while `resources/` ships only **v2.2 (versionCode 4)** — Appium never downgrades an installed
+   package, so every "v2.2" run banner on this machine has actually been exercising v2.3. Either
+   commit the v2.3 APK or have the runner assert that the installed `versionName` matches the
+   configured APK; `BUG_Found_16.md` is only visible because of this drift.
 
 ---
 
@@ -699,18 +825,32 @@ something a reader has to notice. The script used for this pass is a good starti
 > Updated after the 2026-10-27 documentation pass — item 8 is now done (except the
 > file-rename part of S10).
 
-1. **S1** (one line) + **S4** (CI running `typecheck && test:unit`) + **M7** (twin-parity +
-   TC-id uniqueness script) — establish the gate. These three are cheap and they convert the
-   silent maintainability debt (M1–M4) into loud debt.
+1. ~~**S1** (one line) + **S4** (CI running `typecheck && test:unit`) + **M7** (twin-parity +
+   TC-id uniqueness script)~~ — **2 of 3 done 2026-10-28.** **S1** had already landed (the
+   `include` line lists `wdio.ios.conf.ts`; only the prose was stale — now corrected above).
+   **M7** landed as `scripts/check_parity.mjs` / `npm run check:parity` +
+   `scripts/parity-baseline.json`, converting the silent debt of M1–M4 into loud debt.
+   **S4 is the only piece left**, and its command list grew: `typecheck && test:unit &&
+   check:parity` — all three need no device, so a CI gate is cheap and would have caught M1–M4
+   and the S1 prose drift on their own.
 2. **S2** (lint/format) — make the conventions enforceable before more agents touch the tree.
 3. **S3** (dependency `overrides` + per-advisory decisions) — needs approval; do it in a
    dedicated PR so the diff is reviewable on its own.
-4. **M3 → M4 → M1 → M2** (test-case identity, then twin API convergence) — cheapest
-   maintainability wins first; M7's script verifies each step.
+4. ~~**M3 → M4 → M1 → M2** (test-case identity, then twin API convergence) — cheapest
+   maintainability wins first; M7's script verifies each step.~~ ✅ **all four landed 2026-10-28**
+   (M1+M3+M11 with the budget prefix convergence, M4 with the chunk suffixes, M2 with the
+   `ringkasan` iOS port), **and M7 landed the same day**, so this group is closed. The review's
+   root-cause note — *nothing enforces twin parity* — is now false: `npm run check:parity` is
+   what stops them drifting back.
 5. **S5 → S7** (pure refactors: tag centralization, helper dedup) — one PR, behavior-neutral,
    verified by the device gate.
-6. **M5** (timeout constants) — mechanical, behavior-preserving; do it with S9 so the two
-   literal-cleanups land together.
+6. ~~**M5** (timeout constants) — mechanical, behavior-preserving; do it with S9 so the two
+   literal-cleanups land together.~~ — ✅ **M5 + M6 landed 2026-10-28, deliberately *without*
+   S9.** The review suggested doing them together; doing them apart is what made the rename
+   verifiable (a pure-rename diff has one thing to check: does every number still equal what it
+   was). S9 now has a better starting position than it did — a named inventory of every budget
+   and every sleep, with each unresolved inconsistency tagged `_QUICK`/`_SLOW` in
+   `src/config/timeouts.ts` and `src/config/settles.ts`.
 7. **S8 → S9** (assertion-style sweep, sleep replacement) — largest diff; land separately with
    3 clean emulator runs as the acceptance bar.
 8. ~~**S10 → S11, M8 → M9, M12 → M22** (docs/hygiene)~~ — **done** in the 2026-10-27

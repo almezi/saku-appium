@@ -7,6 +7,8 @@ import { accounts, type TransactionType } from '../config/categories'
 import { BaseIosPage } from './base.ios.page'
 import type { ChainablePromiseElement } from '../types'
 import type { TransactionFormInput } from './tambah.page'
+import { DATE_PAGE_ANIM, KEYBOARD_RETRY, SHEET_CLOSE_SETTLE, STALE_RETRY, STALE_RETRY_SLOW, SWIPE_ANIM } from '../config/settles'
+import { COMPOSITION_WAIT, ELEMENT_PRESENT, STATE_SYNC, SURFACE_DISMISS, TOAST_PROBE } from '../config/timeouts'
 
 /**
  * Tambah screen on iOS — accessibility-id twin of TambahPage, driven by the
@@ -76,12 +78,12 @@ export class TambahIosPage extends BaseIosPage {
    */
   async selectCategory(categoryId: string): Promise<void> {
     const rowTag = tags.tambah.categoryItem(categoryId)
-    await iosByTag(tags.tambah.categoryPager).waitForExist({ timeout: 15_000 })
+    await iosByTag(tags.tambah.categoryPager).waitForExist({ timeout: COMPOSITION_WAIT })
     await iosByTag(tags.tambah.categoryPager).click()
 
     // The sheet root reuses the bare category-item tag (TransactionForm.kt
     // passes TAMBAH_CATEGORY_ITEM as the sheet testTag; rows carry _<id>).
-    await iosByTag(tags.tambah.categorySheetRoot).waitForExist({ timeout: 10_000 })
+    await iosByTag(tags.tambah.categorySheetRoot).waitForExist({ timeout: ELEMENT_PRESENT })
 
     for (let attempt = 0; attempt < 4; attempt++) {
       const row = iosByTag(rowTag)
@@ -92,7 +94,7 @@ export class TambahIosPage extends BaseIosPage {
           return
         } catch {
           // Stale handle or mid-recompose ghost — settle, re-query below.
-          await driver.pause(500)
+          await driver.pause(STALE_RETRY)
         }
       }
       await this.swipeSheetContentUp()
@@ -102,7 +104,7 @@ export class TambahIosPage extends BaseIosPage {
 
   async selectAccount(accountId: string): Promise<void> {
     await iosByTag(tags.tambah.selectAccount).click()
-    await iosByTag(tags.tambah.sheetAccount).waitForExist({ timeout: 10_000 })
+    await iosByTag(tags.tambah.sheetAccount).waitForExist({ timeout: ELEMENT_PRESENT })
     await iosByTag(tags.tambah.accountItem(accountId)).click()
     await this.waitForSheetClosed(tags.tambah.sheetAccount)
   }
@@ -135,7 +137,7 @@ export class TambahIosPage extends BaseIosPage {
       }).format(date),
     ]
     await iosByTag(tags.tambah.selectDate).click()
-    await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: 10_000 })
+    await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: ELEMENT_PRESENT })
     for (let attempt = 0; attempt < 3; attempt++) {
       const cells = await $$(
         `-ios predicate string: type == "XCUIElementTypeButton" AND ` +
@@ -145,7 +147,7 @@ export class TambahIosPage extends BaseIosPage {
         if (await cell.isDisplayed()) {
           await cell.click()
           await iosByTag(tags.tambah.datePickerOk).click()
-          await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: 10_000, reverse: true })
+          await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: SURFACE_DISMISS, reverse: true })
           return
         }
       }
@@ -157,7 +159,7 @@ export class TambahIosPage extends BaseIosPage {
         throw new Error('iOS date-picker "Change to previous month" button not found')
       }
       await prevButton.click()
-      await driver.pause(400)
+      await driver.pause(DATE_PAGE_ANIM)
     }
     throw new Error(`Date cell "${label[0]}" never became visible in the iOS date picker`)
   }
@@ -196,7 +198,7 @@ export class TambahIosPage extends BaseIosPage {
       await iosDismissKeyboard()
       if (await iosKeyboardShown().catch(() => false)) {
         lastState = 'keyboard still shown'
-        await driver.pause(500)
+        await driver.pause(KEYBOARD_RETRY)
         continue
       }
       lastState = `saveEnabled=${await this.saveButton.isEnabled().catch(() => false)}`
@@ -207,15 +209,15 @@ export class TambahIosPage extends BaseIosPage {
             const text = await iosFieldText(this.amountInput).catch(() => '')
             return text === '' || text === '0' || text === 'Rp 0'
           },
-          { timeout: 6_000 },
+          { timeout: STATE_SYNC },
         )
         // Best-effort: confirm any toast that might surface on newer builds.
         const toast = iosByTag(tags.component.toast)
-        await toast.waitForExist({ timeout: 2_000 }).catch(() => undefined)
+        await toast.waitForExist({ timeout: TOAST_PROBE }).catch(() => undefined)
         return
       } catch {
         // Click raced a recomposition — settle and retry on a fresh query.
-        await driver.pause(700)
+        await driver.pause(STALE_RETRY_SLOW)
       }
     }
     throw new Error(`Save did not reset the amount field after 3 attempts (last state: ${lastState})`)
@@ -261,8 +263,8 @@ export class TambahIosPage extends BaseIosPage {
    * covers the rest.
    */
   private async waitForSheetClosed(rootTag: string): Promise<void> {
-    await driver.pause(500)
-    await iosByTag(rootTag).waitForExist({ timeout: 10_000, reverse: true })
+    await driver.pause(SHEET_CLOSE_SETTLE)
+    await iosByTag(rootTag).waitForExist({ timeout: SURFACE_DISMISS, reverse: true })
   }
 
   /** One swipe upward over the sheet's list area (lower half of the screen). */
@@ -283,6 +285,6 @@ export class TambahIosPage extends BaseIosPage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
 }

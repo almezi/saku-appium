@@ -11,6 +11,7 @@
     "test": "wdio run ./wdio.conf.ts",
     "test:unit": "node --test -r ts-node/register/transpile-only \"src/*/__tests__/*.test.ts\"",
     "typecheck": "tsc --noEmit",
+    "check:parity": "node scripts/check_parity.mjs",
     "test:sanity": "TEST_GREP=@sanity wdio run ./wdio.conf.ts",
     "test:regression": "TEST_GREP=@regression wdio run ./wdio.conf.ts",
     "test:integration": "TEST_GREP=@integration wdio run ./wdio.conf.ts",

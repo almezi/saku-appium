@@ -5,6 +5,7 @@ import { createTransactionIos } from '../../helpers/transactions'
 import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
 import { RingkasanIosPage } from '../../pageobjects/ringkasan.ios.page'
 import { KategoriIosPage } from '../../pageobjects/kategori.ios.page'
+import { APP_COLD_START_IOS, ELEMENT_PRESENT } from '../../config/timeouts'
 
 /**
  * TC-KAT on iOS — port of category-management.spec.ts (the Android spec is
@@ -53,7 +54,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
   let customId = ''
 
   before(async () => {
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START_IOS })
     // Un-hides Ringkasan's Kelola button on an otherwise empty month.
     await createTransactionIos({
       type: 'pemasukan',
@@ -107,7 +108,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     expect(before).toBeGreaterThan(1)
     // "gaj" matches only "Gaji" (income tab, case-insensitive).
     await kategori.search('gaj')
-    await expect(kategori.rowHide(categories.income.salary)).toBeDisplayed({ wait: 10_000 })
+    await expect(kategori.rowHide(categories.income.salary)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     expect(await kategori.categoryRowCount()).toBe(1)
     expect(await kategori.rowHide(categories.income.freelance).isExisting()).toBe(false)
   })
@@ -151,7 +152,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
 
   it('TC-KAT-14 the category color mark renders @regression', async () => {
     await kategori.scrollToRow(categories.income.salary)
-    await expect(kategori.mark(categories.income.salary)).toBeDisplayed({ wait: 10_000 })
+    await expect(kategori.mark(categories.income.salary)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     await expect(kategori.mark(categories.income.salary)).toBeDisplayed()
   })
 
@@ -176,7 +177,7 @@ describe('TC-KAT — category management (Phase 2) on iOS @regression', () => {
     await kategori.tapBack()
     await tambah.waitForScreen()
     await iosByTag(tags.tambah.categoryPager).click()
-    await expect(iosByTag(tags.tambah.categorySheetRoot)).toBeDisplayed({ wait: 10_000 })
+    await expect(iosByTag(tags.tambah.categorySheetRoot)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     expect(
       await iosByTag(tags.tambah.categoryItem(categories.income.gift)).isExisting(),
     ).toBe(false)

@@ -10,6 +10,8 @@ import {
 import { tags } from '../config/tags'
 import { formatMonthYear, parseMonthLabel, shiftMonthYear } from '../helpers/months'
 import { BaseIosPage } from './base.ios.page'
+import { MONTH_LABEL_RECOMPOSE, STALE_RETRY, SWIPE_ANIM } from '../config/settles'
+import { ELEMENT_PRESENT, SURFACE_DISMISS } from '../config/timeouts'
 
 /**
  * Transaksi list on iOS — accessibility-id twin of DaftarPage, kept to the
@@ -148,7 +150,7 @@ export class DaftarIosPage extends BaseIosPage {
             return
           } catch {
             // Stale handle after recomposition — settle and re-query.
-            await driver.pause(500)
+            await driver.pause(STALE_RETRY)
           }
         }
       }
@@ -176,7 +178,7 @@ export class DaftarIosPage extends BaseIosPage {
             return
           } catch {
             // Stale handle after recomposition — settle and re-query.
-            await driver.pause(500)
+            await driver.pause(STALE_RETRY)
           }
         }
       }
@@ -187,9 +189,9 @@ export class DaftarIosPage extends BaseIosPage {
 
   /** Confirms the open delete sheet and waits for it to close. */
   async confirmDeleteSheet(): Promise<void> {
-    await iosByTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: 10_000 })
+    await iosByTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: ELEMENT_PRESENT })
     await iosByTag(tags.component.sheetConfirm).click()
-    await iosByTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: 10_000, reverse: true })
+    await iosByTag(tags.daftar.deleteSheet).waitForDisplayed({ timeout: SURFACE_DISMISS, reverse: true })
   }
 
   /**
@@ -229,7 +231,7 @@ export class DaftarIosPage extends BaseIosPage {
       // the click returns the old value, and re-clicking on it steps two
       // months. Settle first, then let a failed read surface instead of
       // masking it as "unchanged".
-      await driver.pause(300)
+      await driver.pause(MONTH_LABEL_RECOMPOSE)
       const after = parseMonthLabel(await this.monthLabel())
       if (after.monthIndex === target.monthIndex && after.year === target.year) return
       // Only retry the still-showing-old-month case (the silent no-op). A
@@ -338,6 +340,6 @@ export class DaftarIosPage extends BaseIosPage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
 }

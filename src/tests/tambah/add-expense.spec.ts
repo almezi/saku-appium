@@ -7,6 +7,7 @@ import { RingkasanPage } from '../../pageobjects/ringkasan.page'
 import { UbahPage } from '../../pageobjects/ubah.page'
 import { TambahPage } from '../../pageobjects/tambah.page'
 import { formatNegativeRp, formatRp } from '../../helpers/money'
+import { APP_COLD_START } from '../../config/timeouts'
 
 const EXPENSE = 75_000
 const INCOME = 200_000
@@ -21,7 +22,7 @@ describe('TC-EXP — add expense (Phase 1) @regression', () => {
   // The expense is the only transaction of the day so the day total renders
   // the negative "−Rp" form before later tests add income on top.
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
     await createTransaction({
       type: 'pengeluaran',
       amount: EXPENSE,

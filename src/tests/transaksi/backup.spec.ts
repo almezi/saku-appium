@@ -6,6 +6,8 @@ import { categories } from '../../config/categories'
 import { createTransaction, uniqueNote } from '../../helpers/transactions'
 import { DaftarPage } from '../../pageobjects/daftar.page'
 import { CadanganPage } from '../../pageobjects/cadangan.page'
+import { DRAWER_RECOMPOSE, SAF_DRAWER_SLIDE_IN, SAF_RETRY_BACKOFF, STALE_RETRY } from '../../config/settles'
+import { ELEMENT_PRESENT_QUICK, SYSTEM_SHEET } from '../../config/timeouts'
 
 /**
  * TC-BACK — Cadangan / backup & export (Phase 2).
@@ -116,11 +118,11 @@ async function tapPickerNode(selector: string, label: string): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const node = $(`android=new UiSelector().${selector}`)
-      await expect(node).toBeDisplayed({ wait: 5_000 })
+      await expect(node).toBeDisplayed({ wait: ELEMENT_PRESENT_QUICK })
       await node.click()
       return
     } catch {
-      await driver.pause(500)
+      await driver.pause(STALE_RETRY)
     }
   }
   throw new Error(`SAF picker node "${label}" could not be tapped`)
@@ -140,13 +142,13 @@ async function openDownloadsRoot(fileName: string): Promise<void> {
     try {
       await tapPickerNode('description("Show roots")', 'Show roots')
       // Drawer slide-in: the row is queryable before it is safely tappable.
-      await driver.pause(600)
+      await driver.pause(SAF_DRAWER_SLIDE_IN)
       await tapPickerNode('text("Downloads")', 'Downloads root')
       const fileRow = $(`android=new UiSelector().textContains("${fileName}")`)
-      await expect(fileRow).toBeDisplayed({ wait: 5_000 })
+      await expect(fileRow).toBeDisplayed({ wait: ELEMENT_PRESENT_QUICK })
       return
     } catch {
-      await driver.pause(800)
+      await driver.pause(SAF_RETRY_BACKOFF)
     }
   }
   throw new Error(`SAF picker did not reach "${fileName}" via the Downloads root`)
@@ -235,11 +237,11 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     // (a direct filesystem listing) where the pushed file is always visible.
     await driver.waitUntil(
       async () => (await driver.getCurrentPackage()).includes('documentsui'),
-      { timeout: 15_000 },
+      { timeout: SYSTEM_SHEET },
     )
     await openDownloadsRoot(IMPORT_FILE_NAME)
     // Settle the drawer-close recomposition before clicking the row.
-    await driver.pause(400)
+    await driver.pause(DRAWER_RECOMPOSE)
     const fileRow = $(`android=new UiSelector().textContains("${IMPORT_FILE_NAME}")`)
     await fileRow.click()
 
@@ -271,7 +273,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     // the empty state's secondary button (verified 2026-10-28).
     await cadangan.openFromEmptyDaftar()
     await cadangan.exportCsvButton.click()
-    await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: 15_000 })
+    await driver.waitUntil(() => cadangan.isShareSheetOpen(), { timeout: SYSTEM_SHEET })
     await driver.back()
     const csv = (await readExportedFile('cache/backups/saku-cadangan.csv')).replace(/^\uFEFF/, '')
     expect(csv.trim()).toBe(CSV_HEADER)

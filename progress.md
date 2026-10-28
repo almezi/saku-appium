@@ -121,7 +121,10 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 - [x] TC-EXP-05: Expense breakdown category shows 100% for single item
 - [x] TC-EXP-06: Expense on default account Tunai
 - [x] TC-EXP-07: Mixed income+expense same day → day total = net
-- [x] TC-EXP-08: Expense > balance → balance negative `−Rp`
+- [~[BUG]~] TC-EXP-08: Expense > balance → balance negative `−Rp` — **FAILING 2026-10-28**
+  (2/2, `/tmp/m5_tambah.log`, `/tmp/m5_exp_solo.log`; last green 2026-10-24): `selectCategory`
+  cannot reach the below-fold row "Bahan Bakar" — `scrollIntoView` never scrolls the v2.3
+  category sheet. See `BUG_Found_16.md`. Not the M5/M6 sweep (pre-sweep code fails identically).
 
 **Spec:** `src/tests/tambah/add-expense.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/8 passing 2026-10-24
 
@@ -166,9 +169,20 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 - [x] TC-SUM-07: Income breakdown percentages sum 100%
 - [x] TC-SUM-08: Expense breakdown percentages sum 100%
 - [x] TC-SUM-09: Breakdown bar width proportional
-- [x] TC-SUM-10: Empty month → all zeros, no NaN/Infinity
-- [x] TC-SUM-11: Large values format with separators, no clipping
-- [x] TC-SUM-12: Negative balance renders `−Rp` not `Rp -`
+- [~[BUG]~] TC-SUM-10: Empty month → all zeros, no NaN/Infinity — **FAILING 2026-10-28** as a
+  **cascade** (2/2): `prevMonth()` runs after the TC-SUM-12/11 failures leave the flow off
+  Ringkasan, so `ringkasan_month_switcher_label` isn't composed (`ringkasan.page.ts:221`). Root
+  case is `BUG_Found_16.md`; this case is not independently broken.
+- [~[BUG]~] TC-SUM-11: Large values format with separators, no clipping — **FAILING 2026-10-28**
+  as a **cascade** (2/2): its expected balance includes the TC-SUM-12 expense that was never
+  created — `Expected: "Rp 1.499.900.000" / Received: "Rp 1.500.200.000"`, exactly the missing
+  300 000. Root case is `BUG_Found_16.md`.
+- [~[BUG]~] TC-SUM-12: Negative balance renders `−Rp` not `Rp -` — **FAILING 2026-10-28**
+  (2/2, `/tmp/m5_ringkasan.log`, `/tmp/m5_ringkasan2.log`; last green 2026-10-24): the primary
+  failure of this trio. `selectCategory('exp_transport_public')` → "Transportasi Umum" is below
+  the sheet's initial 9-row window and `UiScrollable.scrollIntoView` does not scroll it
+  (`tambah.page.ts:96`, 10 000 ms = `ELEMENT_PRESENT`). See `BUG_Found_16.md`. Identical on
+  pre-sweep code (`/tmp/ab_sum.log`) — not the M5/M6 sweep.
 - [x] TC-SUM-13: Scroll to bottom → all sections render
 
 **Spec:** `src/tests/ringkasan/summary.spec.ts` | **Agent:** ZCode (GLM-5.3) — 13/13 passing 2026-10-24. Verified live: income-0 renders the savings value as "—" (not "0,0%") and hides the income breakdown card; the empty month replaces the whole content area with `ringkasan_empty_state`; breakdown bars are untagged container+fill Views (fill/container width = share). Fixed en route: `mobile: scrollGesture "down"` is a silent no-op on this Compose LazyColumn — scrolling uses raw W3C touch swipes and breakdown rows are read from atomic page-source dumps (element-handle reads stale out; see failure log).
@@ -411,7 +425,13 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-VAL-14: Emoji note → saved and rendered
 - [x] TC-VAL-15: Unicode note → saved correctly
 - [x] TC-VAL-16: Rapid double-tap save → only one transaction
-- [x] TC-VAL-17: Save with keyboard open → works
+- [~[BUG]~] TC-VAL-17: Save with keyboard open → works — **3 consecutive failures 2026-10-28**
+  (`/tmp/m5_tambah.log` parallel, `/tmp/m5_val_solo.log` solo, `/tmp/ab_val.log` solo on
+  **pre-sweep** code → same result, so not the M5/M6 sweep): after the save there is no
+  `tambah_helper` node, so the "form reset" read at `validation.spec.ts:191` cannot resolve.
+  App-vs-harness split not yet determined. See `BUG_Found_18.md`. Marked, **not yet `it.skip`-ed**
+  — the skip changes suite behaviour and interacts with the iOS twin's parity baseline, so it is
+  left for a human decision.
 
 **Spec:** `src/tests/tambah/validation.spec.ts` | **Agent:** repo owner (spec added in `c78728a`, 2026-10-26) — Android execution not separately logged; the iOS run below is the recorded evidence
 

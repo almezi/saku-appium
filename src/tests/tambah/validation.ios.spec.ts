@@ -30,6 +30,7 @@ import { iosClearField, iosDismissKeyboard, iosKeyboardShown, iosWriteNote, iosW
 import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
 import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
 import { UbahIosPage } from '../../pageobjects/ubah.ios.page'
+import { APP_COLD_START } from '../../config/timeouts'
 
 const BUNDLE_ID = 'id.almezi.saku'
 
@@ -72,7 +73,7 @@ async function clearAmount(): Promise<void> {
 async function freshForm(): Promise<void> {
   await driver.terminateApp(BUNDLE_ID)
   await driver.activateApp(BUNDLE_ID)
-  await expect(iosByTag(tags.navTambah)).toBeDisplayed({ wait: 30_000 })
+  await expect(iosByTag(tags.navTambah)).toBeDisplayed({ wait: APP_COLD_START })
   await tambah.open()
 }
 

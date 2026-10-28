@@ -3,6 +3,7 @@ import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
+import { SCREEN_READY, SURFACE_DISMISS, SYSTEM_SHEET } from '../config/timeouts'
 
 /**
  * Cadangan (backup) screen, reached from Transaksi via the daftar entry
@@ -107,7 +108,7 @@ export class CadanganPage extends BasePage {
    */
   async tapBack(): Promise<void> {
     await byTag(tags.component.buttonBack).click()
-    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: 15_000 })
+    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
   }
 
   /** True while the system share sheet is foregrounded after an export. */
@@ -116,7 +117,7 @@ export class CadanganPage extends BasePage {
   }
 
   /** Bounded wait for the share sheet an export opens. */
-  async waitForShareSheet(timeout = 15_000): Promise<void> {
+  async waitForShareSheet(timeout = SYSTEM_SHEET): Promise<void> {
     await driver.waitUntil(() => this.isShareSheetOpen(), {
       timeout,
       timeoutMsg: 'Share sheet did not open after the export',
@@ -130,6 +131,6 @@ export class CadanganPage extends BasePage {
    */
   async dismissShareSheet(): Promise<void> {
     await driver.back()
-    await driver.waitUntil(async () => !(await this.isShareSheetOpen()), { timeout: 10_000 })
+    await driver.waitUntil(async () => !(await this.isShareSheetOpen()), { timeout: SURFACE_DISMISS })
   }
 }

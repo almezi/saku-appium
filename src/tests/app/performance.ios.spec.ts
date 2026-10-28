@@ -39,6 +39,8 @@ import { IOS_BUNDLE_ID } from '../../helpers/ios-app'
 import { createTransactionIos } from '../../helpers/transactions'
 import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
 import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
+import { APP_RESTART_SETTLE, POST_NAV, SCROLL_SETTLE } from '../../config/settles'
+import { APP_LAUNCH_MEASURED, ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK, POLL_INTERVAL_QUICK } from '../../config/timeouts'
 
 const tambah = new TambahIosPage()
 const daftar = new DaftarIosPage()
@@ -65,10 +67,10 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
 
   it('TC-PERF-02 tab switch completes in under 1.5s @regression', async () => {
     await tambah.open()
-    await driver.pause(500)
+    await driver.pause(POST_NAV)
     const t0 = Date.now()
     await iosByTag(tags.navDaftar).click()
-    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed({ wait: 10_000 })
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     const t = Date.now() - t0
     console.log(`[TC-PERF-02] tab switch: ${t} ms`)
     expect(t).toBeLessThan(1_500)
@@ -87,7 +89,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
 
     const t0 = Date.now()
     await tambah.saveButton.click()
-    await driver.waitUntil(amountFieldCleared, { timeout: 5_000, interval: 100 })
+    await driver.waitUntil(amountFieldCleared, { timeout: ELEMENT_PRESENT_QUICK, interval: POLL_INTERVAL_QUICK })
     const t = Date.now() - t0
     console.log(`[TC-PERF-04] save: ${t} ms`)
     expect(t).toBeLessThan(2_000)
@@ -98,7 +100,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
     // Normalise the scroll position: the list must not start at its end,
     // where further sweeps would move nothing.
     await driver.execute('mobile: scroll', { direction: 'up', distance: 0.25 })
-    await driver.pause(500)
+    await driver.pause(SCROLL_SETTLE)
 
     const before = await daftar.firstCardPosition()
     const t0 = Date.now()
@@ -132,10 +134,10 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
     const totals: number[] = []
     for (let attempt = 0; attempt < 3; attempt++) {
       await driver.terminateApp(IOS_BUNDLE_ID)
-      await driver.pause(3_000) // settle before measuring
+      await driver.pause(APP_RESTART_SETTLE) // settle before measuring
       const t0 = Date.now()
       await driver.execute('mobile: launchApp', { bundleId: IOS_BUNDLE_ID })
-      await iosByTag(tags.navBottom).waitForExist({ timeout: 30_000 })
+      await iosByTag(tags.navBottom).waitForExist({ timeout: APP_LAUNCH_MEASURED })
       totals.push(Date.now() - t0)
     }
     // Min-of-3: cold starts vary wildly under system load (4.1 s vs 7.5 s

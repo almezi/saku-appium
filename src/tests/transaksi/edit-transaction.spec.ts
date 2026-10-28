@@ -7,6 +7,7 @@ import { RingkasanPage } from '../../pageobjects/ringkasan.page'
 import { UbahPage } from '../../pageobjects/ubah.page'
 import { TambahPage } from '../../pageobjects/tambah.page'
 import { formatRp } from '../../helpers/money'
+import { APP_COLD_START, ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK } from '../../config/timeouts'
 
 const AMOUNT = 123_000
 const NEW_AMOUNT = 456_000
@@ -25,7 +26,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d)
 
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
     await createTransaction({
       type: 'pemasukan',
       amount: AMOUNT,
@@ -41,7 +42,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
    */
   async function selectCategoryInline(categoryId: string): Promise<void> {
     const item = byTag(tags.tambah.categoryItem(categoryId))
-    await expect(item).toBeDisplayed({ wait: 5_000 })
+    await expect(item).toBeDisplayed({ wait: ELEMENT_PRESENT_QUICK })
     await item.click()
   }
 
@@ -112,7 +113,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     expect(await tambah.getNoteText()).toBe(editedNote)
     expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
     const mark = byTag(tags.tambah.categoryMark(categories.expense.dailyFood))
-    await expect(mark).toBeDisplayed({ wait: 5_000 })
+    await expect(mark).toBeDisplayed({ wait: ELEMENT_PRESENT_QUICK })
     await ubah.systemBack()
     await expect(byTag(tags.daftar.screen)).toBeDisplayed()
   })
@@ -143,7 +144,7 @@ describe('TC-EDIT — edit transaction (Phase 1) @regression', () => {
     await tambah.selectDate(prevMonthDay)
     await ubah.save()
     // The list keeps showing the current month, which now has no transactions.
-    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
+    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     await daftar.prevMonth()
     await expect(await daftar.findRowText(formatRp(NEW_AMOUNT))).toBeDisplayed()
     const headerTexts = await daftar.firstDayHeaderTexts()

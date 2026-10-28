@@ -7,6 +7,7 @@ import { RingkasanPage } from '../../pageobjects/ringkasan.page'
 import { KategoriPage } from '../../pageobjects/kategori.page'
 import { TambahPage } from '../../pageobjects/tambah.page'
 import { formatNegativeRp, formatRp } from '../../helpers/money'
+import { APP_COLD_START } from '../../config/timeouts'
 
 // A: yesterday income. B: today expense (large — today nets negative so the
 // day header renders the −Rp form). C: today income, created last, so the
@@ -34,7 +35,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
   // transaction); mocha's timeout is raised globally because WDIO's
   // wrapper ignores this.timeout() inside hooks.
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
   })
 
   it('seeds three transactions across two days @regression', async () => {
@@ -214,10 +215,14 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
   ) {
     const first = chunk * BULK_PER_SEED + 1
     const last = Math.min((chunk + 1) * BULK_PER_SEED, BULK_COUNT)
-    it(`TC-LIST-08 seeds bulk items ${first}–${last} of ${BULK_COUNT} @regression`, async () => {
+    // Per-chunk suffix (a…g) keeps the seeding cases distinguishable: bare
+    // TC-LIST-08 stays reserved for the catalogue case ("scroll 100+ items,
+    // no crash") below, so a defect report naming an id names one case.
+    const id = `TC-LIST-08${String.fromCharCode(97 + chunk)}`
+    it(`${id} seeds bulk items ${first}–${last} of ${BULK_COUNT} @regression`, async () => {
       await tambah.open()
       for (let i = first; i <= last; i++) {
-        if ((i - first) % 5 === 0) console.log(`[TC-LIST-08] creating bulk item ${i}/${BULK_COUNT}`)
+        if ((i - first) % 5 === 0) console.log(`[${id}] creating bulk item ${i}/${BULK_COUNT}`)
         await tambah.selectType('pengeluaran')
         await tambah.fillAmount(1_000)
         await tambah.selectCategory(categories.expense.dailyFood)

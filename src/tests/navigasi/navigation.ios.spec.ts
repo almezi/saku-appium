@@ -1,5 +1,6 @@
 import { iosByTag } from '../../helpers/locators'
 import { tags } from '../../config/tags'
+import { APP_COLD_START, APP_COLD_START_IOS } from '../../config/timeouts'
 
 // The iOS target of the multiplatform app (iosApp/ in the app repo). The
 // Android suite drives id.almezi.simplemoneytracker_kt; the iOS bundle has
@@ -18,7 +19,7 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     // The iOS accessibility tree is populated lazily (TESTABILITY.md) and
     // noReset:false reinstalls the app, so the first launch needs a wider
     // window than the Android spec's 30 s.
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START_IOS })
   })
 
   it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => {
@@ -92,7 +93,7 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     await expect(iosByTag(tags.tambah.screen)).toBeDisplayed()
     await driver.background(2)
     await driver.activateApp(APP_ID)
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
   })
 
   it('TC-NAV-07 selected tab state persists on re-tap @sanity', async () => {
@@ -121,6 +122,6 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     // A frozen app would surface as a command timeout instead of a displayed
     // screen; assert the app still responds and settles.
     await iosByTag(tags.navTambah).click()
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
   })
 })

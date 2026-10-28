@@ -11,6 +11,8 @@ import { tags } from '../config/tags'
 import { kategoriTags } from './kategori.page'
 import { BaseIosPage } from './base.ios.page'
 import type { ChainablePromiseElement } from '../types'
+import { KEY_RETURN_SETTLE, POLL_CADENCE, SHEET_CLOSE_SETTLE_QUICK, STALE_RETRY, STALE_RETRY_QUICK, SWIPE_ANIM } from '../config/settles'
+import { COMPOSITION_WAIT, POLL_INTERVAL, SCREEN_READY, STATE_SYNC, SURFACE_DISMISS } from '../config/timeouts'
 
 type Rect = { x: number; y: number; width: number; height: number }
 
@@ -219,7 +221,7 @@ export class KategoriIosPage extends BaseIosPage {
       } catch {
         // Stale handle mid-recompose — settle and re-query.
       }
-      await driver.pause(300)
+      await driver.pause(STALE_RETRY_QUICK)
     }
     throw new Error(`kategori row "${categoryId}" rendered no text on iOS`)
   }
@@ -231,7 +233,7 @@ export class KategoriIosPage extends BaseIosPage {
       const label = ((await toggle.getAttribute('label').catch(() => '')) || '').trim()
       if (EYE_HIDDEN.test(label)) return true
       if (EYE_VISIBLE.test(label)) return false
-      await driver.pause(200)
+      await driver.pause(POLL_CADENCE)
     }
     throw new Error(`eye state unreadable for kategori row "${categoryId}"`)
   }
@@ -251,8 +253,8 @@ export class KategoriIosPage extends BaseIosPage {
       }
       try {
         await driver.waitUntil(async () => (await this.isHidden(categoryId)) === hidden, {
-          timeout: 6_000,
-          interval: 300,
+          timeout: STATE_SYNC,
+          interval: POLL_INTERVAL,
         })
         return
       } catch {
@@ -275,7 +277,7 @@ export class KategoriIosPage extends BaseIosPage {
       lastTop = top
     }
     await this.addButton.click()
-    await this.addFormScreen.waitForDisplayed({ timeout: 15_000 })
+    await this.addFormScreen.waitForDisplayed({ timeout: SCREEN_READY })
   }
 
   /**
@@ -287,7 +289,7 @@ export class KategoriIosPage extends BaseIosPage {
     await this.openAddForm()
     await iosTypeIntoTaggedField(this.formName, name, kategoriTags.formName)
     await this.formSave.click()
-    await this.addFormScreen.waitForExist({ timeout: 15_000, reverse: true })
+    await this.addFormScreen.waitForExist({ timeout: SCREEN_READY, reverse: true })
     await this.waitForScreen()
     return this.findCustomCategoryId()
   }
@@ -315,7 +317,7 @@ export class KategoriIosPage extends BaseIosPage {
   async openEditDialog(categoryId: string): Promise<void> {
     await this.scrollToRow(categoryId)
     await this.rowEdit(categoryId).click()
-    await this.formName.waitForDisplayed({ timeout: 15_000 })
+    await this.formName.waitForDisplayed({ timeout: COMPOSITION_WAIT })
   }
 
   /** Rendered value of the open rename dialog's field (prefilled on iOS). */
@@ -337,7 +339,7 @@ export class KategoriIosPage extends BaseIosPage {
     let lastError: unknown = null
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await this.formName.waitForExist({ timeout: 15_000 })
+        await this.formName.waitForExist({ timeout: COMPOSITION_WAIT })
         await this.formName.click()
         const current = await iosFieldText(this.formName).catch(() => '')
         if (current.length > 0) {
@@ -358,7 +360,7 @@ export class KategoriIosPage extends BaseIosPage {
         lastError = null
       } catch (e) {
         lastError = e
-        await driver.pause(500)
+        await driver.pause(STALE_RETRY)
       }
     }
     if (lastError) throw lastError
@@ -375,12 +377,12 @@ export class KategoriIosPage extends BaseIosPage {
   async cancelRename(): Promise<void> {
     await this.closeDialogKeyboard()
     await this.formCancel.click()
-    await this.formName.waitForExist({ timeout: 10_000, reverse: true })
+    await this.formName.waitForExist({ timeout: SURFACE_DISMISS, reverse: true })
   }
 
   /** Waits until the rename dialog closes (successful save). */
   async waitForDialogClosed(): Promise<void> {
-    await this.formName.waitForExist({ timeout: 10_000, reverse: true })
+    await this.formName.waitForExist({ timeout: SURFACE_DISMISS, reverse: true })
   }
 
   /**
@@ -401,8 +403,8 @@ export class KategoriIosPage extends BaseIosPage {
         ],
       },
     ])
-    await driver.pause(400)
-    await iosByTag(rootTag).waitForExist({ timeout: 10_000, reverse: true })
+    await driver.pause(SHEET_CLOSE_SETTLE_QUICK)
+    await iosByTag(rootTag).waitForExist({ timeout: SURFACE_DISMISS, reverse: true })
   }
 
   /**
@@ -422,7 +424,7 @@ export class KategoriIosPage extends BaseIosPage {
         ],
       },
     ])
-    await driver.pause(300)
+    await driver.pause(KEY_RETURN_SETTLE)
   }
 
   /**
@@ -495,7 +497,7 @@ export class KategoriIosPage extends BaseIosPage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
 
   /** Static texts whose centers fall inside `rect`, top-to-bottom then left-to-right. */

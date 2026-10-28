@@ -4,6 +4,7 @@ import { extractChildTexts } from '../helpers/elements'
 import { BasePage } from './base.page'
 import { typeIntoTaggedField } from '../helpers/input'
 import type { ChainablePromiseElement } from '../types'
+import { ELEMENT_PRESENT, SURFACE_DISMISS } from '../config/timeouts'
 
 /**
  * Test tags for the Anggaran (budget) screen and form, from TESTABILITY.md
@@ -72,6 +73,10 @@ export class AnggaranPage extends BasePage {
     return byTag(anggaranTags.formCategory)
   }
 
+  get formScreen(): ChainablePromiseElement {
+    return byTag(anggaranTags.formScreen)
+  }
+
   get formSave(): ChainablePromiseElement {
     return byTag(anggaranTags.formSave)
   }
@@ -88,7 +93,7 @@ export class AnggaranPage extends BasePage {
   /** Opens the shared budget form ("Anggaran baru" / "Ubah anggaran"). */
   async openForm(): Promise<void> {
     await this.addButton.click()
-    await this.formCategory.waitForDisplayed({ timeout: 10_000 })
+    await this.formCategory.waitForDisplayed({ timeout: ELEMENT_PRESENT })
   }
 
   /**
@@ -101,9 +106,9 @@ export class AnggaranPage extends BasePage {
   async selectFormCategory(categoryId: string): Promise<void> {
     await this.formCategory.click()
     const sheet = byTag(anggaranTags.formCategorySheet)
-    await sheet.waitForDisplayed({ timeout: 10_000 })
+    await sheet.waitForDisplayed({ timeout: ELEMENT_PRESENT })
     await byTag(anggaranTags.formCategoryOption(categoryId)).click()
-    await sheet.waitForDisplayed({ reverse: true, timeout: 10_000 })
+    await sheet.waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS })
   }
 
   /** Fills "Batas bulanan" on the open budget form. */
@@ -120,19 +125,19 @@ export class AnggaranPage extends BasePage {
   /** "Simpan anggaran" on the open budget form; waits for the form to close. */
   async saveForm(): Promise<void> {
     await this.formSave.click()
-    await this.formSave.waitForDisplayed({ reverse: true, timeout: 10_000 })
+    await this.formSave.waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS })
   }
 
   /** "Ubah" button on the budget row for `categoryId` (tag verified live). */
   async tapRowEdit(categoryId: string): Promise<void> {
     await byTag(anggaranTags.rowEdit(categoryId)).click()
-    await this.formCategory.waitForDisplayed({ timeout: 10_000 })
+    await this.formCategory.waitForDisplayed({ timeout: ELEMENT_PRESENT })
   }
 
   /** "Hapus anggaran" danger button, shown on the form in edit mode. */
   async deleteFromForm(): Promise<void> {
     await byTag(anggaranTags.formDelete).click()
-    await byTag(anggaranTags.deleteSheet).waitForDisplayed({ timeout: 10_000 })
+    await byTag(anggaranTags.deleteSheet).waitForDisplayed({ timeout: ELEMENT_PRESENT })
     await byTag(tags.component.sheetConfirm).click()
     await byTag(anggaranTags.deleteSheet).waitForDisplayed({ reverse: true })
   }
@@ -145,7 +150,7 @@ export class AnggaranPage extends BasePage {
    */
   async rowText(categoryId: string): Promise<string> {
     const row = this.row(categoryId)
-    await row.waitForDisplayed({ timeout: 10_000 })
+    await row.waitForDisplayed({ timeout: ELEMENT_PRESENT })
     return (await extractChildTexts(row)).join(' ')
   }
 }

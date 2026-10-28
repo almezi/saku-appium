@@ -16,6 +16,8 @@
  */
 import { $, $$ } from '@wdio/globals'
 import type { ChainablePromiseElement } from '../types'
+import { FIELD_CLEAR, FIELD_WRITE, KEYBOARD_DISMISS, STALE_RETRY } from '../config/settles'
+import { COMPOSITION_WAIT } from '../config/timeouts'
 
 export type FieldVerify = 'exact' | 'digits'
 
@@ -42,7 +44,7 @@ export async function typeIntoTaggedField(
       // while the screen is still composing, and the interaction retries
       // below span only ~1 s. Wait for the field to enter the tree first;
       // the retry loop then handles interaction-level staleness only.
-      await $(selector).waitForExist({ timeout: 15_000 })
+      await $(selector).waitForExist({ timeout: COMPOSITION_WAIT })
       const fresh = await $(selector)
       // Focus the inner editor node where one exists: a cached-bounds click on
       // the wrapper can land on a scrim once the keyboard resize shifts the
@@ -62,7 +64,7 @@ export async function typeIntoTaggedField(
     } catch (e) {
       // Transient interaction failure — settle, then retry on a fresh query.
       lastError = e
-      await driver.pause(500)
+      await driver.pause(STALE_RETRY)
     }
   }
   if (lastError) throw lastError
@@ -113,7 +115,7 @@ export async function setValueIntoTaggedField(
   let lastError: unknown = null
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      await $(selector).waitForExist({ timeout: 15_000 })
+      await $(selector).waitForExist({ timeout: COMPOSITION_WAIT })
       const fresh = await $(selector)
       await fresh.setValue(text)
       landed = await fieldText(fresh).catch(() => '')
@@ -121,7 +123,7 @@ export async function setValueIntoTaggedField(
       lastError = null
     } catch (e) {
       lastError = e
-      await driver.pause(500)
+      await driver.pause(STALE_RETRY)
     }
   }
   if (lastError) throw lastError
@@ -220,7 +222,7 @@ export async function iosDismissKeyboard(): Promise<void> {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(KEYBOARD_DISMISS)
   }
   await tapDeadZone()
   if (!(await iosKeyboardShown().catch(() => false))) return
@@ -240,7 +242,7 @@ export async function iosDismissKeyboard(): Promise<void> {
       ],
     },
   ])
-  await driver.pause(400)
+  await driver.pause(KEYBOARD_DISMISS)
 }
 
 /**
@@ -259,7 +261,7 @@ export async function iosClearField(field: ChainablePromiseElement): Promise<voi
   await editor?.clearValue().catch(() => undefined)
   if ((await iosFieldText(field).catch(() => '')).length > 0) {
     await field.addValue('\uE003'.repeat(64))
-    await driver.pause(300)
+    await driver.pause(FIELD_CLEAR)
   }
   const left = await iosFieldText(field).catch(() => '')
   if (left.length > 0) {
@@ -290,14 +292,14 @@ export async function iosWriteRaw(
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const lazy = $(selector)
-      await lazy.waitForExist({ timeout: 15_000 })
+      await lazy.waitForExist({ timeout: COMPOSITION_WAIT })
       await iosClearField(lazy)
       await lazy.addValue(text)
-      await driver.pause(300)
+      await driver.pause(FIELD_WRITE)
       return await iosFieldText(lazy)
     } catch {
       // Transient interaction failure — settle, then retry on a fresh query.
-      await driver.pause(500)
+      await driver.pause(STALE_RETRY)
     }
   }
   throw new Error(`iosWriteRaw: could not write "${text}" into "${label}" after 3 attempts`)
@@ -324,16 +326,16 @@ export async function iosWriteNote(
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const lazy = $(selector)
-      await lazy.waitForExist({ timeout: 15_000 })
+      await lazy.waitForExist({ timeout: COMPOSITION_WAIT })
       await iosClearField(lazy)
       const editor = await iosFieldEditor(lazy)
       if (!editor) throw new Error(`No editor node behind "${label}"`)
       await editor.setValue(text)
-      await driver.pause(300)
+      await driver.pause(FIELD_WRITE)
       return await iosFieldText(lazy)
     } catch (e) {
       lastError = e
-      await driver.pause(500)
+      await driver.pause(STALE_RETRY)
     }
   }
   const detail = lastError instanceof Error ? ` (${lastError.message})` : ''
@@ -377,7 +379,7 @@ export async function iosTypeIntoTaggedField(
       // addValue on the stale handle no-ops silently. Every command below
       // re-resolves through the chainable, exactly like the working spike.
       const lazy = $(selector)
-      await lazy.waitForExist({ timeout: 15_000 })
+      await lazy.waitForExist({ timeout: COMPOSITION_WAIT })
       await lazy.click()
       const current = await iosFieldText(lazy).catch(() => '')
       if (current.length > 0) {
@@ -399,7 +401,7 @@ export async function iosTypeIntoTaggedField(
       lastError = null
     } catch (e) {
       lastError = e
-      await driver.pause(500)
+      await driver.pause(STALE_RETRY)
     }
   }
   if (lastError) throw lastError

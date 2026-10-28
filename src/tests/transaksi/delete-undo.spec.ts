@@ -5,6 +5,8 @@ import { createTransaction, tapUndoAction, uniqueNote } from '../../helpers/tran
 import { DaftarPage } from '../../pageobjects/daftar.page'
 import { RingkasanPage } from '../../pageobjects/ringkasan.page'
 import { formatRp } from '../../helpers/money'
+import { UNDO_TOAST_EXPIRY, UNDO_TOAST_PASSED } from '../../config/settles'
+import { APP_COLD_START, ELEMENT_PRESENT } from '../../config/timeouts'
 
 const AMOUNT = 111_000
 
@@ -19,11 +21,11 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1) @inte
   async function confirmDelete(): Promise<void> {
     await byTag(tags.component.sheetConfirm).click()
     await expect(byTag(tags.daftar.deleteSheet)).not.toBeDisplayed()
-    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: 10_000 })
+    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: ELEMENT_PRESENT })
   }
 
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
     await createTransaction({
       type: 'pemasukan',
       amount: AMOUNT,
@@ -63,10 +65,10 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1) @inte
     // Toast expiry (5s) makes the deletion permanent. Wait past it with a
     // plain pause: the toast node can linger composed after expiry, so a
     // disappearance wait is unreliable (flaked across runs).
-    await driver.pause(6_000)
+    await driver.pause(UNDO_TOAST_EXPIRY)
     // With no transactions left the list swaps to its empty state and the
     // summary cards leave the hierarchy entirely (verified live).
-    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
+    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     const rows = await allByTagMatches('daftar_item_\\d+$')
     expect(rows.length).toBe(0)
   })
@@ -84,15 +86,15 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @
     await byTag(tags.component.sheetConfirm).click()
     // Wait past the 5 s undo window with a plain pause: the toast node can
     // linger composed after expiry, so a disappearance wait is unreliable.
-    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: 10_000 })
-    await driver.pause(6_000)
+    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: ELEMENT_PRESENT })
+    await driver.pause(UNDO_TOAST_EXPIRY)
   }
 
   before(async () => {
     // The first describe ends on the Daftar screen — navigate back to the
     // form explicitly instead of assuming a fresh launch.
     await byTag(tags.navTambah).click()
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
     await createTransaction({
       type: 'pemasukan',
       amount: SALES_INCOME,
@@ -154,7 +156,7 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @
     await byTag(tags.component.sheetConfirm).click()
     // Second undo window (5 s) — pause past it; the following assertions
     // prove both deletions stuck.
-    await driver.pause(6_500)
+    await driver.pause(UNDO_TOAST_PASSED)
     const bonusRows = await allByTagMatches(
       `daftar_item_.*_delete_${categories.income.bonusThr}`,
     )
@@ -169,7 +171,7 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @
   it('TC-DEL-04 deleting the last item of the month shows the empty state @integration', async () => {
     await daftar.tapDelete(categories.income.sales)
     await confirmPermanentDelete()
-    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
+    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: ELEMENT_PRESENT })
     const rows = await allByTagMatches('daftar_item_\\d+$')
     expect(rows.length).toBe(0)
   })

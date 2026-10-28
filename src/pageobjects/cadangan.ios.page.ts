@@ -2,6 +2,7 @@ import { $, $$ } from '@wdio/globals'
 import { iosByTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import type { ChainablePromiseElement } from '../types'
+import { SCREEN_READY_IOS, SURFACE_DISMISS, SYSTEM_SHEET } from '../config/timeouts'
 
 /**
  * Cadangan (backup & export) on iOS — accessibility-id twin of CadanganPage.
@@ -102,7 +103,7 @@ export class CadanganIosPage {
     return $(WARNING_CARD)
   }
 
-  async waitForScreen(timeout = 30_000): Promise<void> {
+  async waitForScreen(timeout = SCREEN_READY_IOS): Promise<void> {
     await this.screen.waitForDisplayed({ timeout })
   }
 
@@ -141,7 +142,7 @@ export class CadanganIosPage {
     return $(SHARE_SHEET).isExisting()
   }
 
-  async waitForShareSheet(timeout = 15_000): Promise<void> {
+  async waitForShareSheet(timeout = SYSTEM_SHEET): Promise<void> {
     await $(SHARE_SHEET).waitForExist({ timeout })
   }
 
@@ -153,6 +154,6 @@ export class CadanganIosPage {
   /** Dismisses the share popover by tapping outside it. */
   async dismissShareSheet(): Promise<void> {
     await $(SHARE_SHEET).click()
-    await $(SHARE_SHEET).waitForExist({ timeout: 10_000, reverse: true })
+    await $(SHARE_SHEET).waitForExist({ timeout: SURFACE_DISMISS, reverse: true })
   }
 }

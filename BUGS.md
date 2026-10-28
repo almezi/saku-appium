@@ -9,10 +9,10 @@ file; the numbering is continuous and files are never deleted or renumbered.
 
 | State | Count | Bugs |
 |---|---|---|
-| **Open** | 8 | 01, 03, 04, 05, 06, 10, 12, 15 |
+| **Open** | 11 | 01, 03, 04, 05, 06, 10, 12, 15, 16, 17, 18 |
 | **Fixed** | 6 | 02, 07, 08, 11, 13, 14 |
 | **Closed** | 1 | 09 |
-| **Total** | **15** | |
+| **Total** | **18** | |
 
 ## Index
 
@@ -33,6 +33,9 @@ file; the numbering is continuous and files are never deleted or renumbered.
 | 13 | [BUG_Found_13.md](BUG_Found_13.md) | iOS | Critical / P1 | Fixed | Compose renders a tagged container's strings as siblings → tree-only child reads returned nothing |
 | 14 | [BUG_Found_14.md](BUG_Found_14.md) | iOS | Critical / P1 | Fixed | Numeric keypad Delete key is a silent no-op after the category sheet closes |
 | 15 | [BUG_Found_15.md](BUG_Found_15.md) | Android + iOS | Major / P2 | Open | v2.3 redesign drops six Cadangan test tags on both platforms; import outcome has no UI surface — worked around via documented text lookups |
+| 16 | [BUG_Found_16.md](BUG_Found_16.md) | Android | Major / P1 | Open | `UiScrollable.scrollIntoView` cannot scroll the Tambah category sheet — rows below the initial 9-row window are unreachable; TC-SUM-12 fails 2/2 (swipe-and-check or the sheet's search box both work) |
+| 17 | [BUG_Found_17.md](BUG_Found_17.md) | Android | Minor / P2 | Open | Sheet renders "Obat-obatan", TESTABILITY.md:302 + `category-labels.ts:43` say "Obat-obat" — a locator string, so `exp_health_medicine` is a latent failure |
+| 18 | [BUG_Found_18.md](BUG_Found_18.md) | Android | Major / P2 | Open | TC-VAL-17 fails 3/3: no `tambah_helper` node after saving with the keyboard up — app-vs-harness split not yet determined; case marked `~[BUG]~`, skip not committed |
 
 ## Patterns worth knowing
 
@@ -44,6 +47,8 @@ question rather than a plain app bug:
 | **System-surface automation** (pickers, keyboards, system UI) | 01, 02, 04, 10 | If the target is an OS-owned view, WDIO cannot always drive it. Verify the app behaviour by MCP first, then decide whether it is a harness limit or an app defect. |
 | **Platform rendering differences** (Compose → XCUITest flattening, locale order) | 11, 13 | Android's tree shape is not iOS's. Read iOS by **geometry from one page-source dump**, never by nested tree traversal. |
 | **Real app defects** | 03, 05, 06 | Root cause lives in the app repo. The harness is only the messenger. |
+| **Untagged Compose lists** (sheet rows without tags → text locators → fragile scrolls) | 07, 16, 17 | Until `TestTags.kt` tags the rows, a sheet's text label IS the locator. On these LazyColumns `mobile: scrollGesture` is a silent no-op and `UiScrollable` either fails or dismisses the sheet — scroll with raw W3C swipes and check after every step (the `kategori.page.ts` `scrollToRow` pattern). |
+| **Cross-case state inside a spec file** | 18 | When the *other* failing ids move between runs on the same device and code, the file is carrying state forward, not reporting N defects. Establish the failure matrix first, and A/B against known-good code before blaming the latest change. |
 
 Bug 12 is the odd one out — not a defect at all, but an environment limitation, which
 is why it is filed as **Trivial / P3** rather than being skipped silently.

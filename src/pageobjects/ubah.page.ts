@@ -2,6 +2,7 @@ import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import { BasePage } from './base.page'
 import type { ChainablePromiseElement } from '../types'
+import { SCREEN_READY } from '../config/timeouts'
 
 /**
  * Ubah transaksi (edit). Shares its form fields with Tambah — the form
@@ -41,7 +42,7 @@ export class UbahPage extends BasePage {
   /** Saving returns to the Transaksi list. */
   async save(): Promise<void> {
     await this.saveButton.click()
-    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: 15_000 })
+    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
   }
 
   async tapDelete(): Promise<void> {

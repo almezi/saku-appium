@@ -7,6 +7,7 @@ import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
 import { RingkasanIosPage } from '../../pageobjects/ringkasan.ios.page'
 import { UbahIosPage } from '../../pageobjects/ubah.ios.page'
 import { formatRp } from '../../helpers/money'
+import { APP_COLD_START_IOS } from '../../config/timeouts'
 
 /**
  * TC-INC on iOS — 1:1 port of add-income.spec.ts (the Android spec is the
@@ -29,7 +30,7 @@ describe('TC-INC — add income (Phase 1) on iOS @regression', () => {
   const ubah = new UbahIosPage()
 
   before(async () => {
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START_IOS })
     await createTransactionIos({
       type: 'pemasukan',
       amount: AMOUNT,

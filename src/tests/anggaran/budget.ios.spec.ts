@@ -5,6 +5,7 @@ import { createTransactionIos } from '../../helpers/transactions'
 import { RingkasanIosPage } from '../../pageobjects/ringkasan.ios.page'
 import { AnggaranIosPage } from '../../pageobjects/anggaran.ios.page'
 import { formatRp } from '../../helpers/money'
+import { APP_COLD_START_IOS } from '../../config/timeouts'
 
 /**
  * TC-BUDGET on iOS — 1:1 port of budget.spec.ts (the Android spec is the
@@ -42,7 +43,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
   const anggaran = new AnggaranIosPage()
 
   before(async () => {
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START_IOS })
     await createTransactionIos({
       type: 'pemasukan',
       amount: SEED_INCOME,

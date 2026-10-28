@@ -13,6 +13,7 @@ import { TambahPage } from '../../pageobjects/tambah.page'
 import { DaftarPage } from '../../pageobjects/daftar.page'
 import { UbahPage } from '../../pageobjects/ubah.page'
 import type { ChainablePromiseElement } from '../../types'
+import { ELEMENT_PRESENT } from '../../config/timeouts'
 
 const tambah = new TambahPage()
 const daftar = new DaftarPage()
@@ -187,7 +188,7 @@ describe('TC-VAL — form validation (Phase 3.A) @regression', () => {
     // Keep the keyboard up (no hideKeyboard) when tapping save.
     await typeKeys(tambah.noteInput, 'kb open', true)
     await tambah.saveButton.click()
-    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: 10_000 }).catch(() => undefined)
+    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: ELEMENT_PRESENT }).catch(() => undefined)
     expect(await tambah.getHelperText()).toBe('Isi jumlah dan kategori dulu')
     await daftar.open()
     const row = await daftar.findRowText(formatRp(3_333))

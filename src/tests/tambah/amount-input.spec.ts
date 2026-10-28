@@ -15,6 +15,7 @@
 import { categories } from '../../config/categories'
 import { TambahPage } from '../../pageobjects/tambah.page'
 import type { ChainablePromiseElement } from '../../types'
+import { ELEMENT_PRESENT } from '../../config/timeouts'
 
 const tambah = new TambahPage()
 
@@ -57,7 +58,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) @regression', () => {
   it('TC-AMT-01 tapping the amount field opens the numeric keyboard @regression', async () => {
     const editor = await editorOf(tambah.amountInput)
     await editor.click()
-    await expect(editor).toBeDisplayed({ wait: 10_000 })
+    await expect(editor).toBeDisplayed({ wait: ELEMENT_PRESENT })
     expect(Boolean(await editor.getAttribute('focused'))).toBe(true)
   })
 

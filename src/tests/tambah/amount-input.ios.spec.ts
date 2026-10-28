@@ -26,6 +26,8 @@ import { categories } from '../../config/categories'
 import { iosClearField, iosFieldEditor, iosKeyboardShown } from '../../helpers/input'
 import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
 import type { ChainablePromiseElement } from '../../types'
+import { FIELD_WRITE, KEY_SETTLE } from '../../config/settles'
+import { ELEMENT_PRESENT } from '../../config/timeouts'
 
 const BUNDLE_ID = 'id.almezi.saku'
 
@@ -43,7 +45,7 @@ async function typeAmount(digits: string): Promise<string> {
   const editor = await amountEditor()
   await editor.click()
   await editor.addValue(digits)
-  await driver.pause(300)
+  await driver.pause(FIELD_WRITE)
   return tambah.getAmountText()
 }
 
@@ -68,7 +70,7 @@ async function pressBackspace(): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt++) {
     const editor = await amountEditor()
     await editor.addValue('\uE003')
-    await driver.pause(400)
+    await driver.pause(KEY_SETTLE)
     if ((await tambah.getAmountText()) !== before) return
   }
   throw new Error(`The backspace did not change the amount ("${before}")`)
@@ -98,7 +100,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
   it('TC-AMT-01 tapping the amount field opens the numeric keypad @regression', async () => {
     const editor = await amountEditor()
     await editor.click()
-    await expect(editor).toBeDisplayed({ wait: 10_000 })
+    await expect(editor).toBeDisplayed({ wait: ELEMENT_PRESENT })
     expect(await iosKeyboardShown()).toBe(true)
     // The numeric keypad renders digits only — an alphabetic key would mean
     // the full keyboard is up instead. The word "Delete" is not a letter key,
@@ -145,7 +147,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
     expect(await tambah.getAmountText()).toBe('Rp 12')
     const editor = await amountEditor()
     await editor.addValue('4')
-    await driver.pause(300)
+    await driver.pause(FIELD_WRITE)
     expect(await tambah.getAmountText()).toBe('Rp 124')
   })
 

@@ -12,6 +12,7 @@ import { createTransaction } from '../../helpers/transactions'
 import { formatRp } from '../../helpers/money'
 import { TambahPage } from '../../pageobjects/tambah.page'
 import { DaftarPage } from '../../pageobjects/daftar.page'
+import { APP_RELAUNCH } from '../../config/timeouts'
 
 const PACKAGE = 'id.almezi.simplemoneytracker_kt'
 const APK = 'resources/SimpleMoneyTrackerKT-v2.2.apk'
@@ -45,7 +46,7 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     // We are on Daftar right now; kill from here and relaunch.
     await driver.terminateApp(PACKAGE)
     await driver.activateApp(PACKAGE)
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 15_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_RELAUNCH })
     await expect(tambah.screen).toBeDisplayed()
   })
 
@@ -81,7 +82,7 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     execSync(`adb install ${APK}`, { stdio: 'inherit' })
     await driver.activateApp(PACKAGE)
     await daftar.open()
-    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 15_000 })
+    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: APP_RELAUNCH })
     expect(await daftar.summaryIncome()).toBe(0)
   })
 })

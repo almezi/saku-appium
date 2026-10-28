@@ -7,6 +7,7 @@ import { DaftarPage } from '../../pageobjects/daftar.page'
 import { RingkasanPage } from '../../pageobjects/ringkasan.page'
 import { UbahPage } from '../../pageobjects/ubah.page'
 import { formatRp } from '../../helpers/money'
+import { APP_COLD_START } from '../../config/timeouts'
 
 const AMOUNT = 250_000
 const NOTE = uniqueNote('inc')
@@ -18,7 +19,7 @@ describe('TC-INC — add income (Phase 1) @regression', () => {
   const ubah = new UbahPage()
 
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
     await createTransaction({
       type: 'pemasukan',
       amount: AMOUNT,

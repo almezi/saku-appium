@@ -4,6 +4,8 @@ import { extractChildTexts } from '../helpers/elements'
 import { BasePage } from './base.page'
 import { typeIntoTaggedField, setValueIntoTaggedField } from '../helpers/input'
 import type { ChainablePromiseElement } from '../types'
+import { SWIPE_ANIM } from '../config/settles'
+import { ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK } from '../config/timeouts'
 
 /**
  * Test tags for the Kelola kategori screen, from TESTABILITY.md ("Kelola
@@ -118,7 +120,7 @@ export class KategoriPage extends BasePage {
         ],
       },
     ])
-    await driver.pause(400)
+    await driver.pause(SWIPE_ANIM)
   }
 
   /**
@@ -168,7 +170,7 @@ export class KategoriPage extends BasePage {
     // clicking or its action buttons may not be composed at all.
     await this.scrollToRow(categoryId)
     await byTag(kategoriTags.rowEdit(categoryId)).click()
-    await byTag(kategoriTags.formName).waitForDisplayed({ timeout: 10_000 })
+    await byTag(kategoriTags.formName).waitForDisplayed({ timeout: ELEMENT_PRESENT })
   }
 
   /**
@@ -189,9 +191,9 @@ export class KategoriPage extends BasePage {
     }
     await setValueIntoTaggedField(field, newName, kategoriTags.formName)
     const save = byTag(kategoriTags.formSave)
-    await save.waitForDisplayed({ timeout: 5_000 })
+    await save.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK })
     await save.click()
-    await save.waitForDisplayed({ reverse: true, timeout: 5_000 })
+    await save.waitForDisplayed({ reverse: true, timeout: ELEMENT_PRESENT_QUICK })
   }
 
   /** Hides (or, when hidden, shows) the category via the eye toggle. */

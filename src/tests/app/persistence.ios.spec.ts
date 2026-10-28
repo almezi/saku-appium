@@ -24,6 +24,8 @@ import { IOS_APP_PATH, IOS_BUNDLE_ID } from '../../helpers/ios-app'
 import { iosDismissKeyboard, iosKeyboardShown } from '../../helpers/input'
 import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
 import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
+import { KEYBOARD_RETRY_QUICK } from '../../config/settles'
+import { APP_COLD_START_IOS, APP_RELAUNCH } from '../../config/timeouts'
 
 // Fallback ONLY, for host commands that somehow run before the session exists.
 // The helper prefers the live session's udid so parallel runs address their
@@ -62,7 +64,7 @@ function simctl(args: string): string {
 async function relaunch(): Promise<void> {
   await driver.terminateApp(IOS_BUNDLE_ID)
   await driver.activateApp(IOS_BUNDLE_ID)
-  await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
+  await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: APP_COLD_START_IOS })
 }
 
 /** Dismisses the keyboard and waits until it is really gone. */
@@ -70,7 +72,7 @@ async function dismissKeyboard(): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt++) {
     await iosDismissKeyboard()
     if (!(await iosKeyboardShown().catch(() => false))) return
-    await driver.pause(400)
+    await driver.pause(KEYBOARD_RETRY_QUICK)
   }
 }
 
@@ -128,7 +130,7 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     await driver.activateApp(IOS_BUNDLE_ID)
     // No crash and the list renders with prior data intact; the racing row
     // itself may legitimately be present or absent.
-    await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
+    await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: APP_COLD_START_IOS })
     await daftar.open()
     expect(await daftar.summaryIncome()).toBeGreaterThanOrEqual(seededTotal)
   })
@@ -139,9 +141,9 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     simctl(`uninstall ${udid} ${IOS_BUNDLE_ID}`)
     simctl(`install ${udid} ${IOS_APP_PATH}`)
     await driver.activateApp(IOS_BUNDLE_ID)
-    await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
+    await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: APP_COLD_START_IOS })
     await daftar.open()
-    await expect(iosByTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 15_000 })
+    await expect(iosByTag(tags.daftar.emptyState)).toBeDisplayed({ wait: APP_RELAUNCH })
     expect(await daftar.summaryIncome()).toBe(0)
   })
 })

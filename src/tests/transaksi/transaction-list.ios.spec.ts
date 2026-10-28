@@ -6,6 +6,7 @@ import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
 import { RingkasanIosPage } from '../../pageobjects/ringkasan.ios.page'
 import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
 import { formatNegativeRp, formatRp } from '../../helpers/money'
+import { APP_COLD_START } from '../../config/timeouts'
 
 const A_YESTERDAY_INCOME = 254_000
 const B_TODAY_EXPENSE = 500_000
@@ -24,7 +25,7 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
   before(async () => {
-    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
   })
 
   it('seeds three transactions across two days @regression', async () => {
@@ -120,6 +121,8 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
     expect(await daftar.summaryExpense()).toBe(B_TODAY_EXPENSE)
   })
 
-  it.skip('TC-LIST-08 seeds bulk items (skipped on iOS) @regression', async () => {})
+  // `a` suffix = the Android per-chunk seeding id (TC-LIST-08a…g); bare
+  // TC-LIST-08 names the catalogue case below, exactly as on Android.
+  it.skip('TC-LIST-08a seeds bulk items (skipped on iOS) @regression', async () => {})
   it.skip('TC-LIST-08 scrolling 100+ items does not crash (skipped on iOS) @regression', async () => {})
 })

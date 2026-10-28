@@ -2,6 +2,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import type { Capabilities, Options } from '@wdio/types'
 import { IOS_APP_PATH } from './src/helpers/ios-app'
+import { DEFAULT_TIMEOUT } from './src/config/timeouts'
 
 // `capabilities` is missing from Options.Testrunner in this @wdio/types
 // version, so add it back explicitly.
@@ -88,7 +89,8 @@ export const config: TestrunnerConfig = {
 
   logLevel: 'warn',
   bail: 0,
-  waitforTimeout: 15_000,
+  // The budget every unparameterised `waitFor…` in the suite resolves to.
+  waitforTimeout: DEFAULT_TIMEOUT,
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 3,
 

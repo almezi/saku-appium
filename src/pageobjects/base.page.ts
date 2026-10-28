@@ -1,6 +1,7 @@
 import { byTag } from '../helpers/locators'
 import { tags } from '../config/tags'
 import type { ChainablePromiseElement } from '../types'
+import { SCREEN_READY } from '../config/timeouts'
 
 export class BasePage {
   constructor(protected readonly screenTag: string) {}
@@ -9,7 +10,7 @@ export class BasePage {
     return byTag(this.screenTag)
   }
 
-  async waitForScreen(timeout = 15_000): Promise<void> {
+  async waitForScreen(timeout = SCREEN_READY): Promise<void> {
     await this.screen.waitForDisplayed({ timeout })
   }
 
