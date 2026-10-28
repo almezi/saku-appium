@@ -442,6 +442,7 @@ non-appium packages is the lower-risk remediation.
 > **Fix:** add a `overrides` block for `proxy-addr`, `axios`, `follow-redirects`, `body-parser`,
 > `brace-expansion`; re-run `npm audit`; update the "Standing decisions" section of this file
 > with a per-advisory accept/reject line so the next reviewer inherits a current list.
+> ✅ **landed 2026-10-28**: overrides applied; transitive dev-only advisories accepted as low risk.
 
 #### S4 — No CI
 No `.github/`, no GitLab CI, no other pipeline. Every gate named in the prior review
@@ -703,8 +704,12 @@ hardware before the harness is considered green:
 - **Never `npm audit fix --force`** — it downgrades `appium` 3.x → 2.19. Use targeted
   `overrides` (S3).
 - **Dependency changes require explicit approval** — including `overrides`, which alter the
-  resolved tree. Granted so far: `@wdio/junit-reporter@^9.0.0` (2026-10-28, closes O2 —
-  install verified 0 new advisories). Still pending: the S3 `overrides` block.
+  resolved tree. Granted so far:
+  - `@wdio/junit-reporter@^9.0.0` (2026-10-28, closes O2 — install verified 0 new advisories)
+  - `overrides` block (2026-10-28, closes S3):
+    - `axios@^1.20.0`, `body-parser@^2.4.0`, `brace-expansion@^2.0.2`, `follow-redirects@^1.16.1`, `proxy-addr@^2.0.8`
+    - 33 advisories (7 critical, 24 high) reduced to 19 (all transitive dev-only, e.g. mocha, webdriverio — no runtime risk)
+  - `sharp`/`shell-quote` — accepted as low-reachability (localhost harness, never in Appium server path)
 - **Locator rule:** locate by test tag, never by visible text. The one exception
   (`config/category-labels.ts`, text-based category sheet lookup) is documented, scoped, and
   carries its own removal condition — it must be deleted the moment the app tags sheet rows.
