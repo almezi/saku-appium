@@ -80,7 +80,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
   const cadangan = new CadanganIosPage()
 
   before(async () => {
-    await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
     // Seed one income so the status card reports "1 transaksi" and the export
     // files have a known single row to assert on.
     await createTransactionIos({
@@ -96,11 +96,11 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     // Transaksi screen, so navigate there first.
     await daftar.open()
     await cadangan.openFromDaftar()
-    expect(await cadangan.isDisplayed()).toBe(true)
+    await expect(cadangan.screen).toBeDisplayed()
     const status = await cadangan.statusText()
     expect(status).toContain('1 transaksi')
     expect(status).toContain('Belum pernah')
-    expect(await cadangan.warningCard.isDisplayed()).toBe(true)
+    await expect(cadangan.warningCard).toBeDisplayed()
   })
 
   it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file @regression', async () => {
@@ -108,7 +108,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     await cadangan.waitForShareSheet()
     expect(await cadangan.shareSheetCaption()).toContain('saku-cadangan')
     await cadangan.dismissShareSheet()
-    expect(await cadangan.isDisplayed()).toBe(true)
+    await expect(cadangan.screen).toBeDisplayed()
   })
 
   it('TC-BACKUP-03 the exported files contain the current transaction @regression', async () => {
@@ -132,7 +132,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     await cadangan.exportCsvButton.click()
     await cadangan.waitForShareSheet()
     await cadangan.dismissShareSheet()
-    expect(await cadangan.isDisplayed()).toBe(true)
+    await expect(cadangan.screen).toBeDisplayed()
     // Cancelling the share must not touch data: the transaction count is
     // unchanged and no toast surfaced. "Cadangan terakhir" is NOT asserted
     // here — the export already wrote the backup file, so the app correctly
@@ -155,7 +155,7 @@ describe('TC-BACKUP — backup & export (Phase 2) on iOS @regression', () => {
     // Remove the seed to reach the empty state.
     await daftar.tapDelete(categories.income.salary)
     await daftar.confirmDeleteSheet()
-    await iosByTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
+    await expect(iosByTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
 
     // The empty list has no `daftar_backup_button`; its empty state carries the
     // same onOpenBackup action on the secondary button.

@@ -45,8 +45,8 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     // We are on Daftar right now; kill from here and relaunch.
     await driver.terminateApp(PACKAGE)
     await driver.activateApp(PACKAGE)
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 15_000 })
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 15_000 })
+    await expect(tambah.screen).toBeDisplayed()
   })
 
   it('TC-PERS-03 relaunch resets the selected month to current @regression', async () => {
@@ -81,7 +81,7 @@ describe('TC-PERS — persistence (Phase 3.C) @regression', () => {
     execSync(`adb install ${APK}`, { stdio: 'inherit' })
     await driver.activateApp(PACKAGE)
     await daftar.open()
-    await byTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 15_000 })
+    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 15_000 })
     expect(await daftar.summaryIncome()).toBe(0)
   })
 })

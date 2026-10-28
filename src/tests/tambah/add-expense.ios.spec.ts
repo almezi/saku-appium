@@ -39,7 +39,7 @@ describe('TC-EXP — add expense (Phase 1) on iOS @regression', () => {
     // Rows render the unsigned amount (sign comes from the type label and
     // the day-total/net color), so assert on the plain formatted value.
     const row = await daftar.findRowText(formatRp(EXPENSE))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
   })
 
   it('TC-EXP-02 expense-only day total renders −Rp @regression', async () => {

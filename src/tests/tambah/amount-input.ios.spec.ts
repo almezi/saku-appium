@@ -98,7 +98,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
   it('TC-AMT-01 tapping the amount field opens the numeric keypad @regression', async () => {
     const editor = await amountEditor()
     await editor.click()
-    await editor.waitForDisplayed({ timeout: 10_000 })
+    await expect(editor).toBeDisplayed({ wait: 10_000 })
     expect(await iosKeyboardShown()).toBe(true)
     // The numeric keypad renders digits only — an alphabetic key would mean
     // the full keyboard is up instead. The word "Delete" is not a letter key,
@@ -152,6 +152,6 @@ describe('TC-AMT — amount input behavior (Phase 3.B) on iOS @regression', () =
   it('TC-AMT-07 max digits limit clamps at 12 without crashing @regression', async () => {
     await clearAmount()
     expect(await typeAmount('9'.repeat(18))).toBe('Rp 999.999.999.999')
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
   })
 })

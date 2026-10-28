@@ -42,7 +42,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
   const anggaran = new AnggaranIosPage()
 
   before(async () => {
-    await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
     await createTransactionIos({
       type: 'pemasukan',
       amount: SEED_INCOME,
@@ -53,7 +53,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
 
   it('TC-BUDGET-01 tapping the Ringkasan budget button opens the Anggaran screen @regression', async () => {
     await anggaran.openFromRingkasan()
-    expect(await anggaran.isDisplayed()).toBe(true)
+    await expect(anggaran.screen).toBeDisplayed()
   })
 
   it('TC-BUDGET-11 back returns to Ringkasan @regression', async () => {
@@ -66,13 +66,13 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
   it('TC-BUDGET-02 title, month label and empty state render; total card is hidden @regression', async () => {
     expect(await anggaran.screenText()).toContain('Anggaran')
     expect(await anggaran.monthLabel()).toBe(MONTH_LABEL)
-    expect(await anggaran.emptyState.isDisplayed()).toBe(true)
+    await expect(anggaran.emptyState).toBeDisplayed()
     expect(await anggaran.totalCard.isExisting()).toBe(false)
   })
 
   it('TC-BUDGET-06 "Atur anggaran baru" opens the new-budget form @regression', async () => {
     await anggaran.openForm()
-    expect(await anggaran.isFormDisplayed()).toBe(true)
+    await expect(anggaran.formScreen).toBeDisplayed()
   })
 
   it('TC-BUDGET-07 a saved limit is displayed as a row and the total card appears @regression', async () => {
@@ -80,8 +80,8 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
     await anggaran.fillLimit(BUDGET_LIMIT)
     expect(await anggaran.isFormSaveEnabled()).toBe(true)
     await anggaran.saveForm()
-    expect(await anggaran.row(categories.expense.dailyFood).isDisplayed()).toBe(true)
-    expect(await anggaran.totalCard.isDisplayed()).toBe(true)
+    await expect(anggaran.row(categories.expense.dailyFood)).toBeDisplayed()
+    await expect(anggaran.totalCard).toBeDisplayed()
   })
 
   it('TC-BUDGET-03 total card shows ANGGARAN, the amount, "Rp X dari Rp Y" and a bar @regression', async () => {
@@ -143,15 +143,18 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
 
   it('TC-BUDGET-05 row Ubah opens the prefilled form and row Hapus opens the delete sheet @regression', async () => {
     await anggaran.tapRowEdit(categories.expense.dailyFood)
-    expect(await anggaran.isFormDisplayed()).toBe(true)
+    await expect(anggaran.formScreen).toBeDisplayed()
     expect(await anggaran.getLimitText()).toBe(formatRp(BUDGET_LIMIT))
     await anggaran.tapBack()
     await anggaran.waitForScreen()
 
     await anggaran.tapRowDelete(categories.expense.dailyFood)
-    expect(await anggaran.isDeleteSheetDisplayed()).toBe(true)
+    // The delete sheet has no public page anchor (anggaranTags lives in the
+    // Android page), so assert its always-present cancel button via the tag
+    // layer — the same node cancelDeleteSheet taps.
+    await expect(iosByTag(tags.component.sheetCancel)).toBeDisplayed()
     await anggaran.cancelDeleteSheet()
-    expect(await anggaran.row(categories.expense.dailyFood).isDisplayed()).toBe(true)
+    await expect(anggaran.row(categories.expense.dailyFood)).toBeDisplayed()
   })
 
   it('TC-BUDGET-10 editing then removing the budget works and keeps transactions @regression', async () => {
@@ -164,7 +167,7 @@ describe('TC-BUDGET — monthly category budgets (Phase 2) on iOS @regression', 
 
     await anggaran.tapRowEdit(categories.expense.dailyFood)
     await anggaran.deleteFromForm()
-    expect(await anggaran.emptyState.isDisplayed()).toBe(true)
+    await expect(anggaran.emptyState).toBeDisplayed()
     expect(await anggaran.row(categories.expense.dailyFood).isExisting()).toBe(false)
 
     await anggaran.tapBack()

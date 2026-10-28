@@ -57,7 +57,7 @@ async function setContentSize(size: string): Promise<void> {
 async function restartApp(): Promise<void> {
   await driver.terminateApp(IOS_BUNDLE_ID)
   await driver.activateApp(IOS_BUNDLE_ID)
-  await iosByTag(tags.navBottom).waitForDisplayed({ timeout: 45_000 })
+  await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
 }
 
 describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', () => {
@@ -90,7 +90,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
       note: 'rotasi',
     })
     await setAppearance('dark')
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
     expect(await tambah.getAmountText()).toBe('Rp 12.000')
     expect(await tambah.getNoteText()).toBe('rotasi')
     await setAppearance('light')
@@ -104,7 +104,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     await driver.pause(500)
     const before = (await daftar.rowAmountTextsInOrder())[0]
     await setAppearance('dark')
-    expect(await daftar.isDisplayed()).toBe(true)
+    await expect(daftar.screen).toBeDisplayed()
     await setAppearance('light')
     const after = (await daftar.rowAmountTextsInOrder())[0]
     expect(after).toBe(before)
@@ -114,7 +114,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     await ringkasan.open()
     const balance = await ringkasan.balanceValue()
     await setAppearance('dark')
-    expect(await ringkasan.isDisplayed()).toBe(true)
+    await expect(ringkasan.screen).toBeDisplayed()
     expect(await ringkasan.balanceValue()).toBe(balance)
     await setAppearance('light')
   })
@@ -126,7 +126,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     await restartApp()
     await setAppearance('dark')
     await ringkasan.open()
-    expect(await ringkasan.isDisplayed()).toBe(true)
+    await expect(ringkasan.screen).toBeDisplayed()
     expect(await ringkasan.balanceText()).toMatch(/^Rp/)
     await tambah.open()
     expect(await tambah.isSaveEnabled()).toBe(false)
@@ -152,7 +152,7 @@ describe('TC-ROT — rotation & config change (Phase 3.D) on iOS @regression', (
     // The empty amount renders the placeholder "Rp 0" as the field's LABEL on
     // iOS (the value attribute is unset), so the rendered text is empty.
     expect(await tambah.getAmountText()).toBe('')
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
     await setContentSize('medium')
     await restartApp()
   })

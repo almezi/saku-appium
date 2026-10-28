@@ -62,7 +62,7 @@ function simctl(args: string): string {
 async function relaunch(): Promise<void> {
   await driver.terminateApp(IOS_BUNDLE_ID)
   await driver.activateApp(IOS_BUNDLE_ID)
-  await iosByTag(tags.navBottom).waitForDisplayed({ timeout: 45_000 })
+  await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
 }
 
 /** Dismisses the keyboard and waits until it is really gone. */
@@ -99,8 +99,8 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     // We are on Daftar right now; kill from here and relaunch.
     await daftar.open()
     await relaunch()
-    expect(await tambah.isDisplayed()).toBe(true)
-    expect(await daftar.isDisplayed()).toBe(false)
+    await expect(tambah.screen).toBeDisplayed()
+    await expect(daftar.screen).not.toBeDisplayed()
   })
 
   it('TC-PERS-03 relaunch resets the selected month to current @regression', async () => {
@@ -128,7 +128,7 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     await driver.activateApp(IOS_BUNDLE_ID)
     // No crash and the list renders with prior data intact; the racing row
     // itself may legitimately be present or absent.
-    await iosByTag(tags.navBottom).waitForDisplayed({ timeout: 45_000 })
+    await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
     await daftar.open()
     expect(await daftar.summaryIncome()).toBeGreaterThanOrEqual(seededTotal)
   })
@@ -139,9 +139,9 @@ describe('TC-PERS — persistence (Phase 3.C) on iOS @regression', () => {
     simctl(`uninstall ${udid} ${IOS_BUNDLE_ID}`)
     simctl(`install ${udid} ${IOS_APP_PATH}`)
     await driver.activateApp(IOS_BUNDLE_ID)
-    await iosByTag(tags.navBottom).waitForDisplayed({ timeout: 45_000 })
+    await expect(iosByTag(tags.navBottom)).toBeDisplayed({ wait: 45_000 })
     await daftar.open()
-    await iosByTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 15_000 })
+    await expect(iosByTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 15_000 })
     expect(await daftar.summaryIncome()).toBe(0)
   })
 })

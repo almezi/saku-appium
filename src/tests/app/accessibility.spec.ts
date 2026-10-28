@@ -63,7 +63,7 @@ describe('TC-A11Y — accessibility (Phase 3.E) @regression', () => {
     await tambah.open()
     await byTag(tags.tambah.categoryPager).click()
     const sheet = await byTag(tags.tambah.categorySheetRoot)
-    await sheet.waitForDisplayed({ timeout: 10_000 })
+    await expect(sheet).toBeDisplayed({ wait: 10_000 })
     expect(await driver.getPageSource()).toContain('content-desc="Buka pilihan"')
     await driver.back()
     await daftar.open()

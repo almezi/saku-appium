@@ -21,7 +21,7 @@ describe('TC-EXP — add expense (Phase 1) @regression', () => {
   // The expense is the only transaction of the day so the day total renders
   // the negative "−Rp" form before later tests add income on top.
   before(async () => {
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     await createTransaction({
       type: 'pengeluaran',
       amount: EXPENSE,
@@ -35,7 +35,7 @@ describe('TC-EXP — add expense (Phase 1) @regression', () => {
     // Rows render the unsigned amount (sign comes from the type label and
     // the day-total/net color), so assert on the plain formatted value.
     const row = await daftar.findRowText(formatRp(EXPENSE))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
   })
 
   it('TC-EXP-02 expense-only day total renders −Rp @regression', async () => {

@@ -18,7 +18,7 @@ describe('TC-INC — add income (Phase 1) @regression', () => {
   const ubah = new UbahPage()
 
   before(async () => {
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     await createTransaction({
       type: 'pemasukan',
       amount: AMOUNT,
@@ -30,7 +30,7 @@ describe('TC-INC — add income (Phase 1) @regression', () => {
   it('TC-INC-01 income with amount and category saves and shows the toast @regression', async () => {
     // createTransaction already waited for the toast; assert we are back on a
     // clean Tambah form (saving never leaves the screen).
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
   })
 
   it('TC-INC-08 form resets after save @regression', async () => {
@@ -42,7 +42,7 @@ describe('TC-INC — add income (Phase 1) @regression', () => {
     await daftar.open()
     // Rows render category, type label and amount, not the note.
     const row = await daftar.findRowText(formatRp(AMOUNT))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
   })
 
   it('TC-INC-03 list income summary increases to the saved amount @regression', async () => {
@@ -108,7 +108,7 @@ describe('TC-INC — add income (Phase 1) @regression', () => {
     })
     expect(await tambah.isSaveEnabled()).toBe(true)
     await tambah.save()
-    expect(await byTag(tags.component.toast).isDisplayed()).toBe(true)
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(byTag(tags.component.toast)).toBeDisplayed()
+    await expect(tambah.screen).toBeDisplayed()
   })
 })

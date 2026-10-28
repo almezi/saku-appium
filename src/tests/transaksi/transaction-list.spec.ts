@@ -34,7 +34,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
   // transaction); mocha's timeout is raised globally because WDIO's
   // wrapper ignores this.timeout() inside hooks.
   before(async () => {
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
   })
 
   it('seeds three transactions across two days @regression', async () => {
@@ -115,7 +115,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     // findRowText scrolls the LazyColumn — the yesterday income is only
     // visible under the older header.
     const yesterdayRow = await daftar.findRowText(formatRp(A_YESTERDAY_INCOME))
-    expect(await yesterdayRow.isDisplayed()).toBe(true)
+    await expect(yesterdayRow).toBeDisplayed()
   })
 
   it('TC-LIST-05 rows render category, type label and formatted amount @regression', async () => {
@@ -160,7 +160,7 @@ describe('TC-LIST — transaction list (Phase 1) @regression', () => {
     })
     await daftar.open()
     const row = await daftar.findRowText(formatRp(10_000))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
 
     // Layout contract: the (possibly truncated) category text must stay
     // clear of the amount text — their bounds must not intersect. Element

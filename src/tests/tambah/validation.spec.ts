@@ -101,7 +101,7 @@ describe('TC-VAL — form validation (Phase 3.A) @regression', () => {
     await clearByBackspace(tambah.amountInput)
     await typeKeys(tambah.amountInput, '9'.repeat(18))
     expect(await tambah.getAmountText()).toBe('Rp 999.999.999.999')
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
   })
 
   it('TC-VAL-10 leading zeros parse as their numeric value (0005000 -> 5.000) @regression', async () => {
@@ -110,7 +110,7 @@ describe('TC-VAL — form validation (Phase 3.A) @regression', () => {
     await tambah.save()
     await daftar.open()
     const row = await daftar.findRowText(formatRp(5_000))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
     await tambah.open()
   })
 
@@ -137,7 +137,7 @@ describe('TC-VAL — form validation (Phase 3.A) @regression', () => {
     await tambah.open()
     await typeKeys(tambah.noteInput, 'a'.repeat(70))
     expect((await tambah.getNoteText()).length).toBe(60)
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
   })
 
   it('TC-VAL-14 emoji note saves and renders (verified by reopening in edit) @regression', async () => {
@@ -187,10 +187,10 @@ describe('TC-VAL — form validation (Phase 3.A) @regression', () => {
     // Keep the keyboard up (no hideKeyboard) when tapping save.
     await typeKeys(tambah.noteInput, 'kb open', true)
     await tambah.saveButton.click()
-    await byTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 }).catch(() => undefined)
+    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: 10_000 }).catch(() => undefined)
     expect(await tambah.getHelperText()).toBe('Isi jumlah dan kategori dulu')
     await daftar.open()
     const row = await daftar.findRowText(formatRp(3_333))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
   })
 })

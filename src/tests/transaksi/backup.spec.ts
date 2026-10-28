@@ -116,7 +116,7 @@ async function tapPickerNode(selector: string, label: string): Promise<void> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const node = $(`android=new UiSelector().${selector}`)
-      await node.waitForDisplayed({ timeout: 5_000 })
+      await expect(node).toBeDisplayed({ wait: 5_000 })
       await node.click()
       return
     } catch {
@@ -143,7 +143,7 @@ async function openDownloadsRoot(fileName: string): Promise<void> {
       await driver.pause(600)
       await tapPickerNode('text("Downloads")', 'Downloads root')
       const fileRow = $(`android=new UiSelector().textContains("${fileName}")`)
-      await fileRow.waitForDisplayed({ timeout: 5_000 })
+      await expect(fileRow).toBeDisplayed({ wait: 5_000 })
       return
     } catch {
       await driver.pause(800)
@@ -174,23 +174,23 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     // the Transaksi screen, so navigate there first.
     await daftar.open()
     await cadangan.openFromDaftar()
-    expect(await cadangan.isDisplayed()).toBe(true)
+    await expect(cadangan.screen).toBeDisplayed()
     // v2.3 renders the status as one untagged line plus the CADANGAN TERAKHIR
     // block, so assert on the joined rendered texts ("1 transaksi", and the
     // never-backed-up label with a capital B).
     const status = await cadangan.statusText()
     expect(status).toContain('1 transaksi')
     expect(status).toContain('Belum pernah')
-    expect(await cadangan.warningCard.isDisplayed()).toBe(true)
+    await expect(cadangan.warningCard).toBeDisplayed()
   })
 
   it('TC-BACKUP-02 exporting JSON opens the share sheet with the backup file @regression', async () => {
     await cadangan.exportJsonButton.click()
     await cadangan.waitForShareSheet()
     const fileName = $('android=new UiSelector().textContains("saku-cadangan.json")')
-    expect(await fileName.isDisplayed()).toBe(true)
+    await expect(fileName).toBeDisplayed()
     await cadangan.dismissShareSheet()
-    expect(await cadangan.isDisplayed()).toBe(true)
+    await expect(cadangan.screen).toBeDisplayed()
   })
 
   it('TC-BACKUP-03 the exported files contain the current transaction @regression', async () => {
@@ -214,7 +214,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
     await cadangan.exportCsvButton.click()
     await cadangan.waitForShareSheet()
     await cadangan.dismissShareSheet()
-    expect(await cadangan.isDisplayed()).toBe(true)
+    await expect(cadangan.screen).toBeDisplayed()
     // Cancelling the share must not touch data: the transaction count is
     // unchanged. "Cadangan terakhir" is NOT asserted here — the export
     // already wrote the backup file, so the app correctly reports a backup
@@ -265,7 +265,7 @@ describe('TC-BACK — backup & export (Phase 2) @regression', () => {
       await daftar.tapDelete(categories.income.salary)
       await daftar.confirmDeleteSheet()
     }
-    expect(await daftar.emptyState.isDisplayed()).toBe(true)
+    await expect(daftar.emptyState).toBeDisplayed()
 
     // The emptied list renders no daftar_backup_button on v2.3 — entry is
     // the empty state's secondary button (verified 2026-10-28).

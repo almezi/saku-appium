@@ -72,7 +72,7 @@ async function clearAmount(): Promise<void> {
 async function freshForm(): Promise<void> {
   await driver.terminateApp(BUNDLE_ID)
   await driver.activateApp(BUNDLE_ID)
-  await iosByTag(tags.navTambah).waitForDisplayed({ timeout: 30_000 })
+  await expect(iosByTag(tags.navTambah)).toBeDisplayed({ wait: 30_000 })
   await tambah.open()
 }
 
@@ -132,7 +132,7 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
   it('TC-VAL-09 18-digit overflow clamps at 12 digits without crashing @regression', async () => {
     await writeAmount('9'.repeat(18))
     expect(await tambah.getAmountText()).toBe('Rp 999.999.999.999')
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
   })
 
   it('TC-VAL-10 leading zeros parse as their numeric value (0005000 -> 5.000) @regression', async () => {
@@ -143,7 +143,7 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     // Scoped to the transaction cards: the month summary renders the same
     // amount and would answer a page-wide lookup.
     const row = await daftar.findTransactionRow(formatRp(5_000))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
     await tambah.open()
   })
 
@@ -169,7 +169,7 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     await tambah.open()
     await writeNote('a'.repeat(70))
     expect((await tambah.getNoteText()).length).toBe(60)
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
   })
 
   it('TC-VAL-14 emoji note saves and renders (verified by reopening in edit) @regression', async () => {
@@ -227,6 +227,6 @@ describe('TC-VAL — form validation (Phase 3.A) on iOS @regression', () => {
     expect(await tambah.getHelperText()).toBe('Isi jumlah dan kategori dulu')
     await daftar.open()
     const row = await daftar.findTransactionRow(formatRp(3_333))
-    expect(await row.isDisplayed()).toBe(true)
+    await expect(row).toBeDisplayed()
   })
 })

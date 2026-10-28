@@ -24,7 +24,7 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
   before(async () => {
-    await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
   })
 
   it('seeds three transactions across two days @regression', async () => {
@@ -95,7 +95,7 @@ describe('TC-LIST — transaction list (Phase 1) on iOS @regression', () => {
   it('TC-LIST-03 items group under their own day headers @regression', async () => {
     expect(await daftar.dayHeaderCount()).toBe(2)
     const yesterdayRow = await daftar.findRowText(formatRp(A_YESTERDAY_INCOME))
-    expect(await yesterdayRow.isDisplayed()).toBe(true)
+    await expect(yesterdayRow).toBeDisplayed()
   })
 
   it('TC-LIST-05 rows render category, type label and formatted amount @regression', async () => {

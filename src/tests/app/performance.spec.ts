@@ -37,7 +37,7 @@ function memTotalKb(): number {
 describe('TC-PERF — performance (Phase 3.F) @regression', () => {
   // Seed for TC-PERF-03; see header for why 15 rows via the UI.
   before(async () => {
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     await tambah.open()
     for (let i = 0; i < 15; i++) {
       await tambah.fillAmount(10_000 + i * 1_000)
@@ -52,7 +52,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
     await driver.pause(500)
     const t0 = Date.now()
     await byTag(tags.navDaftar).click()
-    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: 10_000 })
+    await expect(byTag(tags.daftar.screen)).toBeDisplayed({ wait: 10_000 })
     const t = Date.now() - t0
     expect(t).toBeLessThan(500)
   })
@@ -67,7 +67,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
     })
     const t0 = Date.now()
     await tambah.saveButton.click()
-    await byTag(tags.component.toast).waitForDisplayed({ timeout: 5_000 })
+    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: 5_000 })
     const t = Date.now() - t0
     expect(t).toBeLessThan(1_000)
   })
@@ -93,7 +93,7 @@ describe('TC-PERF — performance (Phase 3.F) @regression', () => {
     const elapsed = Date.now() - t0
 
     // No ANR/crash after sustained scrolling; 60s ceiling catches stalls.
-    expect(await byTag(tags.daftar.screen).isDisplayed()).toBe(true)
+    await expect(byTag(tags.daftar.screen)).toBeDisplayed()
     expect(elapsed).toBeLessThan(60_000)
   })
 

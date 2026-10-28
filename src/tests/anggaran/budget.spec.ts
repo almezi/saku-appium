@@ -27,7 +27,7 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
   const anggaran = new AnggaranPage()
 
   before(async () => {
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     await createTransaction({
       type: 'pemasukan',
       amount: 50_000,
@@ -39,17 +39,17 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
 
   it('TC-BUD-01 tapping the Ringkasan budget button opens the Anggaran screen @regression', async () => {
     await anggaran.openFromRingkasan()
-    expect(await anggaran.isDisplayed()).toBe(true)
+    await expect(anggaran.screen).toBeDisplayed()
   })
 
   it('TC-BUD-11 back returns to Ringkasan @regression', async () => {
     await anggaran.tapBack()
-    expect(await ringkasan.isDisplayed()).toBe(true)
+    await expect(ringkasan.screen).toBeDisplayed()
     await anggaran.openFromRingkasan()
   })
 
   it('TC-BUD-02 with no budgets the empty state shows and the total card is hidden @regression', async () => {
-    expect(await anggaran.emptyState.isDisplayed()).toBe(true)
+    await expect(anggaran.emptyState).toBeDisplayed()
     expect(await anggaran.totalCard.isExisting()).toBe(false)
   })
 
@@ -58,9 +58,9 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
     await anggaran.selectFormCategory(categories.expense.dailyFood)
     await anggaran.fillLimit(BUDGET_LIMIT)
     await anggaran.saveForm()
-    expect(await anggaran.row(categories.expense.dailyFood).isDisplayed()).toBe(true)
+    await expect(anggaran.row(categories.expense.dailyFood)).toBeDisplayed()
     // The total card appears once the first budget exists.
-    expect(await anggaran.totalCard.isDisplayed()).toBe(true)
+    await expect(anggaran.totalCard).toBeDisplayed()
   })
 
   it('TC-BUD-08 progress reflects the month expense total with status Aman @regression', async () => {
@@ -104,7 +104,7 @@ describe('TC-BUD — monthly category budgets (Phase 2) @regression', () => {
   it('TC-BUD-10 removing the budget restores the empty state and keeps transactions @regression', async () => {
     await anggaran.tapRowEdit(categories.expense.dailyFood)
     await anggaran.deleteFromForm()
-    expect(await anggaran.emptyState.isDisplayed()).toBe(true)
+    await expect(anggaran.emptyState).toBeDisplayed()
     expect(await anggaran.row(categories.expense.dailyFood).isExisting()).toBe(false)
   })
 })

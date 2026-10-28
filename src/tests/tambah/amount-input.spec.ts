@@ -57,7 +57,7 @@ describe('TC-AMT — amount input behavior (Phase 3.B) @regression', () => {
   it('TC-AMT-01 tapping the amount field opens the numeric keyboard @regression', async () => {
     const editor = await editorOf(tambah.amountInput)
     await editor.click()
-    await editor.waitForDisplayed({ timeout: 10_000 })
+    await expect(editor).toBeDisplayed({ wait: 10_000 })
     expect(Boolean(await editor.getAttribute('focused'))).toBe(true)
   })
 
@@ -102,6 +102,6 @@ describe('TC-AMT — amount input behavior (Phase 3.B) @regression', () => {
     await clearByBackspace(tambah.amountInput)
     await typeKeys(tambah.amountInput, '9'.repeat(18))
     expect(await tambah.getAmountText()).toBe('Rp 999.999.999.999')
-    expect(await tambah.isDisplayed()).toBe(true)
+    await expect(tambah.screen).toBeDisplayed()
   })
 })

@@ -23,7 +23,7 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
     new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d)
 
   before(async () => {
-    await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     await createTransactionIos({
       type: 'pemasukan',
       amount: AMOUNT,
@@ -34,7 +34,7 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
 
   async function selectCategoryInline(categoryId: string): Promise<void> {
     const item = iosByTag(tags.tambah.categoryItem(categoryId))
-    await item.waitForDisplayed({ timeout: 5_000 })
+    await expect(item).toBeDisplayed({ wait: 5_000 })
     await item.click()
   }
 
@@ -42,7 +42,7 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
     await daftar.open()
     await daftar.tapEdit(categories.income.refund)
     await ubah.waitForScreen()
-    expect(await ubah.isDisplayed()).toBe(true)
+    await expect(ubah.screen).toBeDisplayed()
     expect(await ubah.headerLabel()).toBe('Ubah transaksi')
     expect(await tambah.getAmountText()).toBe(formatRp(AMOUNT))
     expect(await tambah.getNoteText()).toBe(note)
@@ -52,7 +52,7 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
   it('TC-EDIT-02 changing the amount and saving updates the row and summary @regression', async () => {
     await tambah.fillAmount(NEW_AMOUNT)
     await ubah.save()
-    expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
+    await expect(await daftar.findRowText(formatRp(NEW_AMOUNT))).toBeDisplayed()
     expect(await daftar.summaryIncome()).toBe(NEW_AMOUNT)
   })
 
@@ -89,9 +89,9 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
     expect(await tambah.getNoteText()).toBe(editedNote)
     expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
     const mark = iosByTag(tags.tambah.categoryMark(categories.expense.dailyFood))
-    await mark.waitForDisplayed({ timeout: 5_000 })
+    await expect(mark).toBeDisplayed({ wait: 5_000 })
     await ubah.tapBack()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
   })
 
   it('TC-EDIT-07 leaving the edit without saving keeps the data @regression', async () => {
@@ -99,8 +99,8 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
     await ubah.waitForScreen()
     await tambah.fillAmount(999_999)
     await ubah.tapBack()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
-    expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
+    await expect(await daftar.findRowText(formatRp(NEW_AMOUNT))).toBeDisplayed()
     await daftar.tapEdit(categories.expense.dailyFood)
     await ubah.waitForScreen()
     expect(await tambah.getAmountText()).toBe(formatRp(NEW_AMOUNT))
@@ -110,7 +110,7 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
     await tambah.fillAmount(0)
     expect(await ubah.isSaveEnabled()).toBe(false)
     await ubah.tapBack()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
   })
 
   it('TC-EDIT-05 changing the date moves the item to another month @regression', async () => {
@@ -118,9 +118,9 @@ describe('TC-EDIT — edit transaction (Phase 1) on iOS @regression', () => {
     await ubah.waitForScreen()
     await tambah.selectDate(prevMonthDay)
     await ubah.save()
-    await iosByTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
+    await expect(iosByTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
     await daftar.prevMonth()
-    expect(await (await daftar.findRowText(formatRp(NEW_AMOUNT))).isDisplayed()).toBe(true)
+    await expect(await daftar.findRowText(formatRp(NEW_AMOUNT))).toBeDisplayed()
     const headerTexts = await daftar.firstDayHeaderTexts()
     expect(headerTexts).toContain(idDate(prevMonthDay))
   })

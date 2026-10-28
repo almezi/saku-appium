@@ -21,7 +21,7 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
   const ringkasan = new RingkasanPage()
 
   before(async () => {
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     // Expense first: the income-0 savings state (TC-SUM-05) is only
     // reachable before any income exists.
     await createTransaction({
@@ -137,22 +137,22 @@ describe('TC-SUM — Ringkasan summary math (Phase 1) @regression', () => {
     await ringkasan.open()
     const balance = SALARY + SALES + BIG_INCOME - EXPENSE - EXTRA_EXPENSE
     expect(await ringkasan.balanceText()).toBe(formatRp(balance))
-    expect(await byTag(tags.ringkasan.balanceValue).isDisplayed()).toBe(true)
+    await expect(byTag(tags.ringkasan.balanceValue)).toBeDisplayed()
   })
 
   it('TC-SUM-13 scrolling to the bottom renders every section @regression', async () => {
     await ringkasan.open()
     const kelola = await scrollToTag(tags.ringkasan.kelolaButton)
-    expect(await kelola.isDisplayed()).toBe(true)
+    await expect(kelola).toBeDisplayed()
     const expenseCard = await scrollToTag(tags.ringkasan.breakdownExpense)
-    expect(await expenseCard.isDisplayed()).toBe(true)
+    await expect(expenseCard).toBeDisplayed()
     const anggaran = await scrollToTag(tags.ringkasan.anggaranButton)
-    expect(await anggaran.isDisplayed()).toBe(true)
+    await expect(anggaran).toBeDisplayed()
   })
 
   it('TC-SUM-10 empty month shows the empty state with no NaN/Infinity @regression', async () => {
     await ringkasan.prevMonth()
-    await byTag(tags.ringkasan.emptyState).waitForDisplayed()
+    await expect(byTag(tags.ringkasan.emptyState)).toBeDisplayed()
     expect((await ringkasan.emptyStateTexts()).join(' ')).toContain(
       'Belum ada data untuk diringkas',
     )

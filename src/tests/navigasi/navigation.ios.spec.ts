@@ -18,44 +18,44 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     // The iOS accessibility tree is populated lazily (TESTABILITY.md) and
     // noReset:false reinstalls the app, so the first launch needs a wider
     // window than the Android spec's 30 s.
-    await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 45_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 45_000 })
   })
 
   it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => {
-    expect(await iosByTag(tags.tambah.screen).isDisplayed()).toBe(true)
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed()
   })
 
   it('TC-NAV-02 Tambah tab shows tambah_screen @sanity', async () => {
     // The bottom bar renders all three tabs and tapping Tambah (re)shows its
     // screen — it is the start tab, so this also covers the re-tap case.
-    expect(await iosByTag(tags.navBottom).isDisplayed()).toBe(true)
-    expect(await iosByTag(tags.navTambah).isDisplayed()).toBe(true)
-    expect(await iosByTag(tags.navDaftar).isDisplayed()).toBe(true)
-    expect(await iosByTag(tags.navRingkasan).isDisplayed()).toBe(true)
+    await expect(iosByTag(tags.navBottom)).toBeDisplayed()
+    await expect(iosByTag(tags.navTambah)).toBeDisplayed()
+    await expect(iosByTag(tags.navDaftar)).toBeDisplayed()
+    await expect(iosByTag(tags.navRingkasan)).toBeDisplayed()
     await iosByTag(tags.navTambah).click()
-    await iosByTag(tags.tambah.screen).waitForDisplayed()
-    expect(await iosByTag(tags.tambah.screen).isDisplayed()).toBe(true)
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed()
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed()
   })
 
   it('TC-NAV-03 Transaksi tab opens daftar_screen @sanity', async () => {
     await iosByTag(tags.navDaftar).click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
   })
 
   it('TC-NAV-04 Ringkasan tab opens ringkasan_screen @sanity', async () => {
     await iosByTag(tags.navRingkasan).click()
-    await iosByTag(tags.ringkasan.screen).waitForDisplayed()
+    await expect(iosByTag(tags.ringkasan.screen)).toBeDisplayed()
   })
 
   it('TC-NAV-05 round-trip across all tabs without crashing @sanity', async () => {
     await iosByTag(tags.navTambah).click()
-    await iosByTag(tags.tambah.screen).waitForDisplayed()
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed()
     await iosByTag(tags.navDaftar).click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
     await iosByTag(tags.navRingkasan).click()
-    await iosByTag(tags.ringkasan.screen).waitForDisplayed()
+    await expect(iosByTag(tags.ringkasan.screen)).toBeDisplayed()
     await iosByTag(tags.navTambah).click()
-    await iosByTag(tags.tambah.screen).waitForDisplayed()
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed()
   })
 
   it('TC-NAV-06 system navigation on each tab does not crash @sanity', async () => {
@@ -66,7 +66,7 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     // no back stack, so either the same screen (state kept) or the start
     // tab (reset) is acceptable — same "verify" precedent as TC-PERS-02.
     await iosByTag(tags.navDaftar).click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
     await driver.background(2)
     await driver.activateApp(APP_ID)
     const daftarKept = await iosByTag(tags.daftar.screen).isExisting()
@@ -77,7 +77,7 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     )
 
     await iosByTag(tags.navRingkasan).click()
-    await iosByTag(tags.ringkasan.screen).waitForDisplayed()
+    await expect(iosByTag(tags.ringkasan.screen)).toBeDisplayed()
     await driver.background(2)
     await driver.activateApp(APP_ID)
     const ringkasanKept = await iosByTag(tags.ringkasan.screen).isExisting()
@@ -89,25 +89,25 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
 
     // From the start tab, the round-trip must land back on Tambah cleanly.
     await iosByTag(tags.navTambah).click()
-    await iosByTag(tags.tambah.screen).waitForDisplayed()
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed()
     await driver.background(2)
     await driver.activateApp(APP_ID)
-    await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
   })
 
   it('TC-NAV-07 selected tab state persists on re-tap @sanity', async () => {
     // Re-tapping the active tab must keep its screen and not bounce back to
     // the start tab.
     await iosByTag(tags.navDaftar).click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
     await iosByTag(tags.navDaftar).click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed()
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed()
     expect(await iosByTag(tags.tambah.screen).isExisting()).toBe(false)
 
     await iosByTag(tags.navRingkasan).click()
-    await iosByTag(tags.ringkasan.screen).waitForDisplayed()
+    await expect(iosByTag(tags.ringkasan.screen)).toBeDisplayed()
     await iosByTag(tags.navRingkasan).click()
-    await iosByTag(tags.ringkasan.screen).waitForDisplayed()
+    await expect(iosByTag(tags.ringkasan.screen)).toBeDisplayed()
     expect(await iosByTag(tags.tambah.screen).isExisting()).toBe(false)
   })
 
@@ -121,6 +121,6 @@ describe('TC-NAV — smoke & navigation on iOS @sanity', () => {
     // A frozen app would surface as a command timeout instead of a displayed
     // screen; assert the app still responds and settles.
     await iosByTag(tags.navTambah).click()
-    await iosByTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
   })
 })

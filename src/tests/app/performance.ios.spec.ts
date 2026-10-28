@@ -68,7 +68,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
     await driver.pause(500)
     const t0 = Date.now()
     await iosByTag(tags.navDaftar).click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: 10_000 })
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed({ wait: 10_000 })
     const t = Date.now() - t0
     console.log(`[TC-PERF-02] tab switch: ${t} ms`)
     expect(t).toBeLessThan(1_500)
@@ -116,7 +116,7 @@ describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
     const after = await daftar.firstCardPosition()
 
     // No ANR/crash after sustained scrolling; the 60s ceiling catches stalls.
-    expect(await daftar.isDisplayed()).toBe(true)
+    await expect(daftar.screen).toBeDisplayed()
     expect(elapsed).toBeLessThan(60_000)
     // The sweeps actually moved the list: the topmost card changed or moved up.
     expect(before).not.toBeNull()

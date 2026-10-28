@@ -13,17 +13,17 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1) @inte
 
   async function openDeleteSheet(): Promise<void> {
     await daftar.tapDelete(categories.income.gift)
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed()
+    await expect(byTag(tags.daftar.deleteSheet)).toBeDisplayed()
   }
 
   async function confirmDelete(): Promise<void> {
     await byTag(tags.component.sheetConfirm).click()
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ reverse: true })
-    await byTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 })
+    await expect(byTag(tags.daftar.deleteSheet)).not.toBeDisplayed()
+    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: 10_000 })
   }
 
   before(async () => {
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     await createTransaction({
       type: 'pemasukan',
       amount: AMOUNT,
@@ -39,21 +39,21 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1) @inte
 
   it('TC-DEL-03 cancelling the sheet keeps the transaction @integration', async () => {
     await byTag(tags.component.sheetCancel).click()
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed({ reverse: true })
-    expect(await (await daftar.findRowText(formatRp(AMOUNT))).isDisplayed()).toBe(true)
+    await expect(byTag(tags.daftar.deleteSheet)).not.toBeDisplayed()
+    await expect(await daftar.findRowText(formatRp(AMOUNT))).toBeDisplayed()
     expect(await daftar.summaryIncome()).toBe(AMOUNT)
   })
 
   it('TC-UNDO-01 confirming shows the toast with an undo action @integration', async () => {
     await openDeleteSheet()
     await confirmDelete()
-    expect(await byTag(tags.component.toast).isDisplayed()).toBe(true)
-    expect(await byTag(tags.component.toastAction).isDisplayed()).toBe(true)
+    await expect(byTag(tags.component.toast)).toBeDisplayed()
+    await expect(byTag(tags.component.toastAction)).toBeDisplayed()
   })
 
   it('TC-UNDO-02 tapping Urungkan before the timeout restores the transaction @integration', async () => {
     await tapUndoAction()
-    expect(await (await daftar.findRowText(formatRp(AMOUNT))).isDisplayed()).toBe(true)
+    await expect(await daftar.findRowText(formatRp(AMOUNT))).toBeDisplayed()
     expect(await daftar.summaryIncome()).toBe(AMOUNT)
   })
 
@@ -66,7 +66,7 @@ describe('TC-DEL / TC-UNDO — delete with confirmation and undo (Phase 1) @inte
     await driver.pause(6_000)
     // With no transactions left the list swaps to its empty state and the
     // summary cards leave the hierarchy entirely (verified live).
-    await byTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
+    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
     const rows = await allByTagMatches('daftar_item_\\d+$')
     expect(rows.length).toBe(0)
   })
@@ -80,11 +80,11 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @
   const FOOD_EXPENSE = 75_000
 
   async function confirmPermanentDelete(): Promise<void> {
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed()
+    await expect(byTag(tags.daftar.deleteSheet)).toBeDisplayed()
     await byTag(tags.component.sheetConfirm).click()
     // Wait past the 5 s undo window with a plain pause: the toast node can
     // linger composed after expiry, so a disappearance wait is unreliable.
-    await byTag(tags.component.toast).waitForDisplayed({ timeout: 10_000 })
+    await expect(byTag(tags.component.toast)).toBeDisplayed({ wait: 10_000 })
     await driver.pause(6_000)
   }
 
@@ -92,7 +92,7 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @
     // The first describe ends on the Daftar screen — navigate back to the
     // form explicitly instead of assuming a fresh launch.
     await byTag(tags.navTambah).click()
-    await byTag(tags.tambah.screen).waitForDisplayed({ timeout: 30_000 })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: 30_000 })
     await createTransaction({
       type: 'pemasukan',
       amount: SALES_INCOME,
@@ -145,12 +145,12 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @
     // createTransaction leaves the app on the Tambah form.
     await daftar.open()
     await daftar.tapDelete(categories.income.bonusThr)
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed()
+    await expect(byTag(tags.daftar.deleteSheet)).toBeDisplayed()
     await byTag(tags.component.sheetConfirm).click()
     // Second delete immediately — the first undo toast is still up
     // (verified live: the sheet opens over it).
     await daftar.tapDelete(categories.income.other)
-    await byTag(tags.daftar.deleteSheet).waitForDisplayed()
+    await expect(byTag(tags.daftar.deleteSheet)).toBeDisplayed()
     await byTag(tags.component.sheetConfirm).click()
     // Second undo window (5 s) — pause past it; the following assertions
     // prove both deletions stuck.
@@ -169,7 +169,7 @@ describe('TC-DEL — delete effects on list, Ringkasan and breakdown (Phase 1) @
   it('TC-DEL-04 deleting the last item of the month shows the empty state @integration', async () => {
     await daftar.tapDelete(categories.income.sales)
     await confirmPermanentDelete()
-    await byTag(tags.daftar.emptyState).waitForDisplayed({ timeout: 10_000 })
+    await expect(byTag(tags.daftar.emptyState)).toBeDisplayed({ wait: 10_000 })
     const rows = await allByTagMatches('daftar_item_\\d+$')
     expect(rows.length).toBe(0)
   })
