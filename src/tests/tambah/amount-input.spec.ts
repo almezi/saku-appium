@@ -12,97 +12,101 @@
  * - Backspace (native DEL keycode 67) edits from the end of the value; clearing
  *   to empty restores the amount-missing helper state and re-disables save.
  */
-import { categories } from '../../config/categories'
-import { TambahPage } from '../../pageobjects/tambah.page'
-import type { ChainablePromiseElement } from '../../types'
-import { ELEMENT_PRESENT } from '../../config/timeouts'
+import { categories } from "../../config/categories";
+import { TambahPage } from "../../pageobjects/tambah.page";
+import type { ChainablePromiseElement } from "../../types";
+import { ELEMENT_PRESENT } from "../../config/timeouts";
 
-const tambah = new TambahPage()
+const tambah = new TambahPage();
 
 /** Inner EditText of a tagged wrapper field (where text actually lands). */
 async function editorOf(field: ChainablePromiseElement): Promise<ChainablePromiseElement> {
-  return field.$('.//android.widget.EditText')
+  return field.$(".//android.widget.EditText");
 }
 
 /** Replace field content via UiObject2 setValue (clears + sets). */
 async function setDirect(field: ChainablePromiseElement, text: string): Promise<void> {
-  const editor = await editorOf(field)
-  await editor.setValue(text)
+  const editor = await editorOf(field);
+  await editor.setValue(text);
 }
 
 /** Focus + clear a field with native DEL (keycode 67) keypresses. */
 async function clearByBackspace(field: ChainablePromiseElement): Promise<void> {
-  const editor = await editorOf(field)
-  await editor.click()
-  for (let i = 0; i < 16; i++) await driver.pressKeyCode(67)
-  await driver.hideKeyboard().catch(() => undefined)
+  const editor = await editorOf(field);
+  await editor.click();
+  for (let i = 0; i < 16; i++) await driver.pressKeyCode(67);
+  await driver.hideKeyboard().catch(() => undefined);
 }
 
 /** Type as keyboard events (the realistic user path), then hide the keyboard. */
-async function typeKeys(field: ChainablePromiseElement, text: string, keepKeyboard = false): Promise<void> {
-  const editor = await editorOf(field)
-  await editor.click()
-  await driver.keys(text)
-  if (!keepKeyboard) await driver.hideKeyboard().catch(() => undefined)
+async function typeKeys(
+  field: ChainablePromiseElement,
+  text: string,
+  keepKeyboard = false,
+): Promise<void> {
+  const editor = await editorOf(field);
+  await editor.click();
+  await driver.keys(text);
+  if (!keepKeyboard) await driver.hideKeyboard().catch(() => undefined);
 }
 
-describe('TC-AMT — amount input behavior (Phase 3.B) @regression', () => {
+describe("TC-AMT — amount input behavior (Phase 3.B) @regression", () => {
   before(async () => {
-    await tambah.open()
-  })
+    await tambah.open();
+  });
 
   beforeEach(async () => {
-    await clearByBackspace(tambah.amountInput)
-  })
+    await clearByBackspace(tambah.amountInput);
+  });
 
-  it('TC-AMT-01 tapping the amount field opens the numeric keyboard @regression', async () => {
-    const editor = await editorOf(tambah.amountInput)
-    await editor.click()
-    await expect(editor).toBeDisplayed({ wait: ELEMENT_PRESENT })
-    expect(Boolean(await editor.getAttribute('focused'))).toBe(true)
-  })
+  it("TC-AMT-01 tapping the amount field opens the numeric keyboard @regression", async () => {
+    const editor = await editorOf(tambah.amountInput);
+    await editor.click();
+    await expect(editor).toBeDisplayed({ wait: ELEMENT_PRESENT });
+    expect(Boolean(await editor.getAttribute("focused"))).toBe(true);
+  });
 
   it('TC-AMT-02 typed digits format live as "Rp X.XXX" @regression', async () => {
-    await typeKeys(tambah.amountInput, '250000')
-    expect(await tambah.getAmountText()).toBe('Rp 250.000')
-  })
+    await typeKeys(tambah.amountInput, "250000");
+    expect(await tambah.getAmountText()).toBe("Rp 250.000");
+  });
 
-  it('TC-AMT-03 backspace to empty returns helper state and re-disables save @regression', async () => {
-    await tambah.selectCategory(categories.income.salary)
-    await typeKeys(tambah.amountInput, '10000')
-    expect(await tambah.isSaveEnabled()).toBe(true)
-    await clearByBackspace(tambah.amountInput)
-    expect(await tambah.isSaveEnabled()).toBe(false)
-    expect(await tambah.getHelperText()).toBe('Isi jumlah dulu')
-  })
+  it("TC-AMT-03 backspace to empty returns helper state and re-disables save @regression", async () => {
+    await tambah.selectCategory(categories.income.salary);
+    await typeKeys(tambah.amountInput, "10000");
+    expect(await tambah.isSaveEnabled()).toBe(true);
+    await clearByBackspace(tambah.amountInput);
+    expect(await tambah.isSaveEnabled()).toBe(false);
+    expect(await tambah.getHelperText()).toBe("Isi jumlah dulu");
+  });
 
-  it('TC-AMT-04 clear field re-disables save @regression', async () => {
-    await setDirect(tambah.amountInput, '10000')
-    await tambah.selectCategory(categories.income.salary)
-    expect(await tambah.isSaveEnabled()).toBe(true)
-    await clearByBackspace(tambah.amountInput)
-    expect(await tambah.isSaveEnabled()).toBe(false)
-  })
+  it("TC-AMT-04 clear field re-disables save @regression", async () => {
+    await setDirect(tambah.amountInput, "10000");
+    await tambah.selectCategory(categories.income.salary);
+    expect(await tambah.isSaveEnabled()).toBe(true);
+    await clearByBackspace(tambah.amountInput);
+    expect(await tambah.isSaveEnabled()).toBe(false);
+  });
 
-  it('TC-AMT-05 thousand separator auto-inserted on formatted amounts @regression', async () => {
-    await typeKeys(tambah.amountInput, '1234567')
-    expect(await tambah.getAmountText()).toBe('Rp 1.234.567')
-  })
+  it("TC-AMT-05 thousand separator auto-inserted on formatted amounts @regression", async () => {
+    await typeKeys(tambah.amountInput, "1234567");
+    expect(await tambah.getAmountText()).toBe("Rp 1.234.567");
+  });
 
-  it('TC-AMT-06 cursor stays at end during formatting edits @regression', async () => {
-    await typeKeys(tambah.amountInput, '123', true)
-    expect(await tambah.getAmountText()).toBe('Rp 123')
+  it("TC-AMT-06 cursor stays at end during formatting edits @regression", async () => {
+    await typeKeys(tambah.amountInput, "123", true);
+    expect(await tambah.getAmountText()).toBe("Rp 123");
     // Native DEL edits from the end: one backspace drops the last digit only.
-    await driver.pressKeyCode(67)
-    expect(await tambah.getAmountText()).toBe('Rp 12')
-    await typeKeys(tambah.amountInput, '4', true)
-    expect(await tambah.getAmountText()).toBe('Rp 124')
-  })
+    await driver.pressKeyCode(67);
+    expect(await tambah.getAmountText()).toBe("Rp 12");
+    await typeKeys(tambah.amountInput, "4", true);
+    expect(await tambah.getAmountText()).toBe("Rp 124");
+  });
 
-  it('TC-AMT-07 max digits limit clamps at 12 without crashing @regression', async () => {
-    await clearByBackspace(tambah.amountInput)
-    await typeKeys(tambah.amountInput, '9'.repeat(18))
-    expect(await tambah.getAmountText()).toBe('Rp 999.999.999.999')
-    await expect(tambah.screen).toBeDisplayed()
-  })
-})
+  it("TC-AMT-07 max digits limit clamps at 12 without crashing @regression", async () => {
+    await clearByBackspace(tambah.amountInput);
+    await typeKeys(tambah.amountInput, "9".repeat(18));
+    expect(await tambah.getAmountText()).toBe("Rp 999.999.999.999");
+    await expect(tambah.screen).toBeDisplayed();
+  });
+});

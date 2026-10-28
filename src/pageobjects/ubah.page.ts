@@ -1,8 +1,8 @@
-import { byTag } from '../helpers/locators'
-import { tags } from '../config/tags'
-import { BasePage } from './base.page'
-import type { ChainablePromiseElement } from '../types'
-import { SCREEN_READY } from '../config/timeouts'
+import { byTag } from "../helpers/locators";
+import { tags } from "../config/tags";
+import { BasePage } from "./base.page";
+import type { ChainablePromiseElement } from "../types";
+import { SCREEN_READY } from "../config/timeouts";
 
 /**
  * Ubah transaksi (edit). Shares its form fields with Tambah — the form
@@ -10,42 +10,42 @@ import { SCREEN_READY } from '../config/timeouts'
  */
 export class UbahPage extends BasePage {
   constructor() {
-    super(tags.ubah.screen)
+    super(tags.ubah.screen);
   }
 
   get saveButton(): ChainablePromiseElement {
-    return byTag(tags.ubah.buttonSave)
+    return byTag(tags.ubah.buttonSave);
   }
 
   get deleteButton(): ChainablePromiseElement {
-    return byTag(tags.ubah.buttonDelete)
+    return byTag(tags.ubah.buttonDelete);
   }
 
   /** Header title via its child TextView (the tag node's own text is empty). */
   async headerLabel(): Promise<string> {
-    const own = ((await byTag(tags.ubah.header).getText()) || '').trim()
-    if (own) return own
+    const own = ((await byTag(tags.ubah.header).getText()) || "").trim();
+    if (own) return own;
     const children = await byTag(tags.ubah.header).$$(
       'android=new UiSelector().className("android.widget.TextView")',
-    )
+    );
     for (const child of children) {
-      const text = ((await child.getText()) || '').trim()
-      if (text) return text
+      const text = ((await child.getText()) || "").trim();
+      if (text) return text;
     }
-    return ''
+    return "";
   }
 
   async isSaveEnabled(): Promise<boolean> {
-    return this.saveButton.isEnabled()
+    return this.saveButton.isEnabled();
   }
 
   /** Saving returns to the Transaksi list. */
   async save(): Promise<void> {
-    await this.saveButton.click()
-    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
+    await this.saveButton.click();
+    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY });
   }
 
   async tapDelete(): Promise<void> {
-    await this.deleteButton.click()
+    await this.deleteButton.click();
   }
 }

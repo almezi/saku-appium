@@ -1,9 +1,9 @@
-import { iosByTag } from '../helpers/locators'
-import { iosPageNodes, iosStaticTexts, iosTextsInRect } from '../helpers/elements'
-import { tags } from '../config/tags'
-import { BaseIosPage } from './base.ios.page'
-import type { ChainablePromiseElement } from '../types'
-import { SCREEN_READY } from '../config/timeouts'
+import { iosByTag } from "../helpers/locators";
+import { iosPageNodes, iosStaticTexts, iosTextsInRect } from "../helpers/elements";
+import { tags } from "../config/tags";
+import { BaseIosPage } from "./base.ios.page";
+import type { ChainablePromiseElement } from "../types";
+import { SCREEN_READY } from "../config/timeouts";
 
 /**
  * Ubah transaksi (edit) on iOS. Shares its form fields with Tambah — the
@@ -16,15 +16,15 @@ import { SCREEN_READY } from '../config/timeouts'
  */
 export class UbahIosPage extends BaseIosPage {
   constructor() {
-    super(tags.ubah.screen)
+    super(tags.ubah.screen);
   }
 
   get saveButton(): ChainablePromiseElement {
-    return iosByTag(tags.ubah.buttonSave)
+    return iosByTag(tags.ubah.buttonSave);
   }
 
   get deleteButton(): ChainablePromiseElement {
-    return iosByTag(tags.ubah.buttonDelete)
+    return iosByTag(tags.ubah.buttonDelete);
   }
 
   /**
@@ -35,31 +35,31 @@ export class UbahIosPage extends BaseIosPage {
    * header's frame (measured 2026-10-27).
    */
   async headerLabel(): Promise<string> {
-    const own = ((await iosByTag(tags.ubah.header).getText()) || '').trim()
-    if (own) return own
-    const nodes = await iosPageNodes()
-    const header = nodes.find((node) => node.name === tags.ubah.header)
-    if (!header) return ''
-    return iosTextsInRect(header, iosStaticTexts(nodes))[0] ?? ''
+    const own = ((await iosByTag(tags.ubah.header).getText()) || "").trim();
+    if (own) return own;
+    const nodes = await iosPageNodes();
+    const header = nodes.find((node) => node.name === tags.ubah.header);
+    if (!header) return "";
+    return iosTextsInRect(header, iosStaticTexts(nodes))[0] ?? "";
   }
 
   async isSaveEnabled(): Promise<boolean> {
-    return this.saveButton.isEnabled()
+    return this.saveButton.isEnabled();
   }
 
   /** Saving returns to the Transaksi list. */
   async save(): Promise<void> {
-    await this.saveButton.click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
+    await this.saveButton.click();
+    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY });
   }
 
   async tapDelete(): Promise<void> {
-    await this.deleteButton.click()
+    await this.deleteButton.click();
   }
 
   /** Leaving without saving returns to the Transaksi list. */
   async tapBack(): Promise<void> {
-    await super.tapBack()
-    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
+    await super.tapBack();
+    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY });
   }
 }

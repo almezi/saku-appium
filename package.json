@@ -11,6 +11,11 @@
     "test": "wdio run ./wdio.conf.ts",
     "test:unit": "node --test -r ts-node/register/transpile-only \"src/*/__tests__/*.test.ts\"",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run typecheck && npm run lint && npm run test:unit && npm run check:parity",
     "check:parity": "node scripts/check_parity.mjs",
     "test:sanity": "TEST_GREP=@sanity wdio run ./wdio.conf.ts",
     "test:regression": "TEST_GREP=@regression wdio run ./wdio.conf.ts",
@@ -55,7 +60,12 @@
     "appium": "^3.0.0",
     "appium-uiautomator2-driver": "^8.0.0",
     "appium-xcuitest-driver": "^12.21.0",
+    "eslint": "^9.39.5",
+    "eslint-import-resolver-typescript": "^3.10.1",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.9.10",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.72.1"
   }
 }

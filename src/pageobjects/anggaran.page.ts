@@ -1,10 +1,10 @@
-import { byTag } from '../helpers/locators'
-import { tags } from '../config/tags'
-import { extractChildTexts } from '../helpers/elements'
-import { BasePage } from './base.page'
-import { typeIntoTaggedField } from '../helpers/input'
-import type { ChainablePromiseElement } from '../types'
-import { ELEMENT_PRESENT, SURFACE_DISMISS } from '../config/timeouts'
+import { byTag } from "../helpers/locators";
+import { tags } from "../config/tags";
+import { extractChildTexts } from "../helpers/elements";
+import { BasePage } from "./base.page";
+import { typeIntoTaggedField } from "../helpers/input";
+import type { ChainablePromiseElement } from "../types";
+import { ELEMENT_PRESENT, SURFACE_DISMISS } from "../config/timeouts";
 
 /**
  * Test tags for the Anggaran (budget) screen and form, from TESTABILITY.md
@@ -18,33 +18,32 @@ import { ELEMENT_PRESENT, SURFACE_DISMISS } from '../config/timeouts'
  * as are the per-row "Ubah"/"Hapus" actions.
  */
 export const anggaranTags = {
-  screen: 'anggaran_screen',
-  totalCard: 'anggaran_total_card',
-  list: 'anggaran_list',
+  screen: "anggaran_screen",
+  totalCard: "anggaran_total_card",
+  list: "anggaran_list",
   row: (categoryId: string) => `anggaran_row_${categoryId}`,
   rowEdit: (categoryId: string) => `anggaran_row_${categoryId}_edit_${categoryId}`,
   rowDelete: (categoryId: string) => `anggaran_row_${categoryId}_delete_${categoryId}`,
-  addButton: 'anggaran_add_button',
-  emptyState: 'anggaran_empty_state',
-  formScreen: 'anggaran_form_screen',
-  formCategory: 'anggaran_form_category',
-  formCategorySheet: 'anggaran_form_category_sheet',
-  formCategoryOption: (categoryId: string) =>
-    `anggaran_form_category_sheet_option_${categoryId}`,
-  formLimit: 'anggaran_form_limit',
-  formNote: 'anggaran_form_note',
-  formSwitch: 'anggaran_form_switch',
-  formSave: 'anggaran_form_save',
-  formDelete: 'anggaran_form_delete',
+  addButton: "anggaran_add_button",
+  emptyState: "anggaran_empty_state",
+  formScreen: "anggaran_form_screen",
+  formCategory: "anggaran_form_category",
+  formCategorySheet: "anggaran_form_category_sheet",
+  formCategoryOption: (categoryId: string) => `anggaran_form_category_sheet_option_${categoryId}`,
+  formLimit: "anggaran_form_limit",
+  formNote: "anggaran_form_note",
+  formSwitch: "anggaran_form_switch",
+  formSave: "anggaran_form_save",
+  formDelete: "anggaran_form_delete",
   // Live-verified 2026-10-25: the budget delete sheet root is
   // anggaran_form_delete_sheet — the documented anggaran_delete_sheet does
   // not exist on build v2.2. Confirm/cancel are the shared component tags.
-  deleteSheet: 'anggaran_form_delete_sheet',
+  deleteSheet: "anggaran_form_delete_sheet",
   // The row "Hapus" action opens a screen-level confirmation instead of the
   // form one; that root IS tagged anggaran_delete_sheet (verified live on
   // iOS 2026-10-27; ConfirmDeleteSheet in AnggaranScreen.kt).
-  screenDeleteSheet: 'anggaran_delete_sheet',
-} as const
+  screenDeleteSheet: "anggaran_delete_sheet",
+} as const;
 
 /**
  * Anggaran (budget) screen. Opened from Ringkasan via
@@ -54,46 +53,46 @@ export const anggaranTags = {
  */
 export class AnggaranPage extends BasePage {
   constructor() {
-    super(anggaranTags.screen)
+    super(anggaranTags.screen);
   }
 
   get totalCard(): ChainablePromiseElement {
-    return byTag(anggaranTags.totalCard)
+    return byTag(anggaranTags.totalCard);
   }
 
   get emptyState(): ChainablePromiseElement {
-    return byTag(anggaranTags.emptyState)
+    return byTag(anggaranTags.emptyState);
   }
 
   get addButton(): ChainablePromiseElement {
-    return byTag(anggaranTags.addButton)
+    return byTag(anggaranTags.addButton);
   }
 
   get formCategory(): ChainablePromiseElement {
-    return byTag(anggaranTags.formCategory)
+    return byTag(anggaranTags.formCategory);
   }
 
   get formScreen(): ChainablePromiseElement {
-    return byTag(anggaranTags.formScreen)
+    return byTag(anggaranTags.formScreen);
   }
 
   get formSave(): ChainablePromiseElement {
-    return byTag(anggaranTags.formSave)
+    return byTag(anggaranTags.formSave);
   }
 
   row(categoryId: string): ChainablePromiseElement {
-    return byTag(anggaranTags.row(categoryId))
+    return byTag(anggaranTags.row(categoryId));
   }
 
   async openFromRingkasan(): Promise<void> {
-    await byTag(tags.ringkasan.anggaranButton).click()
-    await this.waitForScreen()
+    await byTag(tags.ringkasan.anggaranButton).click();
+    await this.waitForScreen();
   }
 
   /** Opens the shared budget form ("Anggaran baru" / "Ubah anggaran"). */
   async openForm(): Promise<void> {
-    await this.addButton.click()
-    await this.formCategory.waitForDisplayed({ timeout: ELEMENT_PRESENT })
+    await this.addButton.click();
+    await this.formCategory.waitForDisplayed({ timeout: ELEMENT_PRESENT });
   }
 
   /**
@@ -104,11 +103,11 @@ export class AnggaranPage extends BasePage {
    * is applied (seen in the first wdio run of budget.spec.ts).
    */
   async selectFormCategory(categoryId: string): Promise<void> {
-    await this.formCategory.click()
-    const sheet = byTag(anggaranTags.formCategorySheet)
-    await sheet.waitForDisplayed({ timeout: ELEMENT_PRESENT })
-    await byTag(anggaranTags.formCategoryOption(categoryId)).click()
-    await sheet.waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS })
+    await this.formCategory.click();
+    const sheet = byTag(anggaranTags.formCategorySheet);
+    await sheet.waitForDisplayed({ timeout: ELEMENT_PRESENT });
+    await byTag(anggaranTags.formCategoryOption(categoryId)).click();
+    await sheet.waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS });
   }
 
   /** Fills "Batas bulanan" on the open budget form. */
@@ -118,28 +117,28 @@ export class AnggaranPage extends BasePage {
       byTag(anggaranTags.formLimit),
       String(amount),
       anggaranTags.formLimit,
-      'digits',
-    )
+      "digits",
+    );
   }
 
   /** "Simpan anggaran" on the open budget form; waits for the form to close. */
   async saveForm(): Promise<void> {
-    await this.formSave.click()
-    await this.formSave.waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS })
+    await this.formSave.click();
+    await this.formSave.waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS });
   }
 
   /** "Ubah" button on the budget row for `categoryId` (tag verified live). */
   async tapRowEdit(categoryId: string): Promise<void> {
-    await byTag(anggaranTags.rowEdit(categoryId)).click()
-    await this.formCategory.waitForDisplayed({ timeout: ELEMENT_PRESENT })
+    await byTag(anggaranTags.rowEdit(categoryId)).click();
+    await this.formCategory.waitForDisplayed({ timeout: ELEMENT_PRESENT });
   }
 
   /** "Hapus anggaran" danger button, shown on the form in edit mode. */
   async deleteFromForm(): Promise<void> {
-    await byTag(anggaranTags.formDelete).click()
-    await byTag(anggaranTags.deleteSheet).waitForDisplayed({ timeout: ELEMENT_PRESENT })
-    await byTag(tags.component.sheetConfirm).click()
-    await byTag(anggaranTags.deleteSheet).waitForDisplayed({ reverse: true })
+    await byTag(anggaranTags.formDelete).click();
+    await byTag(anggaranTags.deleteSheet).waitForDisplayed({ timeout: ELEMENT_PRESENT });
+    await byTag(tags.component.sheetConfirm).click();
+    await byTag(anggaranTags.deleteSheet).waitForDisplayed({ reverse: true });
   }
 
   /**
@@ -149,8 +148,8 @@ export class AnggaranPage extends BasePage {
    * read and joined — same pattern as daftar.rowTexts.
    */
   async rowText(categoryId: string): Promise<string> {
-    const row = this.row(categoryId)
-    await row.waitForDisplayed({ timeout: ELEMENT_PRESENT })
-    return (await extractChildTexts(row)).join(' ')
+    const row = this.row(categoryId);
+    await row.waitForDisplayed({ timeout: ELEMENT_PRESENT });
+    return (await extractChildTexts(row)).join(" ");
   }
 }

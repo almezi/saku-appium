@@ -1,8 +1,8 @@
-import { $, $$ } from '@wdio/globals'
-import { iosByTag } from '../helpers/locators'
-import { tags } from '../config/tags'
-import type { ChainablePromiseElement } from '../types'
-import { SCREEN_READY_IOS, SURFACE_DISMISS, SYSTEM_SHEET } from '../config/timeouts'
+import { $, $$ } from "@wdio/globals";
+import { iosByTag } from "../helpers/locators";
+import { tags } from "../config/tags";
+import type { ChainablePromiseElement } from "../types";
+import { SCREEN_READY_IOS, SURFACE_DISMISS, SYSTEM_SHEET } from "../config/timeouts";
 
 /**
  * Cadangan (backup & export) on iOS — accessibility-id twin of CadanganPage.
@@ -40,30 +40,30 @@ import { SCREEN_READY_IOS, SURFACE_DISMISS, SYSTEM_SHEET } from '../config/timeo
  */
 
 /** The screen's title — the only node with this exact label on Cadangan. */
-const TITLE = '-ios predicate string: type == "XCUIElementTypeStaticText" AND label == "Cadangan"'
+const TITLE = '-ios predicate string: type == "XCUIElementTypeStaticText" AND label == "Cadangan"';
 
 /**
  * The import button (the `cadangan_import_button` tag is not applied). Its
  * child StaticText carries the same label, hence the Button type guard.
  */
 const IMPORT_BUTTON =
-  '-ios predicate string: type == "XCUIElementTypeButton" AND label == "Pulihkan dari cadangan"'
+  '-ios predicate string: type == "XCUIElementTypeButton" AND label == "Pulihkan dari cadangan"';
 
 /** Warning card; its Button label is "<note>, Detail" (the note plus the link). */
 const WARNING_CARD =
-  '-ios predicate string: type == "XCUIElementTypeButton" AND name BEGINSWITH "Hanya tersimpan di perangkat ini"'
+  '-ios predicate string: type == "XCUIElementTypeButton" AND name BEGINSWITH "Hanya tersimpan di perangkat ini"';
 
 /** Full-screen dismiss region of the presented share popover. */
-const SHARE_SHEET = '-ios predicate string: name == "PopoverDismissRegion"'
+const SHARE_SHEET = '-ios predicate string: name == "PopoverDismissRegion"';
 
 /** The popover's top caption, which renders the exported file's base name. */
-const SHARE_CAPTION = '-ios predicate string: name == "LP.CaptionBar.TopCaption"'
+const SHARE_CAPTION = '-ios predicate string: name == "LP.CaptionBar.TopCaption"';
 
 export class CadanganIosPage {
   /** Entry from Transaksi: the backup button lives on the daftar screen. */
   async openFromDaftar(): Promise<void> {
-    await iosByTag(tags.cadangan.daftarEntryButton).click()
-    await this.waitForScreen()
+    await iosByTag(tags.cadangan.daftarEntryButton).click();
+    await this.waitForScreen();
   }
 
   /**
@@ -73,8 +73,8 @@ export class CadanganIosPage {
    * to the empty state's secondary button ("…ekspor data"). Verified live.
    */
   async openFromEmptyDaftar(): Promise<void> {
-    await iosByTag(tags.daftar.emptyStateSecondary).click()
-    await this.waitForScreen()
+    await iosByTag(tags.daftar.emptyStateSecondary).click();
+    await this.waitForScreen();
   }
 
   /**
@@ -84,36 +84,36 @@ export class CadanganIosPage {
    * only stable node with that exact label while the screen is up.
    */
   get screen(): ChainablePromiseElement {
-    return $(TITLE)
+    return $(TITLE);
   }
 
   get exportCsvButton(): ChainablePromiseElement {
-    return iosByTag(tags.cadangan.exportCsv)
+    return iosByTag(tags.cadangan.exportCsv);
   }
 
   get exportJsonButton(): ChainablePromiseElement {
-    return iosByTag(tags.cadangan.exportJson)
+    return iosByTag(tags.cadangan.exportJson);
   }
 
   get importButton(): ChainablePromiseElement {
-    return $(IMPORT_BUTTON)
+    return $(IMPORT_BUTTON);
   }
 
   get warningCard(): ChainablePromiseElement {
-    return $(WARNING_CARD)
+    return $(WARNING_CARD);
   }
 
   async waitForScreen(timeout = SCREEN_READY_IOS): Promise<void> {
-    await this.screen.waitForDisplayed({ timeout })
+    await this.screen.waitForDisplayed({ timeout });
   }
 
   async isDisplayed(): Promise<boolean> {
-    return this.screen.isDisplayed()
+    return this.screen.isDisplayed();
   }
 
   /** Back to Transaksi (no system BACK on iOS). */
   async tapBack(): Promise<void> {
-    await iosByTag(tags.component.buttonBack).click()
+    await iosByTag(tags.component.buttonBack).click();
   }
 
   /**
@@ -123,37 +123,37 @@ export class CadanganIosPage {
    * Perlu/Aman pill — so status assertions read rendered texts.
    */
   async statusTexts(): Promise<string[]> {
-    const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"')
-    const texts: string[] = []
+    const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"');
+    const texts: string[] = [];
     for (const node of nodes) {
-      const text = ((await node.getText()) || '').trim()
-      if (text) texts.push(text)
+      const text = ((await node.getText()) || "").trim();
+      if (text) texts.push(text);
     }
-    return texts
+    return texts;
   }
 
   /** The screen's rendered texts joined, for `toContain` status assertions. */
   async statusText(): Promise<string> {
-    return (await this.statusTexts()).join(' | ')
+    return (await this.statusTexts()).join(" | ");
   }
 
   /** True while the share popover is up after an export. */
   async isShareSheetOpen(): Promise<boolean> {
-    return $(SHARE_SHEET).isExisting()
+    return $(SHARE_SHEET).isExisting();
   }
 
   async waitForShareSheet(timeout = SYSTEM_SHEET): Promise<void> {
-    await $(SHARE_SHEET).waitForExist({ timeout })
+    await $(SHARE_SHEET).waitForExist({ timeout });
   }
 
   /** File base name the popover is sharing (e.g. "saku-cadangan"). */
   async shareSheetCaption(): Promise<string> {
-    return $(SHARE_CAPTION).getText()
+    return $(SHARE_CAPTION).getText();
   }
 
   /** Dismisses the share popover by tapping outside it. */
   async dismissShareSheet(): Promise<void> {
-    await $(SHARE_SHEET).click()
-    await $(SHARE_SHEET).waitForExist({ timeout: SURFACE_DISMISS, reverse: true })
+    await $(SHARE_SHEET).click();
+    await $(SHARE_SHEET).waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
   }
 }

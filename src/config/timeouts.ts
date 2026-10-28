@@ -39,10 +39,10 @@
  * `navigation.ios` restores) while their iOS twins give the same wait 45 s as
  * `APP_COLD_START_IOS`. Same intent, two numbers, no stated reason — **S9**.
  */
-export const APP_COLD_START = 30_000
+export const APP_COLD_START = 30_000;
 
 /** The same wait on iOS: 45 s for the nine first-screen hooks. */
-export const APP_COLD_START_IOS = 45_000
+export const APP_COLD_START_IOS = 45_000;
 
 /**
  * After `terminateApp` + `activateApp`, the app is already installed and was
@@ -50,7 +50,7 @@ export const APP_COLD_START_IOS = 45_000
  * empty-state reads that follow a relaunch (`persistence.spec.ts:84`,
  * `persistence.ios.spec.ts:144`) settle on 15 s rather than 30.
  */
-export const APP_RELAUNCH = 15_000
+export const APP_RELAUNCH = 15_000;
 
 /**
  * `performance.ios.spec.ts:138` caps its own measured
@@ -58,7 +58,7 @@ export const APP_RELAUNCH = 15_000
  * first-screen budget above. Kept as its constant so the gap is visible; the
  * perf spec times the launch, so this bound is a cap, not an expectation.
  */
-export const APP_LAUNCH_MEASURED = 30_000
+export const APP_LAUNCH_MEASURED = 30_000;
 
 /* ------------------------------------------------------------------ *
  * Screen and element presence
@@ -75,10 +75,10 @@ export const APP_LAUNCH_MEASURED = 30_000
  * non-reverse twin a few lines above is the `SCREEN_READY` call; note that a
  * sheet's dismissal gets `SURFACE_DISMISS` (10 s) instead — **S9**.
  */
-export const SCREEN_READY = 15_000
+export const SCREEN_READY = 15_000;
 
 /** `BaseIosPage.waitForScreen` default, and `CadanganIosPage`'s override. */
-export const SCREEN_READY_IOS = 30_000
+export const SCREEN_READY_IOS = 30_000;
 
 /**
  * The suite-wide fallback for a wait whose budget was never stated — the
@@ -87,7 +87,7 @@ export const SCREEN_READY_IOS = 30_000
  * unparameterised `waitForExist()` in any page object resolves to this number.
  * Prefer the specific budget above at a call site that does have an opinion.
  */
-export const DEFAULT_TIMEOUT = SCREEN_READY
+export const DEFAULT_TIMEOUT = SCREEN_READY;
 
 /**
  * The workhorse: a tagged element, sheet row, card or button is expected to
@@ -95,7 +95,7 @@ export const DEFAULT_TIMEOUT = SCREEN_READY
  * (`anggaran.page.ts:95`, `daftar.ios.page.ts`, `accessibility.spec.ts:66`).
  * Waits that prove a surface is GONE use `SURFACE_DISMISS` instead.
  */
-export const ELEMENT_PRESENT = 10_000
+export const ELEMENT_PRESENT = 10_000;
 
 /**
  * The other direction at the same 10 s: a sheet, dialog or field that was just
@@ -106,14 +106,14 @@ export const ELEMENT_PRESENT = 10_000
  * given `SYSTEM_SHEET` (15 s) when it APPEARS and this 10 s when it goes — a
  * 5 s asymmetry **S9** should look at.
  */
-export const SURFACE_DISMISS = 10_000
+export const SURFACE_DISMISS = 10_000;
 
 /**
  * The same expectation for a surface that should ALREADY be there — the undo
  * toast action (`transactions.ts:35`), the kategori rename dialog's save
  * button (`kategori.page.ts:192,194`), a just-tapped card. 12 sites at 5 s.
  */
-export const ELEMENT_PRESENT_QUICK = 5_000
+export const ELEMENT_PRESENT_QUICK = 5_000;
 
 /**
  * A Compose surface entering the accessibility tree. `helpers/input.ts` calls
@@ -126,7 +126,7 @@ export const ELEMENT_PRESENT_QUICK = 5_000
  * `ELEMENT_PRESENT` (10 s) for the same sheets. 12 sites; the split is
  * **S9**'s.
  */
-export const COMPOSITION_WAIT = 15_000
+export const COMPOSITION_WAIT = 15_000;
 
 /* ------------------------------------------------------------------ *
  * Surfaces outside the app
@@ -141,7 +141,7 @@ export const COMPOSITION_WAIT = 15_000
  * plus `backup.spec.ts:238,274`). Dismissing the same sheet waits
  * `SURFACE_DISMISS` (10 s).
  */
-export const SYSTEM_SHEET = 15_000
+export const SYSTEM_SHEET = 15_000;
 
 /* ------------------------------------------------------------------ *
  * State change and polling
@@ -154,20 +154,20 @@ export const SYSTEM_SHEET = 15_000
  * writes the value asynchronously; it is a deadline, paired with
  * `POLL_INTERVAL*`.
  */
-export const STATE_SYNC = 6_000
+export const STATE_SYNC = 6_000;
 
 /** The `waitUntil` cadence for a `STATE_SYNC` poll (`kategori.ios.page.ts:255`). */
-export const POLL_INTERVAL = 300
+export const POLL_INTERVAL = 300;
 
 /** The tighter cadence the save-acknowledgement probe uses (`performance.ios.spec.ts:90`). */
-export const POLL_INTERVAL_QUICK = 100
+export const POLL_INTERVAL_QUICK = 100;
 
 /**
  * A best-effort toast probe: `tambah.ios.page.ts:214` confirms "any toast
  * that might surface on newer builds" and swallows the failure, so the budget
  * is a politeness ceiling, not an expectation.
  */
-export const TOAST_PROBE = 2_000
+export const TOAST_PROBE = 2_000;
 
 /* ------------------------------------------------------------------ *
  * Non-WDIO budgets
@@ -178,7 +178,7 @@ export const TOAST_PROBE = 2_000
  * entirely: this bounds a host-side process, and a device under load (the
  * perf specs) answers slowly.
  */
-export const ADB_EXEC = 60_000
+export const ADB_EXEC = 60_000;
 
 /* ------------------------------------------------------------------ *
  * Mocha / runner budgets (only the wait default is imported)

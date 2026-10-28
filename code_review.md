@@ -390,7 +390,7 @@ failure on a developer machine rather than a type error in CI.
 > general lesson (the **Documentation currency** row above): a fixed finding must be re-checked
 > *in every doc that cites it*, not only in the code.
 
-#### S2 — No lint or format layer
+#### S2 — No lint or format layer — ✅ **fixed 2026-10-28**
 There is no ESLint, no Prettier, no `.editorconfig`, no `lint` npm script. For 8,883 LOC of
 TypeScript maintained by multiple human contributors *and* multiple AI agents (per `AGENTS.md`),
 the project's conventions — naming, import order, quote style, JSDoc on every non-obvious
@@ -403,7 +403,13 @@ lint rule (`import/no-cycle`, `no-restricted-imports` on `src/pageobjects/*` cro
 would have flagged `O6` automatically.
 
 > **Fix:** `eslint` + `typescript-eslint` + `prettier` + `prettier-check` script, and wire
-> `typecheck && lint && test:unit` into one `npm run verify`.
+> `typecheck && lint && test:unit` into one `npm run verify`. ✅ **landed 2026-10-28**:
+> - `eslint.config.mjs`: `import/no-cycle`, `no-restricted-imports` (twin isolation), S8 `isDisplayed()` ban
+> - `.prettierrc.json`: `semi`, `singleQuote`, `printWidth`, `tabWidth`, `trailingComma`
+> - `package.json`: `lint`, `lint:fix`, `format`, `format:check`, `verify` scripts
+> - `.prettierignore`: excludes `node_modules`, `reports`, `.kilo`, `.zcode`, `package-lock.json`, `*.md`
+> - **S5 fix**: `kategoriTags`/`anggaranTags` moved to `config/tags.ts`; cross-imports caught by lint
+> - **S8 enforcement**: `expect(...).toBeDisplayed()` only in specs; page objects may branch on `isDisplayed()`
 
 #### S3 — Dependency posture has drifted past the recorded decision
 The 2026-10-25 review accepted exactly **two** advisories as low-reachability (`shell-quote`,

@@ -1,9 +1,9 @@
-import { $, $$ } from '@wdio/globals'
-import { byTag } from '../helpers/locators'
-import { tags } from '../config/tags'
-import { BasePage } from './base.page'
-import type { ChainablePromiseElement } from '../types'
-import { SCREEN_READY, SURFACE_DISMISS, SYSTEM_SHEET } from '../config/timeouts'
+import { $, $$ } from "@wdio/globals";
+import { byTag } from "../helpers/locators";
+import { tags } from "../config/tags";
+import { BasePage } from "./base.page";
+import type { ChainablePromiseElement } from "../types";
+import { SCREEN_READY, SURFACE_DISMISS, SYSTEM_SHEET } from "../config/timeouts";
 
 /**
  * Cadangan (backup) screen, reached from Transaksi via the daftar entry
@@ -28,7 +28,7 @@ export class CadanganPage extends BasePage {
     // only the export cards render on this screen in every state (verified
     // live with 0 transactions, 2026-10-28) — the CSV card anchors screen
     // detection (waitForScreen/isDisplayed from BasePage).
-    super(tags.cadangan.exportCsv)
+    super(tags.cadangan.exportCsv);
   }
 
   /**
@@ -37,8 +37,8 @@ export class CadanganPage extends BasePage {
    * openFromEmptyDaftar() there.
    */
   async openFromDaftar(): Promise<void> {
-    await byTag(tags.cadangan.daftarEntryButton).click()
-    await this.waitForScreen()
+    await byTag(tags.cadangan.daftarEntryButton).click();
+    await this.waitForScreen();
   }
 
   /**
@@ -48,16 +48,16 @@ export class CadanganPage extends BasePage {
    * the iOS page's method).
    */
   async openFromEmptyDaftar(): Promise<void> {
-    await byTag(tags.daftar.emptyStateSecondary).click()
-    await this.waitForScreen()
+    await byTag(tags.daftar.emptyStateSecondary).click();
+    await this.waitForScreen();
   }
 
   get exportCsvButton(): ChainablePromiseElement {
-    return byTag(tags.cadangan.exportCsv)
+    return byTag(tags.cadangan.exportCsv);
   }
 
   get exportJsonButton(): ChainablePromiseElement {
-    return byTag(tags.cadangan.exportJson)
+    return byTag(tags.cadangan.exportJson);
   }
 
   /**
@@ -68,7 +68,7 @@ export class CadanganPage extends BasePage {
    * container.
    */
   get importButton(): ChainablePromiseElement {
-    return $('android=new UiSelector().text("Pulihkan dari cadangan")')
+    return $('android=new UiSelector().text("Pulihkan dari cadangan")');
   }
 
   /**
@@ -77,7 +77,7 @@ export class CadanganPage extends BasePage {
    * unique to this screen.
    */
   get warningCard(): ChainablePromiseElement {
-    return $('android=new UiSelector().text("Hanya tersimpan di perangkat ini")')
+    return $('android=new UiSelector().text("Hanya tersimpan di perangkat ini")');
   }
 
   /**
@@ -88,18 +88,18 @@ export class CadanganPage extends BasePage {
    * screenTexts).
    */
   async statusTexts(): Promise<string[]> {
-    const nodes = await $$('android=new UiSelector().className("android.widget.TextView")')
-    const texts: string[] = []
+    const nodes = await $$('android=new UiSelector().className("android.widget.TextView")');
+    const texts: string[] = [];
     for (const node of nodes) {
-      const text = ((await node.getText()) || '').trim()
-      if (text) texts.push(text)
+      const text = ((await node.getText()) || "").trim();
+      if (text) texts.push(text);
     }
-    return texts
+    return texts;
   }
 
   /** The screen's rendered texts joined, for `toContain` status assertions. */
   async statusText(): Promise<string> {
-    return (await this.statusTexts()).join(' | ')
+    return (await this.statusTexts()).join(" | ");
   }
 
   /**
@@ -107,21 +107,21 @@ export class CadanganPage extends BasePage {
    * waiting for the list afterwards matches the iOS twin.
    */
   async tapBack(): Promise<void> {
-    await byTag(tags.component.buttonBack).click()
-    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY })
+    await byTag(tags.component.buttonBack).click();
+    await byTag(tags.daftar.screen).waitForDisplayed({ timeout: SCREEN_READY });
   }
 
   /** True while the system share sheet is foregrounded after an export. */
   async isShareSheetOpen(): Promise<boolean> {
-    return (await driver.getCurrentPackage()) === 'com.android.intentresolver'
+    return (await driver.getCurrentPackage()) === "com.android.intentresolver";
   }
 
   /** Bounded wait for the share sheet an export opens. */
   async waitForShareSheet(timeout = SYSTEM_SHEET): Promise<void> {
     await driver.waitUntil(() => this.isShareSheetOpen(), {
       timeout,
-      timeoutMsg: 'Share sheet did not open after the export',
-    })
+      timeoutMsg: "Share sheet did not open after the export",
+    });
   }
 
   /**
@@ -130,7 +130,9 @@ export class CadanganPage extends BasePage {
    * foregrounded again before the spec keeps asserting.
    */
   async dismissShareSheet(): Promise<void> {
-    await driver.back()
-    await driver.waitUntil(async () => !(await this.isShareSheetOpen()), { timeout: SURFACE_DISMISS })
+    await driver.back();
+    await driver.waitUntil(async () => !(await this.isShareSheetOpen()), {
+      timeout: SURFACE_DISMISS,
+    });
   }
 }

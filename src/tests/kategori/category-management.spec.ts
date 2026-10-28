@@ -1,12 +1,12 @@
-import { byTag } from '../../helpers/locators'
-import { tags } from '../../config/tags'
-import { categories } from '../../config/categories'
-import { createTransaction, uniqueNote } from '../../helpers/transactions'
-import { TambahPage } from '../../pageobjects/tambah.page'
-import { RingkasanPage } from '../../pageobjects/ringkasan.page'
-import { KategoriPage } from '../../pageobjects/kategori.page'
-import { typeIntoTaggedField } from '../../helpers/input'
-import { APP_COLD_START, ELEMENT_PRESENT } from '../../config/timeouts'
+import { byTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { categories } from "../../config/categories";
+import { createTransaction, uniqueNote } from "../../helpers/transactions";
+import { TambahPage } from "../../pageobjects/tambah.page";
+import { RingkasanPage } from "../../pageobjects/ringkasan.page";
+import { KategoriPage } from "../../pageobjects/kategori.page";
+import { typeIntoTaggedField } from "../../helpers/input";
+import { APP_COLD_START, ELEMENT_PRESENT } from "../../config/timeouts";
 
 /**
  * TC-KAT — Kelola kategori: defaults, search, rename, hide (Phase 2).
@@ -30,95 +30,95 @@ const DEFAULT_INCOME_IDS = [
   categories.income.transferIn,
   categories.income.gift,
   categories.income.other,
-]
+];
 
-describe('TC-KAT — category management (Phase 2) @regression', () => {
-  const tambah = new TambahPage()
-  const ringkasan = new RingkasanPage()
-  const kategori = new KategoriPage()
+describe("TC-KAT — category management (Phase 2) @regression", () => {
+  const tambah = new TambahPage();
+  const ringkasan = new RingkasanPage();
+  const kategori = new KategoriPage();
 
   before(async () => {
-    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START })
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START });
     // Un-hides Ringkasan's Kelola button on an otherwise empty month (see
     // the file comment); the category screens under test never read it.
     await createTransaction({
-      type: 'pemasukan',
+      type: "pemasukan",
       amount: 50_000,
       categoryId: categories.income.salary,
-      note: uniqueNote('kat-seed'),
-    })
-  })
+      note: uniqueNote("kat-seed"),
+    });
+  });
 
-  it('TC-KAT-01 the Ringkasan manage button opens kategori_screen @regression', async () => {
-    await ringkasan.open()
-    await kategori.openFromRingkasan()
-    await expect(kategori.screen).toBeDisplayed()
-  })
+  it("TC-KAT-01 the Ringkasan manage button opens kategori_screen @regression", async () => {
+    await ringkasan.open();
+    await kategori.openFromRingkasan();
+    await expect(kategori.screen).toBeDisplayed();
+  });
 
-  it('TC-KAT-02 the Tambah manage-category link opens kategori_screen @regression', async () => {
+  it("TC-KAT-02 the Tambah manage-category link opens kategori_screen @regression", async () => {
     // TC-KAT-01 leaves the app on kategori, which shows no bottom bar
     // (UI_SPEC 4), so step back to a bar screen before opening Tambah.
-    await kategori.tapBack()
-    await tambah.open()
-    await kategori.openFromTambah()
-    await expect(kategori.screen).toBeDisplayed()
-  })
+    await kategori.tapBack();
+    await tambah.open();
+    await kategori.openFromTambah();
+    await expect(kategori.screen).toBeDisplayed();
+  });
 
-  it('TC-KAT-03/04 the income tab lists all default income categories @regression', async () => {
+  it("TC-KAT-03/04 the income tab lists all default income categories @regression", async () => {
     // Opens on Pemasukan (UI_SPEC 6.5); the list is a LazyColumn, so scroll
     // each row into view before asserting (9 defaults verified live — the
     // build adds inc_sales and inc_transfer_in to the original 7).
     for (const id of DEFAULT_INCOME_IDS) {
-      await kategori.scrollToRow(id)
-      await expect(kategori.row(id)).toBeDisplayed()
+      await kategori.scrollToRow(id);
+      await expect(kategori.row(id)).toBeDisplayed();
     }
-  })
+  });
 
-  it('TC-KAT-05 the type toggle switches to the expense category list @regression', async () => {
-    await kategori.selectType('pengeluaran')
+  it("TC-KAT-05 the type toggle switches to the expense category list @regression", async () => {
+    await kategori.selectType("pengeluaran");
     for (const id of [
       categories.expense.dailyFood,
       categories.expense.dailyGroceries,
       categories.expense.transportFuel,
       categories.expense.dailyOther,
     ]) {
-      await kategori.scrollToRow(id)
-      await expect(kategori.row(id)).toBeDisplayed()
+      await kategori.scrollToRow(id);
+      await expect(kategori.row(id)).toBeDisplayed();
     }
     // Income rows are gone from the rendered list.
-    expect(await kategori.row(categories.income.salary).isExisting()).toBe(false)
-    await kategori.selectType('pemasukan')
-  })
+    expect(await kategori.row(categories.income.salary).isExisting()).toBe(false);
+    await kategori.selectType("pemasukan");
+  });
 
-  it('TC-KAT-06 search filters the list by name @regression', async () => {
-    const before = await kategori.categoryRowCount()
-    expect(before).toBeGreaterThan(1)
+  it("TC-KAT-06 search filters the list by name @regression", async () => {
+    const before = await kategori.categoryRowCount();
+    expect(before).toBeGreaterThan(1);
     // "gaj" matches only "Gaji" (income tab, case-insensitive).
-    await kategori.search('gaj')
-    await expect(kategori.row(categories.income.salary)).toBeDisplayed({ wait: ELEMENT_PRESENT })
-    const after = await kategori.categoryRowCount()
-    expect(after).toBe(1)
-    expect(await kategori.row(categories.income.freelance).isExisting()).toBe(false)
-  })
+    await kategori.search("gaj");
+    await expect(kategori.row(categories.income.salary)).toBeDisplayed({ wait: ELEMENT_PRESENT });
+    const after = await kategori.categoryRowCount();
+    expect(after).toBe(1);
+    expect(await kategori.row(categories.income.freelance).isExisting()).toBe(false);
+  });
 
   it('TC-KAT-07 the pencil opens the "Ubah kategori" dialog with its field and actions @regression', async () => {
-    await kategori.search('') // TC-KAT-06's filter persists (UI_SPEC 6.5)
-    await kategori.openEditDialog(categories.income.salary)
-    await expect(kategori.formName).toBeDisplayed()
-    await expect(kategori.formCancel).toBeDisplayed()
-    await kategori.formCancel.click()
-    await expect(kategori.formCancel).not.toBeDisplayed()
-  })
+    await kategori.search(""); // TC-KAT-06's filter persists (UI_SPEC 6.5)
+    await kategori.openEditDialog(categories.income.salary);
+    await expect(kategori.formName).toBeDisplayed();
+    await expect(kategori.formCancel).toBeDisplayed();
+    await kategori.formCancel.click();
+    await expect(kategori.formCancel).not.toBeDisplayed();
+  });
 
-  it('TC-KAT-09 renaming to an empty name is blocked @regression', async () => {
-    await kategori.openEditDialog(categories.income.salary)
+  it("TC-KAT-09 renaming to an empty name is blocked @regression", async () => {
+    await kategori.openEditDialog(categories.income.salary);
     // The dialog opens with an empty field (verified live): saving is
     // rejected ("Nama kategori tidak boleh kosong") and the dialog stays.
-    await kategori.formSave.click()
-    await expect(kategori.formName).toBeDisplayed()
-    await kategori.formCancel.click()
-    await expect(kategori.formCancel).not.toBeDisplayed()
-  })
+    await kategori.formSave.click();
+    await expect(kategori.formName).toBeDisplayed();
+    await kategori.formCancel.click();
+    await expect(kategori.formCancel).not.toBeDisplayed();
+  });
 
   // TC-KAT-10 and TC-KAT-08 are it.skip-ped per the AGENTS.md 3-failure
   // rule: the "Ubah kategori" dialog self-dismisses between the open-wait
@@ -128,67 +128,65 @@ describe('TC-KAT — category management (Phase 2) @regression', () => {
   // flow works via Appium MCP set_value. See BUG_Found_04.md; revisit with
   // the setValue-based entry noted there.
 
-  it.skip('TC-KAT-10 cancelling the dialog leaves the category unchanged @regression', async () => {
-    await kategori.openEditDialog(categories.income.salary)
-    await typeIntoTaggedField(kategori.formName, 'Jangan Disimpan')
-    await kategori.formCancel.click()
-    await expect(kategori.formCancel).not.toBeDisplayed()
-    const rowText = await kategori.rowText(categories.income.salary)
-    expect(rowText).not.toContain('Jangan Disimpan')
-  })
+  it.skip("TC-KAT-10 cancelling the dialog leaves the category unchanged @regression", async () => {
+    await kategori.openEditDialog(categories.income.salary);
+    await typeIntoTaggedField(kategori.formName, "Jangan Disimpan");
+    await kategori.formCancel.click();
+    await expect(kategori.formCancel).not.toBeDisplayed();
+    const rowText = await kategori.rowText(categories.income.salary);
+    expect(rowText).not.toContain("Jangan Disimpan");
+  });
 
-  it('TC-KAT-13 the row shows the Bawaan transaction count @regression', async () => {
-    const rowText = await kategori.rowText(categories.income.salary)
-    expect(rowText).toContain('Bawaan ·')
-  })
+  it("TC-KAT-13 the row shows the Bawaan transaction count @regression", async () => {
+    const rowText = await kategori.rowText(categories.income.salary);
+    expect(rowText).toContain("Bawaan ·");
+  });
 
-  it('TC-KAT-14 the category color mark renders @regression', async () => {
-    await kategori.scrollToRow(categories.income.salary)
-    await expect(kategori.mark(categories.income.salary)).toBeDisplayed()
-  })
+  it("TC-KAT-14 the category color mark renders @regression", async () => {
+    await kategori.scrollToRow(categories.income.salary);
+    await expect(kategori.mark(categories.income.salary)).toBeDisplayed();
+  });
 
-  it.skip('TC-KAT-08 renaming a category updates its list row @regression', async () => {
-    const newName = `Uji Gaji ${Date.now().toString(36)}`.slice(0, 20)
-    await kategori.openEditDialog(categories.income.salary)
-    await kategori.renameInDialog(categories.income.salary, newName)
-    const rowText = await kategori.rowText(categories.income.salary)
-    expect(rowText).toContain(newName)
-  })
+  it.skip("TC-KAT-08 renaming a category updates its list row @regression", async () => {
+    const newName = `Uji Gaji ${Date.now().toString(36)}`.slice(0, 20);
+    await kategori.openEditDialog(categories.income.salary);
+    await kategori.renameInDialog(categories.income.salary, newName);
+    const rowText = await kategori.rowText(categories.income.salary);
+    expect(rowText).toContain(newName);
+  });
 
-  it('TC-KAT-11/12 hiding a category removes it from the Tambah picker @regression', async () => {
+  it("TC-KAT-11/12 hiding a category removes it from the Tambah picker @regression", async () => {
     // TC-KAT-06's 'gaj' filter is still active — it persists (UI_SPEC 6.5) —
     // and would keep the gift row out of the rendered list. Clearing the
     // search backspaces the query away, restoring the full tab list.
-    await kategori.search('')
-    await kategori.toggleHidden(categories.income.gift)
+    await kategori.search("");
+    await kategori.toggleHidden(categories.income.gift);
     // Hidden categories show the show icon instead of hide; the row stays.
-    await expect(kategori.row(categories.income.gift)).toBeDisplayed()
+    await expect(kategori.row(categories.income.gift)).toBeDisplayed();
 
     // The picker on the Tambah form no longer offers the hidden category,
     // while a visible one still does (control). Kategori shows no bottom
     // bar (UI_SPEC 4), so step back to a bar screen before opening Tambah.
-    await kategori.tapBack()
-    await tambah.open()
-    await byTag(tags.tambah.categoryPager).click()
-    await expect(byTag(tags.tambah.categorySheetRoot)).toBeDisplayed({ wait: ELEMENT_PRESENT })
-    expect(
-      await byTag(tags.tambah.categoryItem(categories.income.gift)).isExisting(),
-    ).toBe(false)
-    await expect(byTag(tags.tambah.categoryItem(categories.income.salary))).toBeDisplayed()
+    await kategori.tapBack();
+    await tambah.open();
+    await byTag(tags.tambah.categoryPager).click();
+    await expect(byTag(tags.tambah.categorySheetRoot)).toBeDisplayed({ wait: ELEMENT_PRESENT });
+    expect(await byTag(tags.tambah.categoryItem(categories.income.gift)).isExisting()).toBe(false);
+    await expect(byTag(tags.tambah.categoryItem(categories.income.salary))).toBeDisplayed();
     // The sheet never closes on its own — dismiss it (system back) before
     // asserting it is gone.
-    await driver.back()
-    await expect(byTag(tags.tambah.categorySheetRoot)).not.toBeDisplayed()
+    await driver.back();
+    await expect(byTag(tags.tambah.categorySheetRoot)).not.toBeDisplayed();
 
     // Restore visibility so the fresh-session assumption is not load-bearing
     // beyond this file.
-    await tambah.open()
-    await kategori.openFromTambah()
-    await kategori.toggleHidden(categories.income.gift)
-  })
+    await tambah.open();
+    await kategori.openFromTambah();
+    await kategori.toggleHidden(categories.income.gift);
+  });
 
-  it('TC-KAT-15 back returns to the previous screen @regression', async () => {
-    await kategori.tapBack()
-    await expect(tambah.screen).toBeDisplayed()
-  })
-})
+  it("TC-KAT-15 back returns to the previous screen @regression", async () => {
+    await kategori.tapBack();
+    await expect(tambah.screen).toBeDisplayed();
+  });
+});

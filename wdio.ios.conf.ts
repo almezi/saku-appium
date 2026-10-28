@@ -1,24 +1,25 @@
-import { existsSync, mkdirSync } from 'node:fs'
-import path from 'node:path'
-import type { Capabilities, Options } from '@wdio/types'
-import { IOS_APP_PATH } from './src/helpers/ios-app'
-import { DEFAULT_TIMEOUT } from './src/config/timeouts'
+import { existsSync, mkdirSync } from "node:fs";
+import path from "node:path";
+import type { Capabilities, Options } from "@wdio/types";
+import { IOS_APP_PATH } from "./src/helpers/ios-app";
+import { DEFAULT_TIMEOUT } from "./src/config/timeouts";
 
 // `capabilities` is missing from Options.Testrunner in this @wdio/types
 // version, so add it back explicitly.
-type TestrunnerConfig = Omit<Options.Testrunner, 'capabilities'> & {
-  capabilities: Capabilities.RequestedStandaloneCapabilities | Capabilities.RequestedMultiremoteCapabilities
-}
+type TestrunnerConfig = Omit<Options.Testrunner, "capabilities"> & {
+  capabilities:
+    Capabilities.RequestedStandaloneCapabilities | Capabilities.RequestedMultiremoteCapabilities;
+};
 
 /**
  * Simulator list. `SAKU_IOS_DEVICES="udid1,udid2"` enables parallel runs
  * (each device gets its own wdaLocalPort); default is the iPhone 18 Pro
  * simulator used for the first iOS bring-up.
  */
-const IOS_DEVICES = (process.env.SAKU_IOS_DEVICES ?? '80FCD259-BA75-4018-8FE6-31F4E812AD9B')
-  .split(',')
+const IOS_DEVICES = (process.env.SAKU_IOS_DEVICES ?? "80FCD259-BA75-4018-8FE6-31F4E812AD9B")
+  .split(",")
   .map((udid) => udid.trim())
-  .filter(Boolean)
+  .filter(Boolean);
 
 /**
  * Optional prebuilt WebDriverAgent (SAKU_IOS_WDA_APP). By default the driver
@@ -29,7 +30,7 @@ const IOS_DEVICES = (process.env.SAKU_IOS_DEVICES ?? '80FCD259-BA75-4018-8FE6-31
  * consecutive session-creation failures, 2026-10-27), while the driver-built
  * WDA works.
  */
-const PREBUILT_WDA = process.env.SAKU_IOS_WDA_APP
+const PREBUILT_WDA = process.env.SAKU_IOS_WDA_APP;
 
 /**
  * External Appium servers (optional): `SAKU_APPIUM_PORTS="4723,4725"` — one
@@ -37,96 +38,102 @@ const PREBUILT_WDA = process.env.SAKU_IOS_WDA_APP
  * the @wdio/appium-service spawns one shared server on port 4725 for all
  * devices. Port 4723 stays free for Appium MCP sessions.
  */
-const SAKU_APPIUM_PORTS = (process.env.SAKU_APPIUM_PORTS ?? '')
-  .split(',')
+const SAKU_APPIUM_PORTS = (process.env.SAKU_APPIUM_PORTS ?? "")
+  .split(",")
   .map((port) => port.trim())
-  .filter(Boolean)
+  .filter(Boolean);
 
 if (SAKU_APPIUM_PORTS.length > 0 && SAKU_APPIUM_PORTS.length < IOS_DEVICES.length) {
   throw new Error(
     `${IOS_DEVICES.length} iOS devices requested but SAKU_APPIUM_PORTS only lists ` +
-      `${SAKU_APPIUM_PORTS.length} server port(s): ${SAKU_APPIUM_PORTS.join(', ')}.`,
-  )
+      `${SAKU_APPIUM_PORTS.length} server port(s): ${SAKU_APPIUM_PORTS.join(", ")}.`,
+  );
 }
 
 const capabilities = IOS_DEVICES.map((udid, index) => {
   const caps: Record<string, unknown> = {
-    platformName: 'iOS',
-    'appium:automationName': 'XCUITest',
-    'appium:app': IOS_APP_PATH,
-    'appium:bundleId': 'id.almezi.saku',
-    'appium:deviceName': 'iPhone',
-    'appium:udid': udid,
+    platformName: "iOS",
+    "appium:automationName": "XCUITest",
+    "appium:app": IOS_APP_PATH,
+    "appium:bundleId": "id.almezi.saku",
+    "appium:deviceName": "iPhone",
+    "appium:udid": udid,
     // Fresh app data per session => every spec file starts from a clean DB
     // (same isolation contract as the Android suite).
-    'appium:noReset': false,
+    "appium:noReset": false,
     // Each parallel device gets its own WDA listener port so sessions never
     // collide.
-    'appium:wdaLocalPort': 8100 + index,
-    'appium:newCommandTimeout': 240,
-    'appium:wdaLaunchTimeout': 120_000,
-    'appium:printPageSourceOnFindFailure': false,
+    "appium:wdaLocalPort": 8100 + index,
+    "appium:newCommandTimeout": 240,
+    "appium:wdaLaunchTimeout": 120_000,
+    "appium:printPageSourceOnFindFailure": false,
     ...(PREBUILT_WDA
-      ? { 'appium:usePrebuiltWDA': true, 'appium:prebuiltWDAPath': PREBUILT_WDA }
+      ? { "appium:usePrebuiltWDA": true, "appium:prebuiltWDAPath": PREBUILT_WDA }
       : {}),
     ...(SAKU_APPIUM_PORTS[index]
-      ? { hostname: '127.0.0.1', protocol: 'http', path: '/', port: Number(SAKU_APPIUM_PORTS[index]) }
+      ? {
+          hostname: "127.0.0.1",
+          protocol: "http",
+          path: "/",
+          port: Number(SAKU_APPIUM_PORTS[index]),
+        }
       : {}),
-  }
-  return caps
-}) as unknown as Capabilities.RequestedStandaloneCapabilities
+  };
+  return caps;
+}) as unknown as Capabilities.RequestedStandaloneCapabilities;
 
 export const config: TestrunnerConfig = {
-  runner: 'local',
+  runner: "local",
   // iOS spec files carry the .ios.spec.ts suffix so the Android config and
   // this one never pick up each other's specs.
-  specs: ['./src/tests/**/*.ios.spec.ts'],
+  specs: ["./src/tests/**/*.ios.spec.ts"],
   exclude: [],
   maxInstances: IOS_DEVICES.length,
   maxInstancesPerCapability: 1,
 
   capabilities,
 
-  logLevel: 'warn',
+  logLevel: "warn",
   bail: 0,
   // The budget every unparameterised `waitFor…` in the suite resolves to.
   waitforTimeout: DEFAULT_TIMEOUT,
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 3,
 
-  services: SAKU_APPIUM_PORTS.length > 0
-    ? [] // External servers: nothing to spawn.
-    : [
-        [
-          'appium',
-          {
-            args: {
-              port: 4725,
-              log: path.resolve(__dirname, 'reports', 'appium-ios-wdio.log'),
-              'log-level': 'info',
+  services:
+    SAKU_APPIUM_PORTS.length > 0
+      ? [] // External servers: nothing to spawn.
+      : [
+          [
+            "appium",
+            {
+              args: {
+                port: 4725,
+                log: path.resolve(__dirname, "reports", "appium-ios-wdio.log"),
+                "log-level": "info",
+              },
             },
-          },
+          ],
         ],
-      ],
 
-  framework: 'mocha',
+  framework: "mocha",
   // junit (O2, approved 2026-10-28) writes one machine-readable XML per
   // capability into reports/ (gitignored) for CI/reporting consumption; the
   // reporter creates the directory itself and the format function names one
   // file per worker (v9's default stream name is "wdio-<cid>-…-reporter.log").
   reporters: [
-    ['spec', { outputDir: './reports' }],
+    ["spec", { outputDir: "./reports" }],
     [
-      'junit',
+      "junit",
       {
-        outputDir: './reports',
+        outputDir: "./reports",
         outputFileFormat: (options) => `junit-results-${options.cid}.xml`,
       },
     ],
   ],
 
   mochaOpts: {
-    ui: 'bdd',
+    ui: "bdd",
     timeout: 180_000,
     // Same @sanity / @regression / @integration filter contract as the
     // Android suite (TEST_GREP, see package.json).
@@ -137,16 +144,18 @@ export const config: TestrunnerConfig = {
     if (!existsSync(IOS_APP_PATH)) {
       throw new Error(
         `Saku.app not found at ${IOS_APP_PATH}. Build it (./iosApp/build-app.sh Debug in the app ` +
-          'repo) or set SAKU_IOS_APP to an existing bundle.',
-      )
+          "repo) or set SAKU_IOS_APP to an existing bundle.",
+      );
     }
-    mkdirSync(path.join('reports', 'screenshots'), { recursive: true })
+    mkdirSync(path.join("reports", "screenshots"), { recursive: true });
   },
 
   afterTest: async function (test, _context, results) {
-    if (results.passed) return
-    const safeTitle = test.title.replace(/[^a-z0-9]+/gi, '_').slice(0, 80)
-    const file = path.join('reports', 'screenshots', `ios-${Date.now()}-${safeTitle}.png`)
-    await browser.saveScreenshot(file).catch((e: Error) => console.warn('screenshot failed', e.message))
+    if (results.passed) return;
+    const safeTitle = test.title.replace(/[^a-z0-9]+/gi, "_").slice(0, 80);
+    const file = path.join("reports", "screenshots", `ios-${Date.now()}-${safeTitle}.png`);
+    await browser
+      .saveScreenshot(file)
+      .catch((e: Error) => console.warn("screenshot failed", e.message));
   },
-}
+};

@@ -8,18 +8,12 @@
   "specIdDiffs": {
     "anggaran/budget": {
       "androidOnly": [],
-      "iosOnly": [
-        "TC-BUDGET-03",
-        "TC-BUDGET-04",
-        "TC-BUDGET-05"
-      ],
+      "iosOnly": ["TC-BUDGET-03", "TC-BUDGET-04", "TC-BUDGET-05"],
       "reason": "Prefix shared since the M3 convergence, but Android folds the total-card and per-category card content INTO TC-BUDGET-08/09's row-text assertions instead of asserting them as their own cases, and its Ubah/Hapus flow is one case where iOS has 05. Ids match; coverage granularity does not (residual of code_review.md M3/M11). Close: split Android 08/09 into -03/-04/-05 — budget.spec.ts is device-green at 8 passing, so the split re-verifies in ~1m."
     },
     "transaksi/transaction-list": {
       "androidOnly": [],
-      "iosOnly": [
-        "TC-LIST-08a"
-      ],
+      "iosOnly": ["TC-LIST-08a"],
       "reason": "Partly a stated scanner blind spot: Android's bulk-seed chunks are built in a loop and their titles come from a variable (transaction-list.spec.ts:220), so no id is visible at that single call site, while iOS's matching it.skip placeholder names TC-LIST-08a literally — which reads as iOS-only. The divergence underneath is real: iOS never ported bulk seeding and BOTH TC-LIST-08 cases are it.skip there. Close: port the seed and scroll cases to iOS, then this pair lines up literally."
     }
   },
@@ -45,28 +39,16 @@
     },
     "cadangan": {
       "androidOnly": [],
-      "iosOnly": [
-        "shareSheetCaption"
-      ],
+      "iosOnly": ["shareSheetCaption"],
       "reason": "Not portable. The iOS helper reads UIKit's LP.CaptionBar.TopCaption from the share popover (cadangan.ios.page.ts:59) and is asserted by backup.ios.spec.ts:109. On Android the same export opens the SYSTEM share sheet (com.android.intentresolver) whose contents sit outside the app's tree, so the Android twin verifies the export by reading cache/backups/saku-cadangan.* through adb run-as while the sheet is up (cadangan.page.ts header, BUG_Found_02). Close: assert the written file on both sides and drop the iOS caption read — do not fake an Android getter."
     },
     "daftar": {
-      "androidOnly": [
-        "emptyState",
-        "monthLabelEl"
-      ],
-      "iosOnly": [
-        "countTransactionRows",
-        "findTransactionRow",
-        "firstCardPosition"
-      ],
+      "androidOnly": ["emptyState", "monthLabelEl"],
+      "iosOnly": ["countTransactionRows", "findTransactionRow", "firstCardPosition"],
       "reason": "Both directions are locator mechanics. The Android-only names are element handles used by Android waits: monthLabelEl feeds monthLabel(), emptyState backs emptyStateTexts() and backup.spec.ts:268 — and the iOS specs reach that same tag by calling iosByTag directly (backup.ios.spec.ts:158, edit-transaction.ios.spec.ts:121), so the getter is genuinely absent from the iOS page object. The iOS-only names exist because rows must be located by GEOMETRY: a tagged Compose container hoists its strings to siblings (BUG_Found_13) and there is no UiScrollable scrollIntoView to match text — hence findTransactionRow/countTransactionRows/firstCardPosition. Close: add the two getters to DaftarIosPage and switch those three call sites; keep the iOS geometry reads as designed."
     },
     "kategori": {
-      "androidOnly": [
-        "renameInDialog",
-        "toggleHidden"
-      ],
+      "androidOnly": ["renameInDialog", "toggleHidden"],
       "iosOnly": [
         "addButton",
         "addFormScreen",
