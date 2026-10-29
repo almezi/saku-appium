@@ -1,3 +1,10 @@
+/**
+ * Android page for the Transaksi (transaction list); iOS twin:
+ * daftar.ios.page.ts. Locators follow the TESTABILITY.md tag contract
+ * (src/config/tags.ts); findRowText/rowTexts look up rendered text — a row's
+ * text node carries no tag of its own — and month switches verify the PARSED
+ * target (month, year), not a merely-changed label.
+ */
 import { byTag, scrollToTagMatches } from "../helpers/locators";
 import { tags } from "../config/tags";
 import { extractChildTexts, readAmount } from "../helpers/elements";

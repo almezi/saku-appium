@@ -86,9 +86,8 @@ export async function iosTextsInside(el: ChainablePromiseElement): Promise<strin
     const loc = await node.getLocation().catch(() => null);
     const size = await node.getSize().catch(() => null);
     if (!loc || !size) continue;
-    const cx = loc.x + size.width / 2;
-    const cy = loc.y + size.height / 2;
-    if (cx < x || cx > x + width || cy < y || cy > y + height) continue;
+    const inner: IosRect = { x: loc.x, y: loc.y, width: size.width, height: size.height };
+    if (!iosNodeContains({ x, y, width, height }, inner)) continue;
     const text = ((await node.getText().catch(() => "")) || "").trim();
     if (text) found.push({ y: loc.y, x: loc.x, text });
   }
@@ -96,15 +95,21 @@ export async function iosTextsInside(el: ChainablePromiseElement): Promise<strin
 }
 
 /**
- * iOS twin of readAmount. The tagged node is usually an accessible=false
- * wrapper whose own getText() is empty, so in addition to own text and child
- * static texts this reads the wrapper's `value`/`label` attributes (XCUITest
- * exposes them even when the node itself is not accessible), and finally the
- * texts rendered inside the node's rect (see iosTextsInside). Same
- * last-digit-bearing-text rule: the value node renders after the label
- * ("MASUK" -> "Rp 250.000").
+ * The one amount-bearing candidate of an iOS tagged node (the string
+ * iosReadAmount parses and iosAmountText returns raw), shared by both so
+ * their candidate rules cannot drift. The tagged node is usually an
+ * accessible=false wrapper whose own getText() is empty, so candidates are
+ * gathered in order: the node's own text, its `value`/`label` attributes
+ * (XCUITest exposes them even when the node itself is not accessible), its
+ * child static texts, and finally the texts rendered inside the node's rect
+ * (see iosTextsInside — Compose hoists the children of tagged containers out
+ * of the node, verified 2026-10-27). The LAST digit-bearing candidate wins —
+ * the value node renders after the label ("MASUK" -> "Rp 250.000") —
+ * preferring a currency-shaped one: a day header also renders a date
+ * ("27 Okt 2026"), which would otherwise win the last-digit rule. Throws
+ * when no candidate survives, so callers fail loudly instead of parsing "".
  */
-export async function iosReadAmount(el: ChainablePromiseElement): Promise<number> {
+async function iosAmountCandidates(el: ChainablePromiseElement): Promise<string> {
   const texts: string[] = [];
   const own = ((await el.getText()) || "").trim();
   if (own) texts.push(own);
@@ -117,39 +122,6 @@ export async function iosReadAmount(el: ChainablePromiseElement): Promise<number
   if (withDigits.length === 0) {
     withDigits = (await iosTextsInside(el)).filter((t) => /\d/.test(t));
   }
-  // Prefer a currency-shaped candidate: day headers also render a date
-  // ("27 Okt 2026"), which would otherwise win the last-digit rule.
-  const currency = withDigits.filter((t) => /Rp\s?\d/.test(t));
-  const pool = currency.length > 0 ? currency : withDigits;
-  const last = pool.at(-1);
-  if (!last) {
-    throw new Error(
-      `No amount text found on element (tried node, value/label attrs, static-text children, rect)`,
-    );
-  }
-  return parseAmountText(last);
-}
-
-/**
- * Raw amount-bearing text of an iOS tagged node (the string that
- * iosReadAmount would parse, e.g. "\u2212Rp 75.000") for exact-rendering
- * assertions. Same candidate order as iosReadAmount; throws like it when no
- * digit-bearing text exists.
- */
-export async function iosAmountText(el: ChainablePromiseElement): Promise<string> {
-  const texts: string[] = [];
-  const own = ((await el.getText()) || "").trim();
-  if (own) texts.push(own);
-  for (const attr of ["value", "label"] as const) {
-    const v = ((await el.getAttribute(attr).catch(() => "")) || "").trim();
-    if (v) texts.push(v);
-  }
-  texts.push(...(await iosExtractChildTexts(el)));
-  let withDigits = texts.filter((t) => /\d/.test(t));
-  if (withDigits.length === 0) {
-    withDigits = (await iosTextsInside(el)).filter((t) => /\d/.test(t));
-  }
-  // Same currency preference as iosReadAmount (skips a day header's date).
   const currency = withDigits.filter((t) => /Rp\s?\d/.test(t));
   const pool = currency.length > 0 ? currency : withDigits;
   const last = pool.at(-1);
@@ -159,6 +131,24 @@ export async function iosAmountText(el: ChainablePromiseElement): Promise<string
     );
   }
   return last;
+}
+
+/**
+ * iOS twin of readAmount: parses the shared candidate (see
+ * iosAmountCandidates) into a number.
+ */
+export async function iosReadAmount(el: ChainablePromiseElement): Promise<number> {
+  return parseAmountText(await iosAmountCandidates(el));
+}
+
+/**
+ * Raw amount-bearing text of an iOS tagged node (the string that
+ * iosReadAmount would parse, e.g. "\u2212Rp 75.000") for exact-rendering
+ * assertions. Same candidate rules as iosReadAmount via the shared
+ * iosAmountCandidates.
+ */
+export async function iosAmountText(el: ChainablePromiseElement): Promise<string> {
+  return iosAmountCandidates(el);
 }
 
 /** A node of the XCUITest page-source dump, with its frame. */
@@ -203,8 +193,16 @@ export async function iosPageNodes(): Promise<IosPageNode[]> {
   return nodes;
 }
 
-/** True when `inner`'s centre falls inside `outer`'s frame. */
-export function iosNodeContains(outer: IosPageNode, inner: IosPageNode): boolean {
+/** The geometric frame of an IosPageNode — also the shape of every measured rect. */
+export type IosRect = Pick<IosPageNode, "x" | "y" | "width" | "height">;
+
+/**
+ * True when `inner`'s centre falls inside `outer`'s frame. The one
+ * containment predicate for the whole harness: the page-source-dump readers
+ * below, the measured-rect fallbacks (iosTextsInside), and the iOS page
+ * objects' row/card lookups all ask the same question.
+ */
+export function iosNodeContains(outer: IosRect, inner: IosRect): boolean {
   const cx = inner.x + inner.width / 2;
   const cy = inner.y + inner.height / 2;
   return (

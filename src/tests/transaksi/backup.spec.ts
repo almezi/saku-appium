@@ -1,19 +1,3 @@
-import { execSync } from "node:child_process";
-import { writeFileSync } from "node:fs";
-import { $ } from "@wdio/globals";
-import { byTag } from "../../helpers/locators";
-import { categories } from "../../config/categories";
-import { createTransaction, uniqueNote } from "../../helpers/transactions";
-import { DaftarPage } from "../../pageobjects/daftar.page";
-import { CadanganPage } from "../../pageobjects/cadangan.page";
-import {
-  DRAWER_RECOMPOSE,
-  SAF_DRAWER_SLIDE_IN,
-  SAF_RETRY_BACKOFF,
-  STALE_RETRY,
-} from "../../config/settles";
-import { ELEMENT_PRESENT_QUICK, SYSTEM_SHEET } from "../../config/timeouts";
-
 /**
  * TC-BACK — Cadangan / backup & export (Phase 2).
  * Cases picked from Phase 2.C in progress.md / test-cases-simple-money-tracker.md.
@@ -56,6 +40,22 @@ import { ELEMENT_PRESENT_QUICK, SYSTEM_SHEET } from "../../config/timeouts";
  * (com.google.android.documentsui on API 37) are unchanged from the notes
  * above.
  */
+import { execSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { $ } from "@wdio/globals";
+import { byTag } from "../../helpers/locators";
+import { categories } from "../../config/categories";
+import { createTransaction, uniqueNote } from "../../helpers/transactions";
+import { DaftarPage } from "../../pageobjects/daftar.page";
+import { CadanganPage } from "../../pageobjects/cadangan.page";
+import {
+  DRAWER_RECOMPOSE,
+  SAF_DRAWER_SLIDE_IN,
+  SAF_RETRY_BACKOFF,
+  STALE_RETRY,
+} from "../../config/settles";
+import { ELEMENT_PRESENT_QUICK, SYSTEM_SHEET } from "../../config/timeouts";
+
 const APP_ID = "id.almezi.simplemoneytracker_kt";
 // Fallback ONLY, for adb calls that somehow run before the session exists.
 // The helpers below prefer the live session's udid: in multi-device runs

@@ -1,4 +1,12 @@
+/**
+ * iOS twin of anggaran.page.ts — the Anggaran (budget) screen. Locators are
+ * accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); card/row texts are read by geometry (Compose hoists
+ * them out of the tagged container) and the progress bar is asserted by
+ * track width, not fill — both documented in the class block below.
+ */
 import { iosByTag } from "../helpers/locators";
+import { iosNodeContains, type IosRect } from "../helpers/elements";
 import { iosFieldText, iosTypeIntoTaggedField } from "../helpers/input";
 import { tags } from "../config/tags";
 import { BaseIosPage } from "./base.ios.page";
@@ -10,16 +18,6 @@ import {
   SCREEN_READY,
   SURFACE_DISMISS,
 } from "../config/timeouts";
-
-type Rect = { x: number; y: number; width: number; height: number };
-
-function containsCenter(outer: Rect, inner: Rect): boolean {
-  const cx = inner.x + inner.width / 2;
-  const cy = inner.y + inner.height / 2;
-  return (
-    cx >= outer.x && cx <= outer.x + outer.width && cy >= outer.y && cy <= outer.y + outer.height
-  );
-}
 
 /**
  * Anggaran (budget) on iOS — accessibility-id twin of AnggaranPage, driven by
@@ -246,7 +244,7 @@ export class AnggaranIosPage extends BaseIosPage {
           const inner = await this.rectOf(node).catch(() => null);
           // The bar track is narrower than the card it sits in; this also
           // skips the card's own node and the decorative nodes beside the list.
-          if (!inner || inner.width >= rect.width || !containsCenter(rect, inner)) continue;
+          if (!inner || inner.width >= rect.width || !iosNodeContains(rect, inner)) continue;
           if (inner.width > widest) widest = inner.width;
         }
         if (widest > 0) return widest;
@@ -259,12 +257,12 @@ export class AnggaranIosPage extends BaseIosPage {
   }
 
   /** Static texts whose centers fall inside `rect`, top-to-bottom then left-to-right. */
-  private async textsInside(rect: Rect): Promise<string[]> {
+  private async textsInside(rect: IosRect): Promise<string[]> {
     const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"');
     const found: { y: number; x: number; text: string }[] = [];
     for (const node of nodes) {
       const inner = await this.rectOf(node).catch(() => null);
-      if (!inner || !containsCenter(rect, inner)) continue;
+      if (!inner || !iosNodeContains(rect, inner)) continue;
       const text = ((await node.getText()) || "").trim();
       if (text) found.push({ y: inner.y, x: inner.x, text });
     }
@@ -273,7 +271,7 @@ export class AnggaranIosPage extends BaseIosPage {
 
   private async rectOf(
     el: Pick<ChainablePromiseElement, "getLocation" | "getSize">,
-  ): Promise<Rect> {
+  ): Promise<IosRect> {
     const { x, y } = await el.getLocation();
     const { width, height } = await el.getSize();
     return { x, y, width, height };

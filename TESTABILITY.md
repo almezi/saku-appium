@@ -197,7 +197,7 @@ tree lazily, and an XCUITest or Appium session attaches a consumer that
 triggers sync. So this may be an artefact of the probe rather than of CMP.
 
 **Must be re-verified with a real accessibility client before relying on it.**
-See `docs/09-ios-migration-plan.md` section 4.2. Treat sheet-based flows as
+See `docs/01-ios-migration-plan.md` section 4.2. Treat sheet-based flows as
 unverified on iOS until then.
 
 ### Verified against the real app (Stage 1.5)

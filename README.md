@@ -8,7 +8,7 @@ The executable suite lives in `src/`. It drives the Android app (UiAutomator2) t
 
 ### Prerequisites
 
-- Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires `>=20`) and Android emulator(s)/device(s) connected via `adb` (default udid `emulator-5554`; select devices with `SAKU_DEVICES` or the legacy `ANDROID_UDID`/`REAL_DEVICE_UDID`)
+- Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires `>=22`) and Android emulator(s)/device(s) connected via `adb` (default udid `emulator-5554`; select devices with `SAKU_DEVICES` or the legacy `ANDROID_UDID`/`REAL_DEVICE_UDID`)
 - The app APK at `resources/SimpleMoneyTrackerKT-v2.2.apk` (override with `SAKU_APK`, e.g. to point at a debug build)
 - Appium is installed automatically with `npm install` — no global install needed
 
@@ -46,12 +46,14 @@ npm run test:navigasi:ios  # single iOS spec
 npm run test:list:ios      # transaction list
 npm run test:edit:ios      # edit transaction
 npm run test:backup:ios    # backup & export
+npm run test:inc:ios       # add income
+npm run test:exp:ios       # add expense
 ```
 
 iOS needs macOS + Xcode, a booted simulator (`xcrun simctl list devices`), and the
 XCUITest driver — `npm run test:ios` starts its own Appium server. Per-spec iOS
-shortcuts exist for `list`, `edit`, `backup`, `val`, `amt`, `pers`, `rot`, `perf`,
-`a11y`, `anggaran`, `kategori`, and `navigasi`.
+shortcuts exist for `list`, `edit`, `backup`, `val`, `amt`, `inc`, `exp`, `pers`, `rot`,
+`perf`, `a11y`, `anggaran`, `kategori`, and `navigasi`.
 
 `wdio.ios.conf.ts` **is** covered by `npm run typecheck` — `tsconfig.json` includes
 `src/**/*.ts`, `wdio.conf.ts` and `wdio.ios.conf.ts`. (The `code_review.md` finding **S1** gap
@@ -199,6 +201,13 @@ objects** (7 screen twins + the Android/iOS base classes), **142 unique test-cas
 - Test data setup goes through the real UI (`createTransaction` helper). The `test_seed` / `test_now` intent extras in TESTABILITY.md are not implemented in the app yet; seed-based specs (TC-SEED) wait on that.
 - Execution status per sub-phase lives in `progress.md`. Known issues are filed as `bugs/BUG_Found_01.md` … `bugs/BUG_Found_18.md` (index: `bugs/BUGS.md`); see `code_review.md` for the current state of each.
 - **Two Android specs have no iOS twin**: `transaksi/delete-undo.spec.ts` (destructive flow) and `transaksi/backup.spec.ts` has one but with different case coverage (`TC-BUDGET` vs `TC-BUD` prefix divergence — see M3).
+
+## CI
+
+Every push and pull request runs the device-free gates on GitHub Actions: `npm run verify` —
+typecheck, lint, unit tests and the twin-parity check chained by one script — plus
+`npm run format:check`, on the Node version pinned in `.nvmrc` (24). Device/emulator runs
+remain manual by design; the workflow lives in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Generated test cases
 

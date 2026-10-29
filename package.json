@@ -1,11 +1,11 @@
 {
   "name": "saku-appium",
   "version": "1.0.0",
-  "description": "Appium + WebdriverIO + TypeScript E2E automation for Saku (Simple Money Tracker, Android)",
+  "description": "Appium + WebdriverIO + TypeScript E2E automation for Saku (Simple Money Tracker, Android & iOS)",
   "license": "MIT",
   "type": "commonjs",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "test": "wdio run ./wdio.conf.ts",
@@ -41,6 +41,8 @@
     "test:backup:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/backup.ios.spec.ts",
     "test:val:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/tambah/validation.ios.spec.ts",
     "test:amt:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/tambah/amount-input.ios.spec.ts",
+    "test:inc:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/tambah/add-income.ios.spec.ts",
+    "test:exp:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/tambah/add-expense.ios.spec.ts",
     "test:pers:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/persistence.ios.spec.ts",
     "test:rot:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/rotation.ios.spec.ts",
     "test:perf:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/performance.ios.spec.ts",

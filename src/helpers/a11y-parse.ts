@@ -1,6 +1,8 @@
 /**
- * UiAutomator XML tree analysis for the TC-A11Y checks. Dependency-free;
+ * UiAutomator XML tree analysis for the TC-A11Y checks (Android). Dependency-free;
  * parses any element tag name (wdio returns <node>, MCP dumps class names).
+ * Pure functions, no wdio imports — it lives in src/helpers/ like the other
+ * shared test-infrastructure helpers, not under src/tests/.
  */
 const PX_PER_DP = 2.625; // 420dpi profile; recalc via `adb shell wm density` if it changes
 const MIN_TAP_DP = 48;

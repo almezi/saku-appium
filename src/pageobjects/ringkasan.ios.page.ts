@@ -1,3 +1,10 @@
+/**
+ * iOS twin of ringkasan.page.ts — the Ringkasan (summary) screen. Locators
+ * are accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); container texts and the bar ratio keep iOS mechanics
+ * the Android ones cannot express (Compose hoists container strings to
+ * siblings; the bar exposes no fill) — documented in the class block below.
+ */
 import { iosByTag } from "../helpers/locators";
 import {
   iosAmountText,

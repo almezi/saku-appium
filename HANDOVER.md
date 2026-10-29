@@ -123,6 +123,8 @@ npm run test:navigasi:ios                  # one iOS spec
 npm run test:list:ios                      # transaction list
 npm run test:val:ios                       # form validation
 npm run test:perf:ios                      # performance budgets
+npm run test:inc:ios                       # add income
+npm run test:exp:ios                       # add expense
 
 # Pure unit tests (no emulator needed!) for the money/element helpers:
 npm run test:unit

@@ -1,3 +1,9 @@
+/**
+ * iOS twin of base.page.ts — the base class every iOS page object extends.
+ * Locators resolve accessibility ids through the TESTABILITY.md tag contract
+ * (src/config/tags.ts); the class block below records why the screen-wait
+ * budget runs wider than the Android one (lazily populated accessibility tree).
+ */
 import { iosByTag } from "../helpers/locators";
 import { tags } from "../config/tags";
 import type { ChainablePromiseElement } from "../types";

@@ -1,3 +1,8 @@
+/**
+ * TC-LIST — transaction list (Android). Catalogue cases live in
+ * test-cases-simple-money-tracker.md; the TC-SETUP-01 title is an
+ * arrange/seed block, not a catalogue case.
+ */
 import { byTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";
@@ -38,7 +43,7 @@ describe("TC-LIST — transaction list (Phase 1) @regression", () => {
     await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START });
   });
 
-  it("seeds three transactions across two days @regression", async () => {
+  it("TC-SETUP-01 seeds three transactions across two days @regression", async () => {
     await createTransaction({
       type: "pemasukan",
       amount: A_YESTERDAY_INCOME,

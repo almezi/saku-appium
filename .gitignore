@@ -182,8 +182,9 @@ docker-compose.override.yml
 *~.
 *~
 
-# Agent tooling local config (ZCode session state — never commit)
+# Agent tooling local config (ZCode/Kilo session state — never commit)
 .zcode/
+.kilo/
 
 # Log files
 *.log

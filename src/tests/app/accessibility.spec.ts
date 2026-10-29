@@ -8,7 +8,7 @@ import { byTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { TambahPage } from "../../pageobjects/tambah.page";
 import { DaftarPage } from "../../pageobjects/daftar.page";
-import { unlabeledClickables, under48dp, traversalOrder } from "./a11y-parse";
+import { unlabeledClickables, under48dp, traversalOrder } from "../../helpers/a11y-parse";
 import { ELEMENT_PRESENT } from "../../config/timeouts";
 
 const tambah = new TambahPage();

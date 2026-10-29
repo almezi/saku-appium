@@ -1,12 +1,3 @@
-import { byTag } from "../../helpers/locators";
-import { tags } from "../../config/tags";
-import { categories } from "../../config/categories";
-import { createTransaction, uniqueNote } from "../../helpers/transactions";
-import { RingkasanPage } from "../../pageobjects/ringkasan.page";
-import { AnggaranPage } from "../../pageobjects/anggaran.page";
-import { formatRp } from "../../helpers/money";
-import { APP_COLD_START } from "../../config/timeouts";
-
 /**
  * TC-BUDGET — Anggaran / budget limits and status indicators (Phase 2).
  * Cases picked from Phase 2.A in progress.md / test-cases-simple-money-tracker.md.
@@ -22,6 +13,15 @@ import { APP_COLD_START } from "../../config/timeouts";
  * strings are asserted on the row's rendered text — rendered-output
  * assertions, not locators.
  */
+import { byTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { categories } from "../../config/categories";
+import { createTransaction, uniqueNote } from "../../helpers/transactions";
+import { RingkasanPage } from "../../pageobjects/ringkasan.page";
+import { AnggaranPage } from "../../pageobjects/anggaran.page";
+import { formatRp } from "../../helpers/money";
+import { APP_COLD_START } from "../../config/timeouts";
+
 const BUDGET_LIMIT = 500_000;
 const FIRST_EXPENSE = 100_000; // 20% of the limit -> "Aman"
 const SECOND_EXPENSE = 450_000; // total 550.000 -> 110% -> "Lewat batas"

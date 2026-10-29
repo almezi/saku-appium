@@ -1,14 +1,3 @@
-import { iosByTag } from "../../helpers/locators";
-import { tags } from "../../config/tags";
-import { accounts, categories } from "../../config/categories";
-import { createTransactionIos, uniqueNote } from "../../helpers/transactions";
-import { TambahIosPage } from "../../pageobjects/tambah.ios.page";
-import { DaftarIosPage } from "../../pageobjects/daftar.ios.page";
-import { RingkasanIosPage } from "../../pageobjects/ringkasan.ios.page";
-import { UbahIosPage } from "../../pageobjects/ubah.ios.page";
-import { formatRp } from "../../helpers/money";
-import { APP_COLD_START_IOS } from "../../config/timeouts";
-
 /**
  * TC-INC on iOS — 1:1 port of add-income.spec.ts (the Android spec is the
  * source of truth for cases and assertions; only the driver layer changes:
@@ -20,6 +9,17 @@ import { APP_COLD_START_IOS } from "../../config/timeouts";
  *  - the before() hook waits 45 s for tambah_screen because the iOS
  *    accessibility tree is populated lazily after the fresh install.
  */
+import { iosByTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { accounts, categories } from "../../config/categories";
+import { createTransactionIos, uniqueNote } from "../../helpers/transactions";
+import { TambahIosPage } from "../../pageobjects/tambah.ios.page";
+import { DaftarIosPage } from "../../pageobjects/daftar.ios.page";
+import { RingkasanIosPage } from "../../pageobjects/ringkasan.ios.page";
+import { UbahIosPage } from "../../pageobjects/ubah.ios.page";
+import { formatRp } from "../../helpers/money";
+import { APP_COLD_START_IOS } from "../../config/timeouts";
+
 const AMOUNT = 250_000;
 const NOTE = uniqueNote("inc");
 

@@ -1,3 +1,10 @@
+/**
+ * iOS twin of ubah.page.ts — the Ubah transaksi (edit) screen. Locators are
+ * accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); form-field reads live on TambahIosPage against
+ * tags.tambah (the edit form IS the Tambah form component), and leaving taps
+ * component_button_back because iOS has no system BACK.
+ */
 import { iosByTag } from "../helpers/locators";
 import { iosPageNodes, iosStaticTexts, iosTextsInRect } from "../helpers/elements";
 import { tags } from "../config/tags";

@@ -1,3 +1,10 @@
+/**
+ * iOS twin of daftar.page.ts — the Transaksi (transaction list), kept to the
+ * pieces the TC-INC/TC-EXP port needs. Locators are accessibility ids from
+ * the TESTABILITY.md tag contract (src/config/tags.ts); the class block below
+ * itemises how the Android locator mechanics map onto XCUITest (no
+ * UiScrollable, no system BACK).
+ */
 import { $$ } from "@wdio/globals";
 import { iosByTag } from "../helpers/locators";
 import {

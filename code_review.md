@@ -4,6 +4,16 @@ Durable record of the mobile test-automation suite's structure and conventions, 
 **senior mobile QA** perspective. This document is the single source of truth for review findings;
 anything not listed as open below is either fixed or accepted by decision.
 
+> **Post-pass update — 2026-10-29.** The remaining recommended-order items closed since the
+> 2026-10-28 pass: S5 (tag centralization — all three `anggaranTags`/`kategoriTags`/`cadanganTags`
+> now live in `src/config/tags.ts`), S6 (rect-containment dedup into `iosNodeContains`), S7
+> (amount extraction dedup into `iosAmountCandidates`), and the a11y-parse modules moved from
+> `src/tests/app/` to `src/helpers/`. CI is live at `.github/workflows/ci.yml` running
+> `npm run verify` on every push/PR. `npm audit --omit=dev` reports 0 vulnerabilities and the
+> device-free gates (typecheck, lint, 20/20 unit tests, parity) are green. Items still open:
+> S9 (sleep-as-synchronization re-tuning), S10 file-move/casing (bugs/ directory move),
+> S12/S13 package.json decisions, S16–S20 source changes, and the iOS device-verification gate.
+
 | Review | Date | Scope | Grade |
 |---|---|---|---|
 | **#3 (current)** | 2026-10-27 | Structure, file base, conventions, supply chain, **maintainability** — full project | **B+** (structure) / **B** (maintainability) |
@@ -485,6 +495,20 @@ because those three Android modules happen to export a pure constant alongside t
 
 > **Fix:** one exported helper in `src/helpers/elements.ts` operating on `{x,y,width,height}`.
 
+> **✅ RESOLVED (2026-10-29):** there were actually **four** copies — the two page-local
+> `containsCenter`s, `iosNodeContains`, and an inverted inline check inside `iosTextsInside`.
+> All four now share one predicate: `iosNodeContains(outer: IosRect, inner: IosRect)` with the
+> new exported `type IosRect = Pick<IosPageNode, "x" | "y" | "width" | "height">`. Both page
+> files dropped their private `Rect`/`containsCenter` and import from `helpers/elements`
+> (helpers are the shared layer; the twin rule bans page↔page imports, not helper use).
+> `iosTextsInside` builds the measured rects and calls the same predicate. Kategori's viewport
+> band checks are a different predicate and stay local; `iosRenderedText` (ringkasan.ios) is a
+> fifth, differently-shaped variant left as a noted candidate. Verified: typecheck clean,
+> unit tests 20/20, `check:parity` green (page public surfaces unchanged), and the Android
+> device smoke is behavior-neutral — `test:anggaran` **8/8**, and kategori's **9/11** (TC-KAT-07/09
+> rename-dialog failures) is identical to the pre-refactor gate run, so the refactor is
+> exonerated by A/B. iOS half is static-verified only (no simulator attached).
+
 #### S7 — iOS amount extraction is duplicated
 `iosReadAmount` (`helpers/elements.ts:106`) and `iosAmountText` (`helpers/elements.ts:135`) share
 ~30 lines of identical candidate-collection logic (own text → `value`/`label` attributes →
@@ -493,6 +517,13 @@ static-text children → rect geometry → currency preference). Only the final 
 
 > **Fix:** extract the candidate collection into a private `iosAmountCandidates(el)`; both
 > public functions become two lines.
+
+> **✅ RESOLVED (2026-10-29):** exactly that — private `iosAmountCandidates(el): Promise<string>`
+> owns the full candidate chain (own text → `value`/`label` attrs → child static texts → digit
+> filter → `iosTextsInside` rect fallback → currency preference → the shared throw), with the
+> merged why-JSDoc; `iosReadAmount` is `parseAmountText(await iosAmountCandidates(el))` and
+> `iosAmountText` is `return iosAmountCandidates(el)`. The 7 call sites (6 + 1) are unchanged.
+> Same verification as S6.
 
 #### S8 — Three competing assertion styles, and the wrong one dominates
 In `src/tests/`: **105** `waitForDisplayed()`, **109** `isDisplayed()`, **0** `toBeDisplayed()`.

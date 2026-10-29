@@ -1,3 +1,10 @@
+/**
+ * Android page for the Anggaran (budget) screen; iOS twin:
+ * anggaran.ios.page.ts. Also hosts `anggaranTags`, re-verified live on build
+ * v2.2 (the form carries its own `anggaran_form_*` tags). Locators are
+ * TESTABILITY.md tags (src/config/tags.ts); the entry button hides while the
+ * month has no transactions (UI_SPEC 6.3) — seed data before openFromRingkasan.
+ */
 import { byTag } from "../helpers/locators";
 import { tags } from "../config/tags";
 import { extractChildTexts } from "../helpers/elements";

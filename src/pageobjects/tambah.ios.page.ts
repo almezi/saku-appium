@@ -1,3 +1,10 @@
+/**
+ * iOS twin of tambah.page.ts — the Tambah (add transaction) form. Locators
+ * are accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); the only label-matched lookup is the date picker's
+ * day cells, which carry no tags (verified on the Android twin). The class
+ * block below records the spike-verified iOS behaviors baked into this port.
+ */
 import {} from "@wdio/globals";
 import { iosByTag } from "../helpers/locators";
 import {

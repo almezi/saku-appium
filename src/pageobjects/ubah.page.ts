@@ -1,3 +1,10 @@
+/**
+ * Android page for the Ubah transaksi (edit) screen; iOS twin:
+ * ubah.ios.page.ts. Locators are TESTABILITY.md tags (src/config/tags.ts).
+ * The edit screen reuses the Tambah form component, so its
+ * amount/category/note fields answer to tags.tambah; this page owns only the
+ * screen, header, save and delete surfaces.
+ */
 import { byTag } from "../helpers/locators";
 import { tags } from "../config/tags";
 import { BasePage } from "./base.page";

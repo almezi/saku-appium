@@ -1,3 +1,9 @@
+/**
+ * TC-EDIT — edit transaction (Phase 1) on Android, all @regression. Cases run
+ * as a data timeline, not checklist order: TC-EDIT-05 (the date move) runs
+ * last — see the comment above its it() block. iOS twin:
+ * edit-transaction.ios.spec.ts. Locators are the test tags of TESTABILITY.md.
+ */
 import { byTag, allByTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";

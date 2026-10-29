@@ -1,3 +1,10 @@
+/**
+ * TC-DEL / TC-UNDO — delete with confirmation sheet and undo toast (Phase 1)
+ * on Android, all @integration: the confirmation/undo window first, then the
+ * deletion effects on the Transaksi summaries, Ringkasan cards and breakdown
+ * (TC-DEL-01..07, TC-UNDO-01..02; two describes). Android only — no iOS twin
+ * in src/tests/transaksi/.
+ */
 import { byTag, allByTag, allByTagMatches } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";

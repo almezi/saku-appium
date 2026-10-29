@@ -1,3 +1,10 @@
+/**
+ * TC-NAV on iOS — same 8 cases as navigation.spec.ts, executed against the
+ * Compose Multiplatform build (Saku.app). The tag contract carries over
+ * unchanged (testTag -> accessibilityIdentifier, TESTABILITY.md), so every
+ * assertion mirrors the Android spec; the only platform adaptation is
+ * TC-NAV-06, where iOS has no system BACK button.
+ */
 import { iosByTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { APP_COLD_START, APP_COLD_START_IOS } from "../../config/timeouts";
@@ -7,13 +14,6 @@ import { APP_COLD_START, APP_COLD_START_IOS } from "../../config/timeouts";
 // its own id.
 const APP_ID = "id.almezi.saku";
 
-/**
- * TC-NAV on iOS — same 8 cases as navigation.spec.ts, executed against the
- * Compose Multiplatform build (Saku.app). The tag contract carries over
- * unchanged (testTag -> accessibilityIdentifier, TESTABILITY.md), so every
- * assertion mirrors the Android spec; the only platform adaptation is
- * TC-NAV-06, where iOS has no system BACK button.
- */
 describe("TC-NAV — smoke & navigation on iOS @sanity", () => {
   before(async () => {
     // The iOS accessibility tree is populated lazily (TESTABILITY.md) and

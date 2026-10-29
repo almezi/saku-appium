@@ -1,13 +1,3 @@
-import { byTag } from "../../helpers/locators";
-import { tags } from "../../config/tags";
-import { categories } from "../../config/categories";
-import { createTransaction, uniqueNote } from "../../helpers/transactions";
-import { TambahPage } from "../../pageobjects/tambah.page";
-import { RingkasanPage } from "../../pageobjects/ringkasan.page";
-import { KategoriPage } from "../../pageobjects/kategori.page";
-import { typeIntoTaggedField } from "../../helpers/input";
-import { APP_COLD_START, ELEMENT_PRESENT } from "../../config/timeouts";
-
 /**
  * TC-KAT — Kelola kategori: defaults, search, rename, hide (Phase 2).
  * Cases picked from Phase 2.B in progress.md / test-cases-simple-money-tracker.md.
@@ -20,6 +10,16 @@ import { APP_COLD_START, ELEMENT_PRESENT } from "../../config/timeouts";
  * The "Ubah kategori" dialog has no test tags (Compose dialog), so dialog
  * interactions use the documented text-locator fallback inside KategoriPage.
  */
+import { byTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { categories } from "../../config/categories";
+import { createTransaction, uniqueNote } from "../../helpers/transactions";
+import { TambahPage } from "../../pageobjects/tambah.page";
+import { RingkasanPage } from "../../pageobjects/ringkasan.page";
+import { KategoriPage } from "../../pageobjects/kategori.page";
+import { typeIntoTaggedField } from "../../helpers/input";
+import { APP_COLD_START, ELEMENT_PRESENT } from "../../config/timeouts";
+
 const DEFAULT_INCOME_IDS = [
   categories.income.salary,
   categories.income.freelance,

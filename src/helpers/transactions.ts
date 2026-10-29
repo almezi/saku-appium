@@ -1,3 +1,10 @@
+/**
+ * UI-driven arrange helpers for specs. createTransaction (and its iOS twin)
+ * seed data through the real Tambah form — TESTABILITY.md's `test_seed`
+ * intent extras are not implemented in the app — uniqueNote mints a per-run
+ * marker so row lookups never collide, and tapUndoAction waits for and taps
+ * the undo toast's "Urungkan" action.
+ */
 import { byTag } from "./locators";
 import { tags } from "../config/tags";
 import { TambahPage, type TransactionFormInput } from "../pageobjects/tambah.page";

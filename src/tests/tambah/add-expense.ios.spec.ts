@@ -1,3 +1,10 @@
+/**
+ * TC-EXP on iOS — 1:1 port of add-expense.spec.ts (the Android spec is the
+ * source of truth for cases and assertions; only the driver layer changes).
+ *
+ * Platform adaptations, mirroring the TC-NAV-06 precedent: iOS has no system
+ * BACK, so the Ubah (edit) screen is left via its toolbar back button.
+ */
 import { categories } from "../../config/categories";
 import { createTransactionIos, uniqueNote } from "../../helpers/transactions";
 import { DaftarIosPage } from "../../pageobjects/daftar.ios.page";
@@ -6,13 +13,6 @@ import { UbahIosPage } from "../../pageobjects/ubah.ios.page";
 import { TambahIosPage } from "../../pageobjects/tambah.ios.page";
 import { formatNegativeRp, formatRp } from "../../helpers/money";
 
-/**
- * TC-EXP on iOS — 1:1 port of add-expense.spec.ts (the Android spec is the
- * source of truth for cases and assertions; only the driver layer changes).
- *
- * Platform adaptations, mirroring the TC-NAV-06 precedent: iOS has no system
- * BACK, so the Ubah (edit) screen is left via its toolbar back button.
- */
 const EXPENSE = 75_000;
 const INCOME = 200_000;
 const BIG_EXPENSE = 500_000;

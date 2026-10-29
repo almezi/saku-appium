@@ -1,3 +1,11 @@
+/**
+ * Android page for the Kelola kategori screen; iOS twin:
+ * kategori.ios.page.ts. Also hosts `kategoriTags` — this screen's tag map,
+ * kept out of src/config/tags.ts only because that file is frozen for Phase 1
+ * (values mirror TestTags.kt). The rename dialog writes via keyboard-free
+ * setValue: keyboard-resize recomposition self-dismissed the dialog
+ * (BUG_Found_04).
+ */
 import { byTag, allByTagMatches } from "../helpers/locators";
 import { tags } from "../config/tags";
 import { extractChildTexts } from "../helpers/elements";

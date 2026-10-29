@@ -1,3 +1,9 @@
+/**
+ * TC-NAV — smoke & navigation on Android, all @sanity (the fast type that
+ * runs on every change): launch, bottom-bar tab switching, system BACK and
+ * re-tap behavior (TC-NAV-01..08). iOS twin: navigation.ios.spec.ts.
+ * Locators are the test tags of TESTABILITY.md.
+ */
 import { byTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { APP_COLD_START } from "../../config/timeouts";

@@ -1,3 +1,10 @@
+/**
+ * TC-EXP — add expense (Phase 1) on Android, all @regression. Seeds an
+ * expense-only day in `before`, then asserts the −Rp day total, the list and
+ * summary cards, the Ringkasan breakdown and the negative balance
+ * (TC-EXP-01..08). iOS twin: add-expense.ios.spec.ts. Locators are the test
+ * tags of TESTABILITY.md.
+ */
 import { byTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";

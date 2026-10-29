@@ -1,3 +1,10 @@
+/**
+ * iOS twin of cadangan.page.ts — the Cadangan (backup & export) screen, the
+ * same public API method-for-method (M1 convergence). Locators are
+ * accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); the class block below records which cadangan tags
+ * this build actually applies and how each untagged surface is resolved.
+ */
 import { $, $$ } from "@wdio/globals";
 import { iosByTag } from "../helpers/locators";
 import { tags } from "../config/tags";

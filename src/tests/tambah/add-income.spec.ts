@@ -1,3 +1,9 @@
+/**
+ * TC-INC — add income (Phase 1) on Android, all @regression. Seeds one income
+ * in `before`, then follows the saved data through the Transaksi list,
+ * summaries, Ringkasan cards and the edit form (TC-INC-01..09). iOS twin:
+ * add-income.ios.spec.ts. Locators are the test tags of TESTABILITY.md.
+ */
 import { byTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { accounts, categories } from "../../config/categories";

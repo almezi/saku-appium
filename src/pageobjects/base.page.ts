@@ -1,3 +1,10 @@
+/**
+ * Base class every Android page object extends: the subclass passes its
+ * screen's test tag and inherits the shared screen contract — byTag lookups
+ * against the TESTABILITY.md tag contract (mirrored in src/config/tags.ts),
+ * a SCREEN_READY wait budget from src/config/timeouts.ts, and back
+ * navigation. iOS counterpart: base.ios.page.ts.
+ */
 import { byTag } from "../helpers/locators";
 import { tags } from "../config/tags";
 import type { ChainablePromiseElement } from "../types";

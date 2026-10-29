@@ -1,12 +1,3 @@
-import { iosByTag } from "../../helpers/locators";
-import { tags } from "../../config/tags";
-import { categories } from "../../config/categories";
-import { createTransactionIos } from "../../helpers/transactions";
-import { TambahIosPage } from "../../pageobjects/tambah.ios.page";
-import { RingkasanIosPage } from "../../pageobjects/ringkasan.ios.page";
-import { KategoriIosPage } from "../../pageobjects/kategori.ios.page";
-import { APP_COLD_START_IOS, ELEMENT_PRESENT } from "../../config/timeouts";
-
 /**
  * TC-KAT on iOS — port of category-management.spec.ts (the Android spec is
  * the source of truth for the flow; only the driver layer changes). Cases are
@@ -30,6 +21,15 @@ import { APP_COLD_START_IOS, ELEMENT_PRESENT } from "../../config/timeouts";
  *    dismissed by the keyboard (unlike BUG_Found_04 on Android), so TC-KAT-10
  *    and TC-KAT-08 run on iOS where they are it.skip-ped on Android.
  */
+import { iosByTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { categories } from "../../config/categories";
+import { createTransactionIos } from "../../helpers/transactions";
+import { TambahIosPage } from "../../pageobjects/tambah.ios.page";
+import { RingkasanIosPage } from "../../pageobjects/ringkasan.ios.page";
+import { KategoriIosPage } from "../../pageobjects/kategori.ios.page";
+import { APP_COLD_START_IOS, ELEMENT_PRESENT } from "../../config/timeouts";
+
 const DEFAULT_INCOME_IDS = [
   categories.income.salary,
   categories.income.freelance,

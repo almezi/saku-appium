@@ -1,3 +1,8 @@
+/**
+ * TC-SUM — Ringkasan summary math (Android). Catalogue cases live in
+ * test-cases-simple-money-tracker.md; the TC-SETUP-02 title is an
+ * arrange/seed block, not a catalogue case.
+ */
 import { byTag, scrollToTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";
@@ -46,7 +51,7 @@ describe("TC-SUM — Ringkasan summary math (Phase 1) @regression", () => {
     expect(await byTag(tags.ringkasan.breakdownIncome).isExisting()).toBe(false);
   });
 
-  it("seeds two incomes for the multi-category assertions @regression", async () => {
+  it("TC-SETUP-02 seeds two incomes for the multi-category assertions @regression", async () => {
     await createTransaction({
       type: "pemasukan",
       amount: SALARY,

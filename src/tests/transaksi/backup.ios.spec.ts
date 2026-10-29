@@ -1,13 +1,3 @@
-import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { iosByTag } from "../../helpers/locators";
-import { tags } from "../../config/tags";
-import { categories } from "../../config/categories";
-import { createTransactionIos, uniqueNote } from "../../helpers/transactions";
-import { DaftarIosPage } from "../../pageobjects/daftar.ios.page";
-import { CadanganIosPage } from "../../pageobjects/cadangan.ios.page";
-import { APP_COLD_START_IOS, ELEMENT_PRESENT } from "../../config/timeouts";
-
 /**
  * TC-BACKUP on iOS — 1:1 port of backup.spec.ts (the Android spec is the
  * source of truth for the flow; only the driver layer changes). One `it` per
@@ -39,6 +29,16 @@ import { APP_COLD_START_IOS, ELEMENT_PRESENT } from "../../config/timeouts";
  *    as the Android twin (statusTexts/statusText/warningCard renames); only
  *    the locator layer differs.
  */
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { iosByTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { categories } from "../../config/categories";
+import { createTransactionIos, uniqueNote } from "../../helpers/transactions";
+import { DaftarIosPage } from "../../pageobjects/daftar.ios.page";
+import { CadanganIosPage } from "../../pageobjects/cadangan.ios.page";
+import { APP_COLD_START_IOS, ELEMENT_PRESENT } from "../../config/timeouts";
+
 const IOS_BUNDLE = "id.almezi.saku";
 // Fallback ONLY, for host commands that somehow run before the session exists.
 // The helper prefers the live session's udid so parallel runs (SAKU_IOS_DEVICES)

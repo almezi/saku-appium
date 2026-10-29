@@ -1,3 +1,9 @@
+/**
+ * iOS twin of edit-transaction.spec.ts — TC-EDIT, edit transaction (Phase 1),
+ * all @regression (the Android spec is the source of truth; iOS adaptations:
+ * the .ios.page twins and tapBack() instead of systemBack()). Locators are
+ * the accessibility identifiers of TESTABILITY.md.
+ */
 import { iosByTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";

@@ -1,3 +1,10 @@
+/**
+ * Android page for the Tambah (add transaction) form; iOS twin:
+ * tambah.ios.page.ts. Field locators are TESTABILITY.md tags
+ * (src/config/tags.ts); the same form components back the Ubah screen, so
+ * TransactionFormInput is the shared input contract of both platforms.
+ * Category picking is the documented text-lookup exception (BUG_Found-07).
+ */
 import { byTag } from "../helpers/locators";
 import { typeIntoTaggedField, fieldText } from "../helpers/input";
 import { tags } from "../config/tags";

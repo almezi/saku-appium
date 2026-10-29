@@ -37,7 +37,7 @@ import {
   underMinTapTarget,
   traversalOrder,
   iconLabels,
-} from "./a11y-parse.ios";
+} from "../../helpers/a11y-parse.ios";
 
 const tambah = new TambahIosPage();
 const daftar = new DaftarIosPage();

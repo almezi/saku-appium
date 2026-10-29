@@ -1,4 +1,4 @@
-# 9. iOS Migration Plan
+# 1. iOS Migration Plan
 
 Purpose: turn Saku into a dual-platform (Android + iOS) app using Kotlin
 Multiplatform and Compose Multiplatform, and give you an executable to-do list.

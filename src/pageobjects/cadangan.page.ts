@@ -1,3 +1,10 @@
+/**
+ * Android page for the Cadangan (backup & export) screen; iOS twin:
+ * cadangan.ios.page.ts. Locators are TESTABILITY.md tags
+ * (src/config/tags.ts), except where the v2.3 tag drop forces the documented
+ * text-lookup exceptions noted on the members below (import button, warning
+ * strip, rendered status texts).
+ */
 import { $, $$ } from "@wdio/globals";
 import { byTag } from "../helpers/locators";
 import { tags } from "../config/tags";

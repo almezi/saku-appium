@@ -1,12 +1,3 @@
-import { iosByTag } from "../../helpers/locators";
-import { tags } from "../../config/tags";
-import { categories } from "../../config/categories";
-import { createTransactionIos } from "../../helpers/transactions";
-import { RingkasanIosPage } from "../../pageobjects/ringkasan.ios.page";
-import { AnggaranIosPage } from "../../pageobjects/anggaran.ios.page";
-import { formatRp } from "../../helpers/money";
-import { APP_COLD_START_IOS } from "../../config/timeouts";
-
 /**
  * TC-BUDGET on iOS — 1:1 port of budget.spec.ts (the Android spec is the
  * source of truth for the flow; only the driver layer changes). Cases are
@@ -28,6 +19,15 @@ import { APP_COLD_START_IOS } from "../../config/timeouts";
  *  - status strings and "Sisa/Lebih" lines are rendered-output assertions on
  *    the row text, exactly like the Android suite.
  */
+import { iosByTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { categories } from "../../config/categories";
+import { createTransactionIos } from "../../helpers/transactions";
+import { RingkasanIosPage } from "../../pageobjects/ringkasan.ios.page";
+import { AnggaranIosPage } from "../../pageobjects/anggaran.ios.page";
+import { formatRp } from "../../helpers/money";
+import { APP_COLD_START_IOS } from "../../config/timeouts";
+
 const BUDGET_LIMIT = 500_000;
 const EDITED_LIMIT = 600_000;
 const FIRST_EXPENSE = 100_000; // 20% of the limit -> "Aman"

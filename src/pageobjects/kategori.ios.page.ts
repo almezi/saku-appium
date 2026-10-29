@@ -1,5 +1,13 @@
+/**
+ * iOS twin of kategori.page.ts — the Kelola kategori screen. Locators are
+ * accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); row texts are read by geometry, since Compose hoists
+ * them out of the tagged container (same class of read as
+ * anggaran.ios.page.ts). Live-verified iOS constraints: see the class block.
+ */
 import { $$ } from "@wdio/globals";
 import { iosByTag } from "../helpers/locators";
+import { iosNodeContains, type IosRect } from "../helpers/elements";
 import {
   iosDismissKeyboard,
   iosFieldEditor,
@@ -25,16 +33,6 @@ import {
   STATE_SYNC,
   SURFACE_DISMISS,
 } from "../config/timeouts";
-
-type Rect = { x: number; y: number; width: number; height: number };
-
-function containsCenter(outer: Rect, inner: Rect): boolean {
-  const cx = inner.x + inner.width / 2;
-  const cy = inner.y + inner.height / 2;
-  return (
-    cx >= outer.x && cx <= outer.x + outer.width && cy >= outer.y && cy <= outer.y + outer.height
-  );
-}
 
 /** Eye-icon labels, verified live on iOS 27.0 (state is readable in both states). */
 const EYE_HIDDEN = /Tampilkan/i;
@@ -512,12 +510,12 @@ export class KategoriIosPage extends BaseIosPage {
   }
 
   /** Static texts whose centers fall inside `rect`, top-to-bottom then left-to-right. */
-  private async textsInside(rect: Rect): Promise<string[]> {
+  private async textsInside(rect: IosRect): Promise<string[]> {
     const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"');
     const found: { y: number; x: number; text: string }[] = [];
     for (const node of nodes) {
       const inner = await this.rectOf(node).catch(() => null);
-      if (!inner || !containsCenter(rect, inner)) continue;
+      if (!inner || !iosNodeContains(rect, inner)) continue;
       const text = ((await node.getText()) || "").trim();
       if (text) found.push({ y: inner.y, x: inner.x, text });
     }
@@ -526,7 +524,7 @@ export class KategoriIosPage extends BaseIosPage {
 
   private async rectOf(
     el: Pick<ChainablePromiseElement, "getLocation" | "getSize">,
-  ): Promise<Rect> {
+  ): Promise<IosRect> {
     const { x, y } = await el.getLocation();
     const { width, height } = await el.getSize();
     return { x, y, width, height };

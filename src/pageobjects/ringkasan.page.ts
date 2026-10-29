@@ -1,3 +1,10 @@
+/**
+ * Android page for the Ringkasan (summary) screen; iOS twin:
+ * ringkasan.ios.page.ts. Locators are TESTABILITY.md tags
+ * (src/config/tags.ts). Deep LazyColumn rows (the expense breakdown) stale
+ * between find and read, so breakdownItemTexts parses one atomic page-source
+ * dump; scrollGesture 'down' is a no-op here, so scrolling is raw W3C swipes.
+ */
 import { byTag, scrollToTag } from "../helpers/locators";
 import { barFillRatio, extractChildTexts, readAmount } from "../helpers/elements";
 import { formatMonthYear, parseMonthLabel, shiftMonthYear } from "../helpers/months";
