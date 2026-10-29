@@ -127,8 +127,8 @@ npm run test:regression:ios  # iOS, @regression
 npm run test:integration:ios # iOS, @integration
 ```
 
-`@integration` is Android-only so far — `delete-undo` has no iOS twin yet, so its iOS
-variant selects nothing.
+Both platforms now carry all three types: `@integration` is the `delete-undo` twin pair
+(9 cases each), ported to iOS on 2026-10-29 (**S17**).
 
 **A new test case must carry a type tag.** An untagged case is not a loud failure: mocha's
 `grep` matches the tag in the test's full title, so the case is silently excluded from
@@ -160,11 +160,13 @@ SAKU_APPIUM_PORTS="4723,4725" SAKU_DEVICES="emulator-5554,140892554V003873" npm 
 
 ```
 wdio.conf.ts          runner config (Android caps, Appium service, Mocha)
-wdio.ios.conf.ts      runner config (iOS/XCUITest caps, simulator) — NOT typechecked
+wdio.ios.conf.ts      runner config (iOS/XCUITest caps, simulator) — typechecked like the rest
 src/config/tags.ts    test-tag contract, mirrors TestTags.kt (single source: the app repo)
 src/config/categories.ts      stable category/account IDs (TESTABILITY.md § CATEGORIES)
 src/config/category-labels.ts the one text-based exception; states its removal condition
-src/helpers/          tag locators, rupiah formatting/parsing, transaction factory
+src/config/timeouts.ts        every wait deadline, named by intent
+src/config/settles.ts         every settle pause, named by intent
+src/helpers/          tag locators, rupiah formatting/parsing, transaction factory, a11y parsers
 src/pageobjects/      Tambah, Daftar, Ringkasan, Ubah, Anggaran, Kategori, Cadangan pages
 src/tests/navigasi/    TC-NAV navigation smoke (bottom bar, back, rapid switching)
 src/tests/tambah/      Tambah form flows: TC-INC, TC-EXP
@@ -172,7 +174,7 @@ src/tests/transaksi/   Transaksi list flows: TC-LIST, TC-EDIT, TC-DEL/TC-UNDO, T
 src/tests/ringkasan/   Ringkasan flows: TC-SUM
 src/tests/anggaran/    Anggaran/budget flows: TC-BUDGET
 src/tests/kategori/    Kelola kategori flows: TC-KAT
-src/tests/app/         TC-PERS, TC-ROT, TC-A11Y, TC-PERF + a11y-parse helpers
+src/tests/app/         TC-PERS, TC-ROT, TC-A11Y, TC-PERF
 ```
 
 **The Android/iOS twin convention** — each screen that exists on both platforms has a
@@ -189,18 +191,18 @@ the run when they drift (residual, explained drift is itemised in
 `scripts/parity-baseline.json` — the worst remaining is `kategori`, finding **M13**). When you
 add a screen method, add it to **both** twins.
 
-Current scale (measured 2026-10-28): **30 spec files** (16 Android + 14 iOS), **263 test
-cases** (141 Android + 122 iOS), 8 of them `it.skip`, every one type-tagged — **16 page
-objects** (7 screen twins + the Android/iOS base classes), **142 unique test-case IDs** across
-17 prefixes, **7 helper modules**, and **6 config modules** (`tags`, `categories`,
-`category-labels`, `test-types`, `timeouts`, `settles`). Four unit-test files under
+Current scale (measured 2026-10-29): **32 spec files** (16 Android + 16 iOS — every Android spec
+now has a twin), **285 test cases** (141 Android + 144 iOS), 8 of them `it.skip`, every one
+type-tagged — **16 page objects** (7 screen twins + the Android/iOS base classes), **144 unique
+test-case IDs** across 18 prefixes, **9 helper modules**, and **6 config modules** (`tags`,
+`categories`, `category-labels`, `test-types`, `timeouts`, `settles`). Four unit-test files under
 `src/helpers/__tests__/` and `src/config/__tests__/` guard the tree itself.
 
 ### Notes
 
 - Test data setup goes through the real UI (`createTransaction` helper). The `test_seed` / `test_now` intent extras in TESTABILITY.md are not implemented in the app yet; seed-based specs (TC-SEED) wait on that.
 - Execution status per sub-phase lives in `progress.md`. Known issues are filed as `bugs/BUG_Found_01.md` … `bugs/BUG_Found_18.md` (index: `bugs/BUGS.md`); see `code_review.md` for the current state of each.
-- **Two Android specs have no iOS twin**: `transaksi/delete-undo.spec.ts` (destructive flow) and `transaksi/backup.spec.ts` has one but with different case coverage (`TC-BUDGET` vs `TC-BUD` prefix divergence — see M3).
+- **Arrange blocks are `TC-SETUP-NN`, not bare titles.** A `before`-style seed that is written as an `it()` (so it shares the spec's isolation rules) carries a `TC-SETUP-` id — `TC-SETUP-01` in both `transaction-list` twins, `TC-SETUP-02` in both `summary` twins. It is not a catalogue case: the prefix exists so a report never shows an untitled test.
 
 ## CI
 
@@ -216,7 +218,9 @@ remain manual by design; the workflow lives in [`.github/workflows/ci.yml`](.git
 - Covers all screens: Tambah (Add), Transaksi (List), Ringkasan (Summary), Kelola Kategori, and Anggaran (Budget)
 - Includes navigation, form validation, data persistence, accessibility, performance, and edge cases
 - Locators verified via live page source (xpath fallback used where id strategy failed)
-- **148 of these ids are implemented** in `src/tests/` (254 cases, 30 spec files, both platforms)
+- **141 of these ids are implemented** in `src/tests/` (285 cases across 32 spec files, both
+  platforms; measured 2026-10-29 as the intersection of `TC-` ids in the specs and in this
+  catalogue — the 3 spec-only ids are `TC-SETUP-01`/`-02` and the `TC-LIST-08a` chunk suffix)
 
 ## Legacy: Appium MCP exploration (historical)
 

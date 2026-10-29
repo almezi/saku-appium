@@ -1,10 +1,7 @@
 {
   "_generatedBy": "node scripts/check_parity.mjs --update",
   "_note": "Known twin drift, ratcheted: a gap added here must be closed to remove it, and a closed gap left in this file fails the check. Keep \"reason\" honest — it is the audit trail for why a platform diverges.",
-  "missingTwins": [
-    "src/tests/ringkasan/summary.spec.ts",
-    "src/tests/transaksi/delete-undo.spec.ts"
-  ],
+  "missingTwins": [],
   "specIdDiffs": {
     "anggaran/budget": {
       "androidOnly": [],
@@ -69,5 +66,5 @@
       "reason": "The sharpest remaining drift, and the one code_review.md M13 flags. iOS exposes step-level API (openAddForm/createCategory/rowEdit/rowHide/typeRename/saveRename/cancelRename/waitForDialogClosed/dismissSheet/isHidden/setHidden/renameFieldText/findCustomCategoryId/addButton/addFormScreen) while Android folds the same flows into two composites (renameInDialog, toggleHidden): different abstraction granularity, not missing locators. The cost is concrete — Android's composites back TC-KAT-08/10, which are it.skip there (category-management.spec.ts:122, BUG_Found_04 rename-dialog self-dismiss) yet RUN on iOS through the step API (category-management.ios.spec.ts:29-30), so the platforms do not verify the same contract. Close: converge Android onto the iOS granularity, the M1/M2 pattern; do not collapse iOS into composites."
     }
   },
-  "reason": "Baseline recorded 2026-10-28 by scripts/check_parity.mjs. 'Accepted' means explained and carrying a named close action above — not a list to mass-delete. The two missingTwins entries: src/tests/ringkasan/summary.spec.ts is the 13-case TC-SUM suite that was never ported (IOS_PHASE1_HANDOFF.md §1.E) — its page object, ringkasan.ios.page.ts, only reached full surface parity on 2026-10-28 (M2) and has still not been exercised on a simulator, so the port must start with an MCP verification pass; src/tests/transaksi/delete-undo.spec.ts is built on Android-only helpers (tapUndoAction, allByTagMatches/byTag) and the 6-second undo-toast window (finding M14), so its iOS twin needs an iOS undo path before it can be written. Note for anyone debugging the gate: tambah.page.ts:64-110 (selectCategory) is indented 3 spaces instead of 2, a formatting defect under finding S2, and an indent-trusting parser reads that as a missing Android method — which is why check_parity.mjs does not trust indentation. Re-run with `npm run check:parity -- --update` only after a deliberate tree change: reasons carry over per group, and a group whose drift has vanished still FAILS until its entry is removed."
+  "reason": "Baseline recorded 2026-10-28, rebaselined 2026-10-29 when S17 closed: missingTwins is empty now that summary.ios.spec.ts and delete-undo.ios.spec.ts exist (code_review.md S17), and both twins reuse their Android TC- id sets exactly, so neither pair appears in specIdDiffs. Both new specs are device-green on iPhone 18 Pro (2026-10-29): summary 13/13, delete-undo 9/9. The undo path the earlier note said was missing does exist on iOS: the delete confirmation raises component_toast with a reachable component_toast_action — it is only the SAVE toast that iOS renders untagged. Remaining entries are the accepted drift listed above, each with its own close action. Gate note: check_parity.mjs deliberately does not trust indentation when it reads a class member (the 3-space selectCategory block that used to trip an indent-strict parser is now Prettier-normal, but the narrower rule stays). Re-run with `npm run check:parity -- --update` only after a deliberate tree change: reasons carry over per group, and a group whose drift has vanished still FAILS until its entry is removed."
 }

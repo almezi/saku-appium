@@ -5,7 +5,7 @@
  * marker so row lookups never collide, and tapUndoAction waits for and taps
  * the undo toast's "Urungkan" action.
  */
-import { byTag } from "./locators";
+import { byTag, iosByTag } from "./locators";
 import { tags } from "../config/tags";
 import { TambahPage, type TransactionFormInput } from "../pageobjects/tambah.page";
 import { TambahIosPage } from "../pageobjects/tambah.ios.page";
@@ -40,6 +40,19 @@ export function uniqueNote(prefix: string): string {
 /** Waits for the undo toast action ("Urungkan") and taps it. */
 export async function tapUndoAction(): Promise<void> {
   const action = byTag(tags.component.toastAction);
+  await action.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK });
+  await action.click();
+}
+
+/**
+ * iOS twin of tapUndoAction. Verified live on iPhone 18 Pro (2026-10-29): the
+ * DELETE confirmation does raise `component_toast` with a reachable
+ * `component_toast_action`, unlike the save toast, which iOS renders without
+ * either tag (tambah.ios.page.ts `save()`, performance.ios.spec.ts). The
+ * window is the app's 5 s, so this stays a single find-then-click.
+ */
+export async function tapUndoActionIos(): Promise<void> {
+  const action = iosByTag(tags.component.toastAction);
   await action.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK });
   await action.click();
 }

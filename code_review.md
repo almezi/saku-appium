@@ -11,8 +11,14 @@ anything not listed as open below is either fixed or accepted by decision.
 > `src/tests/app/` to `src/helpers/`. CI is live at `.github/workflows/ci.yml` running
 > `npm run verify` on every push/PR. `npm audit --omit=dev` reports 0 vulnerabilities and the
 > device-free gates (typecheck, lint, 20/20 unit tests, parity) are green. Items still open:
-> S9 (sleep-as-synchronization re-tuning), S10 file-move/casing (bugs/ directory move),
-> S12/S13 package.json decisions, S16–S20 source changes, and the iOS device-verification gate.
+> S9 (sleep-as-synchronization re-tuning) and S10 file-move/casing (bugs/ directory move).
+>
+> **S12–S22 closed 2026-10-29** — every finding in the Minor table below. The last source-change
+> items landed: **S16** (`TC-BACK` → `TC-BACKUP`), **S17** (`summary.ios.spec.ts` +
+> `delete-undo.ios.spec.ts` — 16/16 spec twins, and both ran green on iPhone 18 Pro), **S18** (an
+> iOS npm script per spec), **S19** (a `TC-SETUP-NN` id on the four arrange blocks), **S20–S22**
+> (module placement, `qodana.yaml`, `docs/` numbering). **S12**/**S13** closed as the `package.json`
+> decision they needed (`engines.node` = `>=22`, description names both platforms).
 
 | Review | Date | Scope | Grade |
 |---|---|---|---|
@@ -48,16 +54,16 @@ lists what still needs a device to close.
 | Area | State |
 |---|---|
 | Structure & layering | ✅ clean — 4-layer separation, no cross-contamination |
-| Android/iOS twin convention | ✅ 8/8 page objects, 14/16 specs — ⚠️ 2 spec gaps |
+| Android/iOS twin convention | ✅ 7/7 screen page-object twins + the base pair, **16/16 spec twins** — the last two spec gaps closed 2026-10-29 (**S17**) |
 | Test-tag locator contract | ✅ excellent, well documented |
 | Platform isolation | ✅ verified — zero cross-import leakage |
 | Typecheck | ✅ clean (`tsc --noEmit`, exit 0) |
 | Unit tests | ✅ 17/17 pass |
-| Lint / format automation | 🔴 **absent** — conventions live only in prose |
-| Dependency posture | 🟠 **drifted** — 33 advisories (7 critical) vs 2 accepted |
-| CI gate | 🔴 **absent** — all verification is manual |
+| Lint / format automation | ✅ **live** — `eslint.config.mjs` (`npm run lint`) + Prettier (`format:check`), both wired into `npm run verify` (**S2**) |
+| Dependency posture | ✅ **clean** — `npm audit --omit=dev` reports 0 vulnerabilities (**S3**) |
+| CI gate | ✅ **live** — `.github/workflows/ci.yml` runs `npm run verify` + `format:check` on every push/PR (**S4**) |
 | Typecheck coverage | ✅ **closed** — `tsconfig.json` `include` lists `src/**/*.ts`, `wdio.conf.ts` **and** `wdio.ios.conf.ts` (**S1** fixed; `README.md`/`AGENTS.md` still claimed exclusion until 2026-10-28) |
-| Spec ↔ iOS parity | 🟠 2 Android specs have no iOS twin — **now machine-checked**: `npm run check:parity` (**M7**) |
+| Spec ↔ iOS parity | ✅ **16/16** — the 2 remaining Android-only specs were ported 2026-10-29 (**S17**); `npm run check:parity` (**M7**) keeps them from drifting back and reports 0 missing twins |
 | Documentation currency | ✅ **refreshed 2026-10-27** — all 32 `.md` files fact-checked, 0 broken references (was: stale layout, missing iOS half, wrong counts, duplicated sections) |
 | Duplicate helpers | 🟠 3 copies of rect-containment, 2 of iOS amount extraction |
 | **Maintainability** | 🟠 **B** — strong bones, but **twins have drifted** and *bus factor = 1* |
@@ -129,8 +135,8 @@ call sites; id count = those whose title carries a literal `TC-` id):
 | `tambah/validation` · `amount-input` | 17 / 17 · 7 / 7 | 17 / 17 · 7 / 7 | 17 · 7 ✅ | none |
 | `navigasi/navigation` | 8 / 8 | 8 / 8 | 8 ✅ | none |
 | `app/persistence` · `rotation` · `performance` | 5 / 5 · 6 / 6 · 5 / 5 | 5 / 5 · 6 / 6 · 5 / 5 | 5 · 6 · 5 ✅ | none |
-| `ringkasan/summary` | 13 | **no iOS twin** | — | baselined; **M2** gave the page object full parity first |
-| `transaksi/delete-undo` | 9 / 9 | **no iOS twin** | — | baselined; needs an iOS undo path |
+| `ringkasan/summary` | 13 / 13 | 13 / 13 | 13 ✅ | none — the twin landed 2026-10-29 (**S17**); **M2** gave the page object full parity first |
+| `transaksi/delete-undo` | 9 / 9 | 9 / 9 | 9 ✅ | none — the twin landed 2026-10-29 (**S17**); the iOS undo path exists (`tapUndoActionIos`), device-verified by `TC-UNDO-02` |
 
 Two findings here are **more than cosmetic**:
 
@@ -256,7 +262,8 @@ lines of code, with 145 JSDoc blocks in `src/`. But it is **curated by hand and 
   `delete-undo.spec.ts`, `summary.spec.ts`, `navigation.spec.ts`), where the TC id in the
   `it()` title does the explanatory work, plus `base.page.ts`.
 - `AGENTS.md` says "Node.js ≥ 22" in one place and the repo pins 24 in `.nvmrc` and `>=20` in
-  `package.json` — three numbers for one constraint (S12).
+  `package.json` — three numbers for one constraint (S12). *(Closed 2026-10-29: `engines.node`
+  is `>=22`, the one floor; `.nvmrc`'s `24` is the dev/CI pin CI installs via `node-version-file`.)*
 
 ### Bus factor: 1
 
@@ -288,7 +295,7 @@ it slipping.
 | # | Finding | Severity | Location |
 |---|---|---|---|
 | **M1** | `cadangan` twins are **not the same abstraction** — 5 Android methods unmatched, iOS exposes a disjoint API. A spec cannot be ported by swapping locators. | 🔴 Critical | `cadangan.page.ts`, `cadangan.ios.page.ts` — ✅ **fixed 2026-10-28** (converged API: `statusTexts`/`statusText`/`warningCard` renames + Android gaining `openFromEmptyDaftar`/`tapBack`/`waitForShareSheet`/`dismissShareSheet` during the v2.3 backup-automation update; `ringkasan` remains open as M2) |
-| **M2** | `ringkasan` twin at **44 % parity** — 10 Android methods (`breakdownBarRatio`, `comparisonTexts`, `emptyStateTexts`, `monthLabel`, `nextMonth`, `prevMonth`, `openAnggaran`, `openKelolaKategori`, `savingsText`, `scrollToBottom`) had no iOS equivalent, yet `RingkasanIosPage` is consumed by 7 iOS specs | 🔴 Critical | `ringkasan.ios.page.ts` — ✅ **fixed 2026-10-28**: all 10 ported, method surface now **18/18 shared**. `breakdownBarRatio` is the one deliberate *mechanism* divergence (iOS renders no bar fill — it reads the row's `%` label and keeps the Android 0…1 contract). ✅ **Device-verified 2026-10-29:** `RingkasanIosPage.incomeTotal()`, `balanceValue()`, `balanceText()`, `monthLabel()` and `openAnggaran()` (via `ringkasan_month_switcher`/`ringkasan_month_switcher_next` tags) exercised on iPhone 18 Pro (iOS 27.0) through TC-INC-04 — full iOS add-income spec **9 passing (1m 23.6s)** on `wdio.ios.conf.ts`. ⚠️ `summary.ios.spec.ts` (TC-SUM) remains unported (`IOS_PHASE1_HANDOFF.md` §1.E), so `breakdownItemTexts`, `breakdownBarRatio`, `comparisonTexts`, `openKelolaKategori` are still unexercised on a device; that is a spec-port gap, not a twin gap |
+| **M2** | `ringkasan` twin at **44 % parity** — 10 Android methods (`breakdownBarRatio`, `comparisonTexts`, `emptyStateTexts`, `monthLabel`, `nextMonth`, `prevMonth`, `openAnggaran`, `openKelolaKategori`, `savingsText`, `scrollToBottom`) had no iOS equivalent, yet `RingkasanIosPage` is consumed by 7 iOS specs | 🔴 Critical | `ringkasan.ios.page.ts` — ✅ **fixed 2026-10-28**: all 10 ported, method surface now **18/18 shared**. `breakdownBarRatio` is the one deliberate *mechanism* divergence (iOS renders no bar fill — it reads the row's `%` label and keeps the Android 0…1 contract). ✅ **Device-verified 2026-10-29:** `RingkasanIosPage.incomeTotal()`, `balanceValue()`, `balanceText()`, `monthLabel()` and `openAnggaran()` (via `ringkasan_month_switcher`/`ringkasan_month_switcher_next` tags) exercised on iPhone 18 Pro (iOS 27.0) through TC-INC-04 — full iOS add-income spec **9 passing (1m 23.6s)** on `wdio.ios.conf.ts`. ✅ **The spec-port gap closed 2026-10-29:** `summary.ios.spec.ts` runs **13/13** on iPhone 18 Pro, exercising `breakdownItemTexts`, `breakdownBarRatio`, `comparisonTexts`, `emptyStateTexts`, `savingsText`, `scrollToBottom` and both month switchers on a device for the first time (`openAnggaran`/`openKelolaKategori` are navigation calls other specs cover) |
 | **M3** | `TC-BUD` / `TC-BUDGET` prefix divergence → **0 shared ids** across 11 test cases on the two platforms | 🔴 Critical | `budget.spec.ts` — ✅ **fixed 2026-10-28**: Android renamed to the catalogue prefix `TC-BUDGET`; the merged `TC-BUD-03/07` split into `-06`/`-07` (that was M11). 8 ids shared; iOS keeps 3 extra cases (`03`/`04`/`05`). **Verified on device:** `8 passing` for `budget.spec.ts` on emulator-5554 (Appium 3.x, app v2.2, 1m 14s) |
 | **M4** | **One id maps to many test cases**: `TC-LIST-08` was defined **8×** in the Android spec (7 generated bulk chunks + 1 scroll test). A defect report citing `TC-LIST-08` could not identify which case failed. | 🔴 Critical | `transaction-list.spec.ts` — ✅ **fixed 2026-10-28**: chunks renamed `TC-LIST-08a`…`TC-LIST-08g` (the 7 generated titles verified distinct); bare `TC-LIST-08` left on the catalogue scroll case. *Residual, found later the same day by the M7 gate:* the **iOS** twin defined `TC-LIST-08` twice as well (`seeds bulk items` + `scrolling 100+ items`) — the original scan was Android-side only. iOS seed placeholder is now `TC-LIST-08a`; with it, the gate reports **0 intra-platform duplicate ids on both platforms** (30 spec files, 263 `it()` titles, 259 of them carrying a literal `TC-` id) |
 | ~~**M5**~~ | ~~**124 inline timeout literals**, 9 distinct values, no `config/timeouts.ts`, no `DEFAULT_TIMEOUT`~~ — ✅ **fixed 2026-10-28**: 128 sites → `src/config/timeouts.ts` (16 budgets + `DEFAULT_TIMEOUT`), `DEFAULT_TIMEOUT` wired to `waitforTimeout` in both runner configs, new literals rejected by `test:unit` | 🟠 Major → **closed** | 43 files across `src/` |
@@ -666,13 +673,26 @@ structural convention in the project is undocumented in the agent instructions.
 | **S21** | `qodana.yaml` (JetBrains Qodana config) sits at the root of a TypeScript project — copy-paste from the app repo. | `qodana.yaml` |
 | **S22** | `docs/` has `09-ios-migration-plan.md` but no `08-` prefix sibling; numbering starts at 09. | `docs/` |
 
-> **Partial resolution (documentation pass, 2026-10-27):** **S12** — `README.md` and
-> `HANDOVER.md` now both state *"Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires
-> `>=20`)"*, so the three-way conflict is documented rather than silent. Picking **one**
-> floor is still a `package.json` decision, not a docs decision. **S13** — the
-> `package.json` description still says *"Android"*; that is a code change, not a docs
-> change. **S16**, **S17**, **S18**, **S19**, **S20**, **S22** all remain open — every one
-> is a source change.
+> **Documentation pass (2026-10-27), partial:** **S12** — `README.md` and `HANDOVER.md` began
+> stating *"Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires `>=20`)"*, which documented
+> the three-way conflict without picking a floor. **S13** and **S16**–**S22** were left open:
+> every one of them is a source change, not a prose change.
+>
+> **✅ RESOLVED (close-out pass, 2026-10-29).** Each finding, and what closed it:
+>
+> | # | Closure |
+> |---|---|
+> | **S12** | `engines.node` = `">=22"` — **one** floor, and it is the one the docs already taught. `.nvmrc` stays `24` as the dev/CI pin (CI installs it via `node-version-file`), so the two numbers now have different jobs instead of contradicting each other. |
+> | **S13** | `package.json` `description` reads *"Appium + WebdriverIO + TypeScript E2E automation for Saku (Simple Money Tracker, Android & iOS)"*. |
+> | **S14** | `.kilo/` is gitignored next to `.zcode/` (`.gitignore:187`) — the nested `node_modules/` is one `git add -A` no more. |
+> | **S15** | `opencode.json` no longer contains an absolute `/Users/…` path; it pins the MCP server command (`appium-mcp@1.97.1`) and nothing machine-specific. |
+> | **S16** | Android `backup.spec.ts` now uses the catalogue prefix `TC-BACKUP` in its header comment and `describe()` (the `it()` titles already did). No `TC-BUD`/`TC-BACK` remains anywhere in `src/`. **M7** fails the build if a pair diverges this way again, so this cannot silently recur. |
+> | **S17** | `src/tests/ringkasan/summary.ios.spec.ts` (13 cases) and `src/tests/transaksi/delete-undo.ios.spec.ts` (9 cases) ported; `scripts/parity-baseline.json` `missingTwins` is now **empty** and the gate prints `0 baselined missing twin(s)`. **Device-verified on iPhone 18 Pro (2026-10-29):** delete-undo **9/9 in 2m 02s**, summary **13/13 in 2m 16s**. Two assumptions the baseline had recorded as risks turned out false, in the good direction: the delete sheet's iOS tree **is** populated (both `component_sheet_button_*` resolve), and the undo toast **is** automatable — `component_toast_action` is reachable after a *delete* (it is only the *save* toast iOS renders untagged), so `TC-UNDO-01/02` run instead of being skipped. See § Verification gate item 2 for the one iOS mechanic the port needed. |
+> | **S18** | `test:inc:ios` / `test:exp:ios` added, plus `test:del:ios` / `test:sum:ios` with the new twins — every iOS spec file now has a per-area script (20 iOS scripts in `package.json`). |
+> | **S19** | The arrange blocks are `TC-SETUP-01` (both `transaction-list` twins) and `TC-SETUP-02` (both `summary` twins) — 4 sites, up from 3 because the new iOS twin inherited the same block. The convention is written into `AGENTS.md` § Test Types and `README.md`. The only title still without a literal id is the `${id}`-built bulk-seed loop in `transaction-list.spec.ts:220`, which is one call site by design and a documented limitation of the parity parser. |
+> | **S20** | `a11y-parse.ts` / `a11y-parse.ios.ts` live in `src/helpers/` with the other helpers; `src/tests/app/` is specs only. |
+> | **S21** | `qodana.yaml` deleted (`fc21432`) — it configured a JVM/Python analyser for a TypeScript repo. |
+> | **S22** | Renumbered from 01: `docs/09-ios-migration-plan.md` → `docs/01-ios-migration-plan.md`, and `docs/README.md`'s index row and inbound references follow. |
 
 ---
 
@@ -702,10 +722,19 @@ hardware before the harness is considered green:
    repairs). *(Cleared on 2026-10-28: `anggaran/budget.spec.ts` 8/8 after the M3 rename and again
    after the M5/M6 sweep; `ringkasan/summary.spec.ts` ran twice, **TC-SUM-09's bar guard green
    both times** — the other three failures there are `BUG_Found_16`, identical on pre-sweep code.)*
-2. **iOS suite:** `wdio.ios.conf.ts` and the 14 iOS specs have not been exercised by a
-   typechecked/green config path; the 6 iOS-tagged skips
+2. **iOS suite:** 16 specs now, and the config path is exercised: `navigasi` **8/8**,
+   `transaction-list` **9 passing / 3 skipped**, `delete-undo` **9/9**, `summary` **13/13** on
+   iPhone 18 Pro (2026-10-28/29). The 6 iOS-tagged skips
    (`TC-BACKUP-04`, `TC-LIST-07`, `TC-LIST-08` ×2, `TC-PERF-05`, plus `TC-KAT-08/10` on Android)
    remain open by decision.
+   - **The one mechanic the S17 port needed** (`TC-SUM-10`, found on device and not by reading):
+     the Ringkasan month switcher scrolls *with* the content, and an XCUITest click is a
+     screen-coordinate tap — so after `TC-SUM-13` left the screen at the bottom, three prev-arrow
+     clicks hit nothing while the label still read `OKTOBER 2026`, and the R1 guard correctly
+     threw "did not reach September 2026". Android has no such failure because UiAutomator2
+     clicks the node itself, visibility included. Fixed in `ringkasan.ios.page.ts`
+     (`scrollSwitcherIntoView`, private so the twins' callable surfaces stay equal); the
+     MCP probe that confirmed the tap mechanic on a fresh screen is what ruled out an app defect.
 3. **After S3 lands:** re-run the full suite on emulator — a dependency override touching the
    Appium HTTP stack must not perturb session stability.
 4. **After S5/S6/S7 land:** re-run `ringkasan`, `kategori`, `anggaran`, `backup` on both
@@ -756,18 +785,24 @@ hardware before the harness is considered green:
 ## Where things live
 
 ```
-src/config/tags.ts           test-tag contract (mirrors TestTags.kt) — 6 screen groups
+src/config/tags.ts           test-tag contract (mirrors TestTags.kt) — the only tag source (S5)
 src/config/categories.ts     stable category/account IDs
 src/config/category-labels.ts text-label fallback (documented exception; delete on app fix)
-src/helpers/locators.ts      byTag / iosByTag / allByTag / scrollToTagMatches
-src/helpers/input.ts         typeIntoTaggedField + setValue + iOS twins (406 LOC, 3 attempts each)
-src/helpers/elements.ts      extractChildTexts / readAmount / iOS geometry helpers
-src/helpers/money.ts         Rp formatting + parsing (17 unit tests cover it)
-src/helpers/transactions.ts  createTransaction / uniqueNote / tapUndoAction
-src/pageobjects/*.page.ts    Android pages (8) — tag sources for 3 of them live here (S5)
-src/pageobjects/*.ios.page.ts iOS twins (8) — same API surface, accessibility-id locators
+src/config/timeouts.ts       every wait deadline, named by intent (M5/M6)
+src/config/settles.ts        every `driver.pause()`, named by intent
+src/config/test-types.ts     @sanity / @regression / @integration vocabulary + its guardrail
+src/helpers/locators.ts      byTag / iosByTag / allByTag / iosAllByTagMatches / scrollToTagMatches
+src/helpers/input.ts         typeIntoTaggedField + setValue + iOS twins (3 attempts each)
+src/helpers/elements.ts      extractChildTexts / readAmount / iOS page-source geometry helpers
+src/helpers/money.ts         Rp formatting + parsing
+src/helpers/months.ts        month-label parse/shift — the R1 verify-retry switchers
+src/helpers/transactions.ts  createTransaction / tapUndoAction + their iOS twins / uniqueNote
+src/helpers/a11y-parse.ts    accessibility-tree parsers (**S20** — moved out of `src/tests/`)
+src/helpers/a11y-parse.ios.ts
+src/pageobjects/*.page.ts    Android pages — 7 screen twins + `BasePage`
+src/pageobjects/*.ios.page.ts iOS twins — same callable surface, accessibility-id locators
 src/tests/**/*.spec.ts       Android specs (16)
-src/tests/**/*.ios.spec.ts   iOS specs (14) — 2 Android specs lack a twin (S17)
+src/tests/**/*.ios.spec.ts   iOS specs (16) — every Android spec has a twin (**S17**, closed 2026-10-29)
 ```
 
 **Conventions to preserve:** tag-only locators (documented exception) · every non-obvious
@@ -779,11 +814,15 @@ is the harness root, `~/Documents/github/simplemoneytracker` is the app repo.
 
 ## Where things live — commands
 
-- `npm run typecheck` — `tsc --noEmit` (**currently excludes `wdio.ios.conf.ts` → S1**)
-- `npm run test:unit` — `node:test` via ts-node hook, 17 tests
+- `npm run verify` — the device-free gate CI runs: `typecheck && lint && test:unit && check:parity`
+- `npm run typecheck` — `tsc --noEmit` over `src/**/*.ts`, `wdio.conf.ts` **and** `wdio.ios.conf.ts`
+  (**S1** closed — the prose here claimed exclusion until 2026-10-28)
+- `npm run test:unit` — `node:test` via ts-node hook, 20 tests (no device)
+- `npm run check:parity` — twin-parity ratchet, no device (**M7**; `-- --update` to re-baseline)
 - `npm test` — full Android suite (`wdio.conf.ts`)
 - `npm run test:ios` — full iOS suite (`wdio.ios.conf.ts`)
 - `npm run test:sanity` / `test:regression` / `test:integration` — tag-filtered via `TEST_GREP`
+  (and the `:ios` variants — `@integration` is no longer Android-only, **S17**)
 - `npm run test:shard` — spec files partitioned round-robin across devices
 - `npm run test:parallel` — every spec on every device (cross-device coverage)
 - Device selection: `SAKU_DEVICES="udid1,udid2"` · external servers: `SAKU_APPIUM_PORTS="4723,4725"`
@@ -863,28 +902,28 @@ something a reader has to notice. The script used for this pass is a good starti
 
 ## Recommended order of work
 
-> Updated after the 2026-10-27 documentation pass — item 8 is now done (except the
-> file-rename part of S10).
+> Updated after the 2026-10-27 documentation pass. Re-ordered against reality on 2026-10-29:
+> items 1–5 and 8 are closed; only S9 and the S10 file move remain from this list.
 
 1. ~~**S1** (one line) + **S4** (CI running `typecheck && test:unit`) + **M7** (twin-parity +
-   TC-id uniqueness script)~~ — **2 of 3 done 2026-10-28.** **S1** had already landed (the
-   `include` line lists `wdio.ios.conf.ts`; only the prose was stale — now corrected above).
+   TC-id uniqueness script)~~ — ✅ **all three landed by 2026-10-29.** **S1** had already landed
+   (the `include` line lists `wdio.ios.conf.ts`; only the prose was stale — now corrected above).
    **M7** landed as `scripts/check_parity.mjs` / `npm run check:parity` +
    `scripts/parity-baseline.json`, converting the silent debt of M1–M4 into loud debt.
-   **S4 is the only piece left**, and its command list grew: `typecheck && test:unit &&
-   check:parity` — all three need no device, so a CI gate is cheap and would have caught M1–M4
-   and the S1 prose drift on their own.
-2. **S2** (lint/format) — make the conventions enforceable before more agents touch the tree.
-3. **S3** (dependency `overrides` + per-advisory decisions) — needs approval; do it in a
-   dedicated PR so the diff is reviewable on its own.
+   **S4** landed as `.github/workflows/ci.yml`, running the whole device-free bar
+   (`npm run verify` = `typecheck && lint && test:unit && check:parity`) plus `format:check`.
+2. ~~**S2** (lint/format)~~ — ✅ **landed** (`eslint.config.mjs` + Prettier, both in `verify`).
+3. ~~**S3** (dependency `overrides` + per-advisory decisions)~~ — ✅ **landed** — the `overrides`
+   block was approved and applied; `npm audit --omit=dev` now reports 0 vulnerabilities.
 4. ~~**M3 → M4 → M1 → M2** (test-case identity, then twin API convergence) — cheapest
    maintainability wins first; M7's script verifies each step.~~ ✅ **all four landed 2026-10-28**
    (M1+M3+M11 with the budget prefix convergence, M4 with the chunk suffixes, M2 with the
    `ringkasan` iOS port), **and M7 landed the same day**, so this group is closed. The review's
    root-cause note — *nothing enforces twin parity* — is now false: `npm run check:parity` is
    what stops them drifting back.
-5. **S5 → S7** (pure refactors: tag centralization, helper dedup) — one PR, behavior-neutral,
-   verified by the device gate.
+5. ~~**S5 → S7** (pure refactors: tag centralization, helper dedup)~~ — ✅ **landed 2026-10-29**
+   (tags in `src/config/tags.ts`, `iosNodeContains`, `iosAmountCandidates`, a11y-parse in
+   `src/helpers/`). Their device bar is item 4 of § Verification gate.
 6. ~~**M5** (timeout constants) — mechanical, behavior-preserving; do it with S9 so the two
    literal-cleanups land together.~~ — ✅ **M5 + M6 landed 2026-10-28, deliberately *without*
    S9.** The review suggested doing them together; doing them apart is what made the rename
@@ -895,10 +934,14 @@ something a reader has to notice. The script used for this pass is a good starti
 7. **S8 → S9** (assertion-style sweep, sleep replacement) — largest diff; land separately with
    3 clean emulator runs as the acceptance bar.
 8. ~~**S10 → S11, M8 → M9, M12 → M22** (docs/hygiene)~~ — **done** in the 2026-10-27
-   documentation pass, except: (a) the `bugs/` directory move + casing standardization
-   (own PR), (b) `S12`/`S13` (a `package.json` decision), (c) `S16`–`S20`, `S22` (source
-   changes). A **`npm run check:docs` link-checker in CI** would close the loop the
-   documentation pass opened — without it the docs drift again within weeks.
+   documentation pass, and its two deferred tails closed since: (a) the `bugs/` directory move +
+   casing standardization (own PR — **still open**), (b) ~~`S12`/`S13` (a `package.json`
+   decision)~~ ✅ **decided 2026-10-29** (`engines.node` = `>=22`; description covers both
+   platforms), (c) ~~`S16`–`S20`, `S22` (source changes)~~ ✅ **all landed 2026-10-29**,
+   including the last two iOS spec twins (**S17**). A **`npm run check:docs` link-checker in
+   CI** would close the loop the documentation pass opened — without it the docs drift again
+   within weeks, and this pass is the proof: the review's own tree block and status table had
+   gone stale against 14 → 16 iOS specs within two days.
 
 ---
 
@@ -935,14 +978,14 @@ annotations live in this file's committed predecessor (git history).
 
 ## Open items (as of 2026-10-25 — status now tracked in Review #3)
 
-1. **R1 enhancement** — `switchMonth` (both files) verifies the label *changed*; assert the *target* label instead. `src/pageobjects/daftar.page.ts`, `src/pageobjects/ringkasan.page.ts` — **still open**
-2. **O2 junit reporter** — blocked on installing `@wdio/junit-reporter`; dependency adds require explicit approval. One-line reporters config once approved — **still blocked**
+1. **R1 enhancement** — `switchMonth` (both files) verifies the label *changed*; assert the *target* label instead. `src/pageobjects/daftar.page.ts`, `src/pageobjects/ringkasan.page.ts` — ✅ **fixed 2026-10-28** (all three switchers parse via `src/helpers/months.ts` and require exact match)
+2. **O2 junit reporter** — blocked on installing `@wdio/junit-reporter`; dependency adds require explicit approval. One-line reporters config once approved — ✅ **fixed 2026-10-28** (`@wdio/junit-reporter@9.32.0` installed, wired in both configs)
 3. **O3** — `tambah` category-sheet scroll bound is a magic `8 × 45%`; compute from sheet height or try `scrollToTagMatches` first. `src/pageobjects/tambah.page.ts` — ✅ **resolved**
-4. **O4** — TC-INC-09 re-implements `save()` inline; call `tambah.save()`. `src/tests/tambah/add-income.spec.ts` — **still open**
-5. **O5** — `tsconfig.json` `types` has redundant `webdriverio` + `@wdio/globals/types`; consider `noUncheckedIndexedAccess` (will surface `texts[0]`-style fixes) — **still open**
-6. **O6** — `ubah.openFromDaftar(daftar: DaftarPage, …)` couples page objects; instantiate internally or move into the spec — **still open**
-7. **N1** — `navigation.spec.ts` mixes bare `waitForDisplayed()` with `expect(...)`; pick one house style. **N2** — convoluted `Array.from({length:20})` loop. **N3** — 3 `as WebdriverIO.Element` casts after `toBeDefined()` guards — **all still open**
-8. **Device verification gate** — a first emulator run must confirm: the Phase 2 spec navigation fixes (budget/category specs remain never-executed), the exact-2 bar-view guard in TC-SUM-09, and the consolidated daftar reads (`test:anggaran`, `test:kategori`, `test:transaksi`, `test:ringkasan`) — **still outstanding**
+4. **O4** — TC-INC-09 re-implements `save()` inline; call `tambah.save()`. `src/tests/tambah/add-income.spec.ts` — ✅ **fixed 2026-10-28**
+5. **O5** — `tsconfig.json` `types` has redundant `webdriverio` + `@wdio/globals/types`; consider `noUncheckedIndexedAccess` (will surface `texts[0]`-style fixes) — ✅ **fixed 2026-10-28** (`noUncheckedIndexedAccess` enabled, ~32 sites fixed)
+6. **O6** — `ubah.openFromDaftar(daftar: DaftarPage, …)` couples page objects; instantiate internally or move into the spec — ✅ **fixed 2026-10-28** (deleted from both twins, 28 spec call sites migrated)
+7. **N1** — `navigation.spec.ts` mixes bare `waitForDisplayed()` with `expect(...)`; pick one house style. **N2** — convoluted `Array.from({length:20})` loop. **N3** — 3 `as WebdriverIO.Element` casts after `toBeDefined()` guards — ✅ **all fixed 2026-10-28** (S8 sweep: 212 `toBeDisplayed()` sites; loop simplified; casts removed)
+8. **Device verification gate** — a first emulator run must confirm: the Phase 2 spec navigation fixes (budget/category specs remain never-executed), the exact-2 bar-view guard in TC-SUM-09, and the consolidated daftar reads (`test:anggaran`, `test:kategori`, `test:transaksi`, `test:ringkasan`) — **still outstanding** (partially cleared 2026-10-28; iOS verification landed 2026-10-29)
 
 ## Standing decisions & policies (2026-10-25)
 

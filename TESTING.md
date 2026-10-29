@@ -12,8 +12,9 @@ Consolidated test data, execution plan, examples, and results template.
 > `test-cases-simple-money-tracker.md`, and known issues are indexed in
 > `bugs/BUGS.md` (details in the `bugs/BUG_Found_*.md` files).
 >
-> **Current scale (2026-10-29):** 30 spec files (16 Android + 14 iOS), 254 test cases
-> (137 + 117), 148 unique test-case ids, 195 cases in the catalogue, and
+> **Current scale (2026-10-29):** 32 spec files (16 Android + 16 iOS — every Android spec has a
+> twin since **S17** closed), 285 test cases (141 + 144), 144 unique test-case ids, 195 cases in
+> the catalogue, and
 > 20 unit tests for the pure helpers, the test-type guardrail, and the timing
 > guardrail (`npm run test:unit`). Device-free verification is chained by
 > `npm run verify` (`typecheck && lint && test:unit && check:parity`), and

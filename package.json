@@ -49,6 +49,8 @@
     "test:a11y:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/app/accessibility.ios.spec.ts",
     "test:list:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/transaction-list.ios.spec.ts",
     "test:edit:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/edit-transaction.ios.spec.ts",
+    "test:del:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/transaksi/delete-undo.ios.spec.ts",
+    "test:sum:ios": "wdio run ./wdio.ios.conf.ts --spec ./src/tests/ringkasan/summary.ios.spec.ts",
     "wdio": "wdio run ./wdio.conf.ts"
   },
   "devDependencies": {

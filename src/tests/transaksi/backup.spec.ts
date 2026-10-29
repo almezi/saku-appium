@@ -1,5 +1,5 @@
 /**
- * TC-BACK — Cadangan / backup & export (Phase 2).
+ * TC-BACKUP — Cadangan / backup & export (Phase 2).
  * Cases picked from Phase 2.C in progress.md / test-cases-simple-money-tracker.md.
  *
  * Export flow verified live (2026-10-25, see progress.md): the app writes
@@ -159,7 +159,7 @@ async function openDownloadsRoot(fileName: string): Promise<void> {
   throw new Error(`SAF picker did not reach "${fileName}" via the Downloads root`);
 }
 
-describe("TC-BACK — backup & export (Phase 2) @regression", () => {
+describe("TC-BACKUP — backup & export (Phase 2) @regression", () => {
   const daftar = new DaftarPage();
   const cadangan = new CadanganPage();
 

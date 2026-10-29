@@ -46,10 +46,9 @@ import { MONTH_LABEL_RECOMPOSE, SWIPE_ANIM } from "../config/settles";
  *    keeps the Android contract (0…1 fraction) — at the precision the label
  *    is rounded to.
  *
- * Not exercised on a simulator yet (IOS_PHASE1_HANDOFF.md §1.E): the
- * month-switcher, comparison-card and empty-state reads below are ports of
- * proven iOS mechanics from sibling page objects, not live-verified
- * Ringkasan observations.
+ * Exercised on iPhone 18 Pro (2026-10-29): `summary.ios.spec.ts` 13/13. The run
+ * is also what surfaced the iOS-only step in `scrollSwitcherIntoView` — the
+ * month switcher is not sticky, so an arrow above the fold cannot be tapped.
  */
 export class RingkasanIosPage extends BaseIosPage {
   constructor() {
@@ -211,12 +210,61 @@ export class RingkasanIosPage extends BaseIosPage {
   }
 
   /**
+   * One swipe downward over the summary content (the reverse of
+   * `scrollContentDown`) — private because the Android twin has no upward
+   * scroll to mirror, so the public surfaces stay equal.
+   */
+  private async scrollContentUp(): Promise<void> {
+    const { width, height } = await driver.getWindowSize();
+    const x = Math.floor(width / 2);
+    await driver.performActions([
+      {
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
+        actions: [
+          { type: "pointerMove", duration: 0, x, y: Math.floor(height * 0.3) },
+          { type: "pointerDown", button: 0 },
+          { type: "pause", duration: 150 },
+          { type: "pointerMove", duration: 500, x, y: Math.floor(height * 0.75) },
+          { type: "pointerUp", button: 0 },
+        ],
+      },
+    ]);
+    await driver.pause(SWIPE_ANIM);
+  }
+
+  /**
+   * Swipes the month switcher back into the viewport before its arrow is
+   * tapped.
+   *
+   * iOS-only, and the reason is a tap mechanic, not a locator one: the
+   * switcher scrolls with the summary content, and an XCUITest click is a
+   * screen-coordinate tap, so an arrow scrolled above the fold takes the hit
+   * without doing anything — while its label still reads (measured
+   * 2026-10-29: TC-SUM-10 straight after TC-SUM-13 left the screen at the
+   * bottom; three prev clicks, label unmoved). Android needs no equivalent —
+   * UiAutomator2 clicks the node itself, visibility included.
+   */
+  private async scrollSwitcherIntoView(arrow: string): Promise<void> {
+    const { height } = await driver.getWindowSize();
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const nodes = await iosPageNodes();
+      const handle = nodes.find((node) => node.name === arrow);
+      if (!handle) return;
+      if (handle.y >= 0 && handle.y + handle.height <= height) return;
+      await this.scrollContentUp();
+    }
+  }
+
+  /**
    * Month switching with a verify-retry — the iOS twin of the Android
    * `switchMonth`, kept identical including the R1 guard: the switch is
    * verified against the PARSED target (month, year), so a click that
    * double-registered fails loudly instead of passing on "label changed".
    */
   private async switchMonth(arrow: string, direction: "prev" | "next"): Promise<void> {
+    await this.scrollSwitcherIntoView(arrow);
     const before = await this.monthLabel();
     const start = parseMonthLabel(before);
     const target = shiftMonthYear(start, direction);

@@ -200,9 +200,11 @@ src/tests/tambah/add-income.spec.ts ←→  src/tests/tambah/add-income.ios.spec
 Android runs through `wdio.conf.ts` (`npm test`); iOS through `wdio.ios.conf.ts`
 (`npm run test:ios`). The two halves are **not** generated from a shared base — they
 are written separately and are expected to expose the same public method surface. Today
-they have drifted in places (see `code_review.md` findings **M1**–**M2**), so **when you
-add a screen method, add it to both twins**, and when you add a test case, add it to both
-spec twins with the same `TC-<AREA>-<NN>` id.
+all 7 screen page objects and all 16 specs have twins; the **explained** residual drift
+lives in `scripts/parity-baseline.json`, and `npm run check:parity` fails the build on any
+new gap (or on a closed one still listed there). So: **when you add a screen method, add
+it to both twins**, and when you add a test case, add it to both spec twins with the same
+`TC-<AREA>-<NN>` id.
 
 > ⚠️ `wdio.ios.conf.ts` is **not** covered by `npm run typecheck` — `tsconfig.json`
 > includes only `src/**/*.ts` and `wdio.conf.ts`. See `code_review.md` finding **S1**.

@@ -47,6 +47,15 @@ export const allByTagMatches = (pattern: string): ChainablePromiseArray =>
   $$(`android=new UiSelector().resourceIdMatches("${pattern}")`);
 
 /**
+ * All iOS elements whose accessibility identifier matches a regex — the
+ * `allByTagMatches` twin. NSPredicate `MATCHES` is ICU regex, so anchor the
+ * pattern (`[0-9]+$`) when a suffix-bearing node like `daftar_item_1_delete_…`
+ * must not match alongside the card root.
+ */
+export const iosAllByTagMatches = (pattern: string): ChainablePromiseArray =>
+  $$(`-ios predicate string: name MATCHES "${pattern}"`);
+
+/**
  * Scroll the first scrollable container until an element with the given tag
  * regex is visible, and return that element. Returns the plain element when
  * it is already present (UiScrollable handles both internally by scrolling

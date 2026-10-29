@@ -30,6 +30,7 @@ No backend, no credentials, no CI — local-only app, manual `./gradlew` builds.
 | # | Document | Covers |
 |---|---|---|
 | - | [PRODUCT.md](PRODUCT.md) | PRD and functional spec |
+| - | [DEVELOPMENT.md](DEVELOPMENT.md) | Local environment, module layout, build commands |
 | 8 | [DESIGN.md](DESIGN.md) | Design system and accessibility ID coverage |
 | 1 | [01-ios-migration-plan.md](01-ios-migration-plan.md) | **Plan (not implemented in the harness.)** 48-step to-do list to release on iOS via KMP + Compose Multiplatform |
 
@@ -71,10 +72,12 @@ test scope. Do not duplicate their content in new places without a reason.
 ## Status
 
 Last verified against the working tree on the `feature/implement-ios-automation`
-branch (HEAD `c73d097`). No CI configuration, signing configuration, or backend
-exists in the repository as of this writing; see documents 4, 5 and 7.
+branch (2026-10-29). There is no signing configuration and no backend in this
+repository; CI is device-free only — `.github/workflows/ci.yml` runs `npm run verify`.
 
-The app itself is Android-only today — `01-ios-migration-plan.md` is a **plan** for adding iOS.
-The *test harness* has already been ported to iOS: 14 iOS spec files and 8 iOS
+The app is Android-first: an iOS **Debug simulator build** (`Saku.app`, `id.almezi.saku`) is
+what the harness drives, and `01-ios-migration-plan.md` remains the plan for a shippable iOS
+release.
+The *test harness* is fully ported: 16 iOS spec files and 8 iOS
 page objects exist alongside their Android twins, driven by `wdio.ios.conf.ts`.
 See `README.md` § Run — iOS and `IOS_PHASE1_HANDOFF.md` for the port's history.

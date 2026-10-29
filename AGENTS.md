@@ -142,7 +142,7 @@ include a `## Status` line stating `Open` or `Fixed`.
 ┕ root /            # Test infrastructure files
 │   ├── README.md
 │   ├── wdio.conf.ts          # Android runner config
-│   ├── wdio.ios.conf.ts      # iOS runner config (NOT in tsconfig include — see code_review.md S1)
+│   ├── wdio.ios.conf.ts      # iOS runner config (typechecked with everything else)
 │   ├── test-cases-simple-money-tracker.md  # 195-case catalogue
 │   └── TESTING.md
 ```
@@ -247,6 +247,13 @@ every filtered run and never executes. `npm run test:unit` fails on it: the guar
 `src/config/__tests__/test-types.test.ts` asserts every case carries exactly one
 recognized type, that a file does not mix types, and that the file's `describe()` agrees
 with its cases.
+
+**Name arrange blocks `TC-SETUP-<NN>`, never leave them untitled.** A seed step written as
+an `it()` (so it inherits the spec's isolation) still shows up in the report, and a title
+without an id cannot be cited from a defect report. `TC-SETUP-` is that id: it is
+deliberately **not** a catalogue prefix — `test-cases-simple-money-tracker.md` stays the
+list of real cases, and the parity gate counts the setup block like any other title.
+Existing: `TC-SETUP-01` (both `transaction-list` twins), `TC-SETUP-02` (both `summary` twins).
 
 ## Source-of-truth ordering
 

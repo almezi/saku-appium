@@ -26,13 +26,15 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > dialog typing; app-side investigation only if that proves insufficient) · `bugs/BUG_Found_10.md` →
 > **automation code** (iOS document picker is out-of-process; app verified fine).
 >
-> Platform status (2026-10-27): Android — complete (137/146 passing, 9 skipped per retry policy);
-> iOS — partial (TC-NAV 8/8, TC-INC 9/9, TC-EXP 8/8, TC-LIST 9/9, TC-EDIT 8/8, TC-BUDGET 11/11,
-> TC-KAT 13/13, TC-BACKUP 5/5 passing on the iPhone 18 Pro sim — 71 cases across 9 specs; plus
+> Platform status (2026-10-29): Android — complete (137/146 passing, 9 skipped per retry policy);
+> iOS — **every Android sub-phase now has a twin**: TC-NAV 8/8, TC-INC 9/9, TC-EXP 8/8,
+> TC-LIST 9/9, TC-EDIT 8/8, TC-BUDGET 11/11,
+> TC-KAT 13/13, TC-BACKUP 5/5 passing on the iPhone 18 Pro sim; plus
 > the whole of **Phase 3**: TC-VAL 17/17, TC-AMT 7/7, TC-PERS 5/5, TC-ROT 6/6, TC-A11Y 7/7,
-> TC-PERF 4/4 (+1 skipped) — 46 more cases across 6 specs, so 117 cases across 15 specs on
-> iOS; TC-BACKUP-04 and TC-PERF-05 are skipped on iOS, see `bugs/BUG_Found_10.md` /
-> `bugs/BUG_Found_12.md`; the remaining sub-phases — TC-SUM, TC-DEL/TC-UNDO — are not yet ported).
+> TC-PERF 4/4 (+1 skipped); and **2026-10-29**: TC-SUM 13/13, TC-DEL/TC-UNDO 9/9 — **139 cases
+> across 16 specs** on
+> iOS. TC-BACKUP-04 and TC-PERF-05 are skipped on iOS, see `bugs/BUG_Found_10.md` /
+> `bugs/BUG_Found_12.md`.
 >
 > The whole Phase 3 iOS suite was re-run as ONE invocation (all six specs, a fresh Appium
 > session per spec) and came back **6/6 spec files, 46 passing + 1 skipped in 13m 14s**
@@ -187,6 +189,20 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 
 **Spec:** `src/tests/ringkasan/summary.spec.ts` | **Agent:** ZCode (GLM-5.3) — 13/13 passing 2026-10-24. Verified live: income-0 renders the savings value as "—" (not "0,0%") and hides the income breakdown card; the empty month replaces the whole content area with `ringkasan_empty_state`; breakdown bars are untagged container+fill Views (fill/container width = share). Fixed en route: `mobile: scrollGesture "down"` is a silent no-op on this Compose LazyColumn — scrolling uses raw W3C touch swipes and breakdown rows are read from atomic page-source dumps (element-handle reads stale out; see failure log).
 
+> **iOS run 2026-10-29:** ported as `src/tests/ringkasan/summary.ios.spec.ts` — **13/13 passing**
+> (iPhone 18 Pro sim / iOS 27.0, `npm run test:sum:ios`, 2m 15.9s). iOS adaptations: no
+> `UiScrollable`, so "scroll until it composes" is a bounded `performActions` swipe loop; the
+> comparison card and empty state are read by frame geometry from one page-source dump
+> (`bugs/BUG_Found_13.md`); the bar share comes from the row's rendered percentage, not
+> fill/container widths (the iOS bar exposes no fill node); the NaN/Infinity probe is one
+> `getPageSource()` check instead of two `textContains` selectors. **Finding:** the Ringkasan month
+> switcher is NOT sticky — it scrolls with the content, and an XCUITest click is a
+> screen-coordinate tap, so an arrow above the fold silently does nothing while its label still
+> reads (TC-SUM-10 after TC-SUM-13: three prev clicks, label unmoved). Android is immune because
+> UiAutomator2 clicks the node itself. Fixed harness-side in `ringkasan.ios.page.ts`
+> (`scrollSwitcherIntoView`, private so the twins' surfaces stay equal) — no app defect, so no bug
+> file.
+
 ### 1.F — Edit Transaction (TC-EDIT) — 8 tasks
 
 - [x] TC-EDIT-01: Tap `Ubah` → form opens prefilled
@@ -219,6 +235,20 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 - [x] TC-DEL-07: Rapid delete two items → both removed
 
 **Spec:** `src/tests/transaksi/delete-undo.spec.ts` | **Agent:** ZCode (GLM-5.3) — 9/9 passing 2026-10-24 (TC-DEL-01/02/03 in the shared undo describe, TC-DEL-04–07 in a second describe with its own seeds; TC-DEL-02 doubles as TC-UNDO-03). Verified live: the delete sheet opens over a pending undo toast, so back-to-back deletes are safe; the empty list drops the summary cards and shows `daftar_empty_state`. Toast-expiry waits use a plain 6 s pause — the toast node can linger composed after expiry, so disappearance waits flake.
+
+> **iOS run 2026-10-29 (covers 1.G and 1.H):** ported as `src/tests/transaksi/delete-undo.ios.spec.ts`
+> — **9/9 passing** (iPhone 18 Pro sim / iOS 27.0, `npm run test:del:ios`, 2m 01.6s), same two-describe
+> shape and same ids as Android. Two open questions closed in the harness's favour, both measured:
+> ① the delete sheet's iOS accessibility tree **is** populated (`daftar_delete_sheet` +
+> `component_sheet_button_confirm`/`_cancel` resolve and tap), so `TESTABILITY.md`'s
+> "sheets empty the tree" probe was an in-process artefact — its OPEN flag is now RESOLVED;
+> ② the undo toast **is** automatable after a delete — `component_toast` and
+> `component_toast_action` both appear and `TC-UNDO-02`'s tap restores the transaction, so the
+> "iOS renders toasts untagged" finding (save toast, `tambah.ios.page.ts`) does not generalise.
+> iOS adaptations: rows counted with `-ios predicate string: name MATCHES
+> "daftar_item_[0-9]+$"` (the `$` anchor keeps the per-row delete buttons out), a row located by
+> rendered text through the page-source frame (`bugs/BUG_Found_13.md`), and the same plain
+> `UNDO_TOAST_EXPIRY` pause Android uses.
 
 ### 1.H — Undo Delete (TC-UNDO) — 3 tasks
 
