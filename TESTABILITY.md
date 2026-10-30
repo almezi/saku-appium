@@ -301,7 +301,7 @@ IDs are stable and never change. Default categories keep their display name in s
 | grp_daily | exp_daily_household | Kebutuhan Rumah Tangga | true |
 | grp_daily | exp_daily_other | Lainnya (Harian) | true |
 | grp_health | exp_health_doctor | Dokter | true |
-| grp_health | exp_health_medicine | Obat-obat | true |
+| grp_health | exp_health_medicine | Obat-obatan | true |
 | grp_health | exp_health_gym | Olahraga / Gym | true |
 | grp_health | exp_health_other | Lainnya (Kesehatan) | true |
 | grp_lifestyle | exp_lifestyle_clothing | Pakaian | true |

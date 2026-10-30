@@ -34,7 +34,7 @@ file; the numbering is continuous and files are never deleted or renumbered.
 | 14 | [BUG_Found_14.md](BUG_Found_14.md) | iOS | Critical / P1 | Fixed | Numeric keypad Delete key is a silent no-op after the category sheet closes |
 | 15 | [BUG_Found_15.md](BUG_Found_15.md) | Android + iOS | Major / P2 | Open | v2.3 redesign drops six Cadangan test tags on both platforms; import outcome has no UI surface — worked around via documented text lookups |
 | 16 | [BUG_Found_16.md](BUG_Found_16.md) | Android | Major / P1 | Open | `UiScrollable.scrollIntoView` cannot scroll the Tambah category sheet — rows below the initial 9-row window are unreachable; TC-SUM-12 fails 2/2 (swipe-and-check or the sheet's search box both work) |
-| 17 | [BUG_Found_17.md](BUG_Found_17.md) | Android | Minor / P2 | Open | Sheet renders "Obat-obatan", TESTABILITY.md:302 + `category-labels.ts:43` say "Obat-obat" — a locator string, so `exp_health_medicine` is a latent failure |
+| 17 | [BUG_Found_17.md](BUG_Found_17.md) | Android | Minor / P2 | Fixed | Sheet renders "Obat-obatan", TESTABILITY.md:302 + `category-labels.ts:43` said "Obat-obat" — a locator string, so `exp_health_medicine` was a latent failure (contract corrected to "Obat-obatan" 2026-10-31; full-label v2.3 re-verification pending) |
 | 18 | [BUG_Found_18.md](BUG_Found_18.md) | Android | Major / P2 | Open | TC-VAL-17 fails 3/3: no `tambah_helper` node after saving with the keyboard up — app-vs-harness split not yet determined; case marked `~[BUG]~`, skip not committed |
 
 ## Patterns worth knowing

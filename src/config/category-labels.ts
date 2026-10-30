@@ -40,7 +40,7 @@ export const categoryLabels: Record<string, string> = {
 
   // Expense — health (4)
   exp_health_doctor: "Dokter",
-  exp_health_medicine: "Obat-obat",
+  exp_health_medicine: "Obat-obatan",
   exp_health_gym: "Olahraga / Gym",
   exp_health_other: "Lainnya (Kesehatan)",
 

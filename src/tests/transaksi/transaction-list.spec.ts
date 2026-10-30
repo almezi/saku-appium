@@ -3,11 +3,12 @@
  * test-cases-simple-money-tracker.md; the TC-SETUP-01 title is an
  * arrange/seed block, not a catalogue case.
  */
-import { byTag } from "../../helpers/locators";
+import { allByTagMatches, byTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";
 import { createTransaction, uniqueNote } from "../../helpers/transactions";
 import { typeIntoTaggedField } from "../../helpers/input";
+import { STALE_RETRY } from "../../config/settles";
 import { DaftarPage } from "../../pageobjects/daftar.page";
 import { RingkasanPage } from "../../pageobjects/ringkasan.page";
 import { KategoriPage } from "../../pageobjects/kategori.page";
@@ -167,22 +168,39 @@ describe("TC-LIST — transaction list (Phase 1) @regression", () => {
     await byTag(tags.tambah.categoryItem(customId)).click();
     await tambah.save();
     await daftar.open();
-    const row = await daftar.findRowText(formatRp(10_000));
-    await expect(row).toBeDisplayed();
-
     // Layout contract: the (possibly truncated) category text must stay
     // clear of the amount text — their bounds must not intersect. Element
     // handles (not just texts) are needed for the bounds read, so
     // extractChildTexts cannot replace this raw child enumeration.
-    const children = await row.$$('android=new UiSelector().className("android.widget.TextView")');
+    // findRowText's textContains match can resolve to the bare amount
+    // TextView on v2.4 — a node whose child list is empty — so the rows
+    // (daftar_item_<n>) are enumerated fresh and the one whose own children
+    // carry BOTH texts is taken, with a stale-retry against the
+    // recomposition the scroll leaves behind.
     let name: WebdriverIO.Element | undefined;
     let amount: WebdriverIO.Element | undefined;
-    for (const child of children) {
-      const text = ((await child.getText()) || "").trim();
-      if (text.startsWith("KATEGORI")) name = child;
-      if (text === formatRp(10_000)) amount = child;
+    for (let attempt = 0; attempt < 3 && !(name && amount); attempt++) {
+      if (attempt > 0) await driver.pause(STALE_RETRY);
+      const rows = await allByTagMatches("daftar_item_\\d+$");
+      for (const row of rows) {
+        const children = await row.$$(
+          'android=new UiSelector().className("android.widget.TextView")',
+        );
+        let rowName: WebdriverIO.Element | undefined;
+        let rowAmount: WebdriverIO.Element | undefined;
+        for (const child of children) {
+          const text = ((await child.getText()) || "").trim();
+          if (text === formatRp(10_000)) rowAmount = child;
+          else if (text.startsWith("KATEGORI")) rowName = child;
+        }
+        if (rowName && rowAmount) {
+          name = rowName;
+          amount = rowAmount;
+          break;
+        }
+      }
     }
-    // Guard-narrowing instead of casts after toBeDefined(): a missing child
+    // Guard-narrowing instead of casts after the enumeration: a missing child
     // is a layout-contract break and fails with its own message.
     if (!name || !amount) {
       throw new Error("Row rendered neither a KATEGORI label nor the amount text");
@@ -245,6 +263,16 @@ describe("TC-LIST — transaction list (Phase 1) @regression", () => {
     for (let i = 0; i < 14; i++) await daftar.swipeList("up");
     expect(await daftar.dayHeaderCount()).toBeGreaterThanOrEqual(1);
     for (let i = 0; i < 14; i++) await daftar.swipeList("down");
+    // 14 blind swipes can undershoot the return sweep: all 100 bulk items are
+    // dated today, so a viewport left inside today's block renders rows only —
+    // no day header at all. Sweep down until the top row (C) is back.
+    for (
+      let i = 0;
+      i < 14 && (await daftar.rowAmountTextsInOrder())[0] !== formatRp(C_TODAY_INCOME);
+      i++
+    ) {
+      await daftar.swipeList("down");
+    }
     // Back at the top the list is intact: no creation lost, top rows still
     // render, and the month summary still accounts for every bulk expense.
     const amounts = await daftar.rowAmountTextsInOrder();

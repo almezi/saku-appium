@@ -2,11 +2,14 @@
 
 ## Status
 
-- **State:** Open
+- **State:** Fixed
 - **Summary:** The Tambah category sheet renders the health-medication category as **"Obat-obatan"**,
-  while TESTABILITY.md:302 and `src/config/category-labels.ts:43` both contract **"Obat-obat"** —
-  so `exp_health_medicine` is a latent failure in the text-lookup path (`BUG_Found-07`'s
-  workaround depends on these strings being exact).
+  while TESTABILITY.md:302 and `src/config/category-labels.ts:43` both contracted **"Obat-obat"** —
+  so `exp_health_medicine` was a latent failure in the text-lookup path (`BUG_Found-07`'s
+  workaround depends on these strings being exact). **Fixed 2026-10-31:** the contract sites were
+  corrected to the rendered "Obat-obatan" (app wins per AGENTS.md source-of-truth ordering); the
+  pending follow-up is re-verifying the remaining 27 expense + 9 income labels against v2.3 in one
+  page-source dump.
 
 ## Identity
 
