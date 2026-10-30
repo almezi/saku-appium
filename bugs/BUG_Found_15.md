@@ -75,6 +75,14 @@ Major
 ### Priority
 P2
 
+## Fix Ownership
+**APP CODE.** The v2.3 redesign dropped six tags TESTABILITY.md and TestTags.kt contract, on both
+platforms — the shared Compose screen code is the fix site, and only the app owner can close this
+(re-apply the tags; the import outcome would also need some UI surface for
+`cadangan_import_result`/`_error` to mean anything). The harness side is DONE as a workaround:
+text-based lookups in both page objects, with the removal condition documented in their JSDoc.
+This bug stays Open until the app re-applies the tags.
+
 ## Additional Notes
 
 - Same defect family as BUG_Found_07 (v2.2 category-sheet rows lost their tags); there the

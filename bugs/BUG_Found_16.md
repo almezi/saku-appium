@@ -121,6 +121,16 @@ device gate can be considered clean.
   `resources/SimpleMoneyTrackerKT-v2.2.apk` (`versionCode=4`) — see the note below
 - **Android API level:** 37
 
+## Fix Ownership
+**AUTOMATION CODE.** The app renders the below-fold row and accepts it when tapped — a raw W3C
+swipe and the sheet's own search box both reach it; only `UiScrollable.scrollIntoView` fails, and
+the repo already documents that mechanism as unreliable on this Compose list. The trigger was the
+v2.3 build (the same spec was 13/13 green on v2.2, 2026-10-24), but the fix is harness-side, per
+the report's fix options: ① a bounded swipe-and-check in `selectCategory()` (the
+`kategori.page.ts` `scrollToRow` pattern), or ② drive the unused `tambah_category_search` tags.
+Only `selectCategory()` moves; the `it()` blocks stay unchanged. Optional app-side closer that
+also retires the BUG_Found-07/17 lookup family: tag the sheet rows.
+
 ## Additional Notes
 
 - **Not caused by the M5/M6 timing sweep — proven by A/B, not by argument.** The failing budget

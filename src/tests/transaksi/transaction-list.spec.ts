@@ -7,6 +7,7 @@ import { byTag } from "../../helpers/locators";
 import { tags } from "../../config/tags";
 import { categories } from "../../config/categories";
 import { createTransaction, uniqueNote } from "../../helpers/transactions";
+import { typeIntoTaggedField } from "../../helpers/input";
 import { DaftarPage } from "../../pageobjects/daftar.page";
 import { RingkasanPage } from "../../pageobjects/ringkasan.page";
 import { KategoriPage } from "../../pageobjects/kategori.page";
@@ -135,22 +136,22 @@ describe("TC-LIST — transaction list (Phase 1) @regression", () => {
     expect(expenseRow).toContain(formatRp(B_TODAY_EXPENSE));
   });
 
-  // Unblocked 2026-10-27: the dialog self-dismiss was caused by typing's
-  // keyboard-open recomposition (BUG_Found_04, 8 historical failures) —
-  // renameInDialog now writes through keyboard-free instrumentation setText
-  // (setValueIntoTaggedField, the flow that always worked live via Appium
-  // MCP set_value), so the keyboard never opens and the dialog stays put.
+  // Rewritten for app v2.4 (app commit acfc059): default kategori rows no
+  // longer render a pencil, so the long name is created directly as a custom
+  // EXPENSE category through the "Tambah kategori" form. The transaction then
+  // reaches it through the picker sheet's search box — the custom row sorts
+  // below the sheet's initial window (BUG_Found_16) and its runtime-generated
+  // id has no category-labels.ts mapping for selectCategory to use.
   it("TC-LIST-07 long category name does not overlap the row amount @regression", async () => {
-    const LONG_NAME = "KATEGORI PANJANG SEK"; // dialog max is 20 chars
+    const LONG_NAME = "KATEGORI PANJANG SEK"; // form/dialog max is 20 chars
     await ringkasan.open();
     await kategori.openFromRingkasan();
+    let customId = "";
     try {
-      await kategori.selectType("pengeluaran");
-      await kategori.openEditDialog(categories.expense.dailyOther);
-      await kategori.renameInDialog(categories.expense.dailyOther, LONG_NAME);
+      customId = await kategori.createCategory(LONG_NAME, "pengeluaran");
     } finally {
-      // Return to Ringkasan regardless of failures above — a stray dialog
-      // would swallow one back press, and later tests need the bottom bar.
+      // Return to Ringkasan regardless of failures above — a stray form would
+      // swallow one back press, and later tests need the bottom bar.
       await kategori.systemBack().catch(() => undefined);
       if (!(await ringkasan.isDisplayed().catch(() => false))) {
         await kategori.systemBack().catch(() => undefined);
@@ -158,12 +159,13 @@ describe("TC-LIST — transaction list (Phase 1) @regression", () => {
       await ringkasan.waitForScreen();
     }
 
-    await createTransaction({
-      type: "pengeluaran",
-      amount: 10_000,
-      categoryId: categories.expense.dailyOther,
-      date: today,
-    });
+    await tambah.open();
+    await tambah.selectType("pengeluaran");
+    await tambah.fillAmount(10_000);
+    await byTag(tags.tambah.categoryPager).click();
+    await typeIntoTaggedField(byTag(tags.tambah.categorySearch), "PANJANG");
+    await byTag(tags.tambah.categoryItem(customId)).click();
+    await tambah.save();
     await daftar.open();
     const row = await daftar.findRowText(formatRp(10_000));
     await expect(row).toBeDisplayed();

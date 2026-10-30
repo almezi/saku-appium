@@ -95,6 +95,17 @@ can be fixed.
   `resources/SimpleMoneyTrackerKT-v2.2.apk`)
 - **Android API level:** 37
 
+## Fix Ownership
+**UNDETERMINED — app vs harness not yet split.** Two explanations fit the measurement equally:
+the v2.3 save may not reset the form while the IME is up (app defect), or the keyboard resize may
+leave `tambah_helper` uncomposed so `getText` has no node (harness defect). Deciding probe (from
+the report): after the save with the keyboard up, dump the page source and read the form fields
+themselves — amount empty/category cleared means the reset happened and the harness read is at
+fault; fields still filled means an app defect. Do not skip or fix before that probe. A separate,
+already-agreed harness hygiene item sits alongside: the file's cross-case state coupling (moving
+failures across attempts) needs a per-case navigation reset — that pass does not fix this bug and
+must not be counted as doing so.
+
 ## Additional Notes
 
 - **3× rule applied, skip NOT yet committed.** `AGENTS.md` §Rules for All Agents (test-failure

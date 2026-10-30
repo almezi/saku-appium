@@ -211,4 +211,72 @@ export class KategoriPage extends BasePage {
     await this.scrollToRow(categoryId);
     await byTag(kategoriTags.rowHide(categoryId)).click();
   }
+
+  /**
+   * The "Tambah kategori" button is the LazyColumn's last item — below the
+   * default rows — so walk the list to the end before tapping it. Composed
+   * but clipped at the viewport edge is not tappable, so the check requires
+   * the button fully inside the screen.
+   */
+  private async addButtonInView(): Promise<boolean> {
+    const button = byTag(kategoriTags.addButton);
+    if (!(await button.isExisting().catch(() => false))) return false;
+    const top = await button.getLocation();
+    const size = await button.getSize();
+    const { height } = await driver.getWindowSize();
+    return top.y + size.height <= height;
+  }
+
+  /** Opens the "Tambah kategori" form (the row pencil/trash need a custom row). */
+  async openAddForm(): Promise<void> {
+    for (let step = 0; step < 20; step++) {
+      if (await this.addButtonInView()) break;
+      await this.swipeList("up");
+    }
+    await byTag(kategoriTags.addButton).click();
+    await byTag(kategoriTags.formScreen).waitForDisplayed({ timeout: ELEMENT_PRESENT });
+  }
+
+  /**
+   * Creates a custom category through the Tambah kategori form and waits for
+   * the list again. `type` selects the form's segmented toggle (Pemasukan is
+   * the form's default) and re-selects the matching list tab, since the list
+   * keeps its previous tab after the form closes and the new row only renders
+   * in its own type's list. Returns the id derived from the new row, since
+   * the app generates it at runtime (`cus_pem_<epochMs>` income /
+   * `cus_pen_<epochMs>` expense).
+   */
+  async createCategory(
+    name: string,
+    type: "pemasukan" | "pengeluaran" = "pemasukan",
+  ): Promise<string> {
+    await this.openAddForm();
+    await byTag(
+      type === "pemasukan" ? kategoriTags.toggleIncome : kategoriTags.toggleExpense,
+    ).click();
+    await typeIntoTaggedField(byTag(kategoriTags.formName), name, kategoriTags.formName);
+    await byTag(kategoriTags.formSave).click();
+    await byTag(kategoriTags.formScreen).waitForExist({ timeout: ELEMENT_PRESENT, reverse: true });
+    await this.selectType(type);
+    return this.findCustomCategoryId();
+  }
+
+  /**
+   * Id of the newest custom category row. Reads the eye toggle (always
+   * composed for a rendered row) and strips the row-action prefix; swipes the
+   * list when the new row starts out below the fold (it is appended after the
+   * default rows).
+   */
+  async findCustomCategoryId(): Promise<string> {
+    for (let step = 0; step < 12; step++) {
+      const toggles = await allByTagMatches("kategori_row_hide_cus_.*");
+      const toggle = toggles[0];
+      if (toggle) {
+        const tag = String(await toggle.getAttribute("resource-id"));
+        return tag.replace("kategori_row_hide_", "");
+      }
+      await this.swipeList("up");
+    }
+    throw new Error("custom kategori row never appeared in the list");
+  }
 }

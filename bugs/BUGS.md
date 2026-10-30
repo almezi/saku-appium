@@ -29,7 +29,7 @@ file; the numbering is continuous and files are never deleted or renumbered.
 | 09 | [BUG_Found_09.md](BUG_Found_09.md) | Android | Minor / P3 | Closed | Pull-to-refresh is not implemented; TC-LIST-11 retired from the catalogue |
 | 10 | [BUG_Found_10.md](BUG_Found_10.md) | iOS | Major / P2 | Open | iOS picker remote view is not dismissable programmatically — blocks TC-BACKUP-04 |
 | 11 | [BUG_Found_11.md](BUG_Found_11.md) | iOS | Critical / P1 | Fixed | Material3 date picker labels days device-locale-first; the date matcher never matched |
-| 12 | [BUG_Found_12.md](BUG_Found_12.md) | iOS | Trivial / P3 | Open | TC-PERF-05 cannot run on the simulator — `dumpsys meminfo` has no counterpart |
+| 12 | [BUG_Found_12.md](BUG_Found_12.md) | iOS | Trivial / P3 | Open | TC-PERF-05 cannot run on the simulator — `dumpsys meminfo` has no counterpart (decided 2026-10-31: guard lives out-of-band; iOS host-`ps` RSS script still wanted) |
 | 13 | [BUG_Found_13.md](BUG_Found_13.md) | iOS | Critical / P1 | Fixed | Compose renders a tagged container's strings as siblings → tree-only child reads returned nothing |
 | 14 | [BUG_Found_14.md](BUG_Found_14.md) | iOS | Critical / P1 | Fixed | Numeric keypad Delete key is a silent no-op after the category sheet closes |
 | 15 | [BUG_Found_15.md](BUG_Found_15.md) | Android + iOS | Major / P2 | Open | v2.3 redesign drops six Cadangan test tags on both platforms; import outcome has no UI surface — worked around via documented text lookups |

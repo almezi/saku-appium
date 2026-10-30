@@ -76,6 +76,13 @@ P1 (fix before Phase 1 completion)
 - **App build:** Saku.app Debug (bundle `id.almezi.saku`)
 - **Android API level:** n/a
 
+## Fix Ownership
+**AUTOMATION CODE.** The app renders every string correctly; the harness reads assumed a nested
+tree that Compose on iOS does not produce (the tagged container lands empty, its strings as
+siblings). Fixed in `src/helpers/elements.ts` + the affected iOS page objects (see Additional
+Notes); the root cause is Compose's iOS accessibility flattening, which the reads work around by
+geometry.
+
 ## Additional Notes
 Fixed in `src/helpers/elements.ts` + `src/pageobjects/daftar.ios.page.ts` /
 `src/pageobjects/ubah.ios.page.ts`:

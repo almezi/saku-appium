@@ -329,7 +329,7 @@ Locate by text/content-desc only:
 - TC-PERF-02 Tab switch < 500ms
 - TC-PERF-03 List scroll 60fps with 100+ items
 - TC-PERF-04 Save transaction < 1s
-- TC-PERF-05 No memory growth after 50 add/delete cycles
+- TC-PERF-05 No memory growth after 50 add/delete cycles *(decided 2026-10-31: skipped in wdio on both platforms — 50 UI cycles exceed the 180 s mocha timeout, and iOS has no memory source; the guard lives out-of-band via `scripts/perf_memcycles.sh` plus a future iOS host-`ps` RSS script, see `bugs/BUG_Found_12.md`)*
 
 ### W. Debug Tooling & Seeding (TC-SEED)
 - TC-SEED-01 Launch with intent extra `test_seed = seed_empty` → database initialized empty

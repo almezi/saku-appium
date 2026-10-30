@@ -73,6 +73,12 @@ P1 (fix before Phase 3 completion)
 - **App build:** Saku.app Debug (bundle `id.almezi.saku`)
 - **Android API level:** n/a
 
+## Fix Ownership
+**AUTOMATION CODE.** The app behaves correctly (caret at the end, hardware backspace deletes); the
+spec drove an on-screen keypad key that is `visible="false"` once the app has dismissed the
+software keyboard. Fixed in `src/tests/tambah/amount-input.ios.spec.ts` — hardware BACKSPACE
+(U+E003), the twin of Android's native DEL keycode 67.
+
 ## Additional Notes
 Fixed in `src/tests/tambah/amount-input.ios.spec.ts`: TC-AMT-06 now sends the hardware
 BACKSPACE (U+E003) to the focused editor — the direct twin of Android's native DEL keycode 67,

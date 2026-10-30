@@ -99,7 +99,10 @@ Page objects: `base`, `tambah`, `daftar`, `ringkasan`, `ubah`, `anggaran`, `kate
 - `mobile: scrollGesture` is not implemented by appium-xcuitest-driver 12.21 — a sweep uses
   `mobile: scroll`.
 - `dumpsys meminfo` has no simulator counterpart, so TC-PERF-05 cannot run on iOS
-  (`bugs/BUG_Found_12.md`).
+  (`bugs/BUG_Found_12.md`). Decided 2026-10-31: the skip stays on both platforms; the memory
+  guard lives out-of-band — `scripts/perf_memcycles.sh` on Android (last attempt ~30/50 cycles
+  before emulator crashes), and a host-`ps` RSS script on iOS still to be written (the bug's
+  Expected Result names the shape).
 - iOS interaction budgets sit at ~2× Android's because every interaction crosses the WDA
   boundary (a tap alone costs ~0.4 s) — the iOS budgets are 1.5 s / 2 s / 8 s.
 

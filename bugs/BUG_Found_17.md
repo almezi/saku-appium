@@ -80,6 +80,16 @@ P2 — fix in the next contract pass; it blocks nothing currently executed.
 - **App build:** installed `versionName=2.3 / versionCode=5`
 - **Android API level:** 37
 
+## Fix Ownership
+**AUTOMATION CODE (doc + map edit).** Per the source-of-truth ordering (AGENTS.md: the app repo
+wins over documents), the rendered "Obat-obatan" wins over the contracted "Obat-obat" — so the
+fix is correcting `src/config/category-labels.ts:43` and TESTABILITY.md:302 to the rendered
+string, then re-verifying the remaining 27 expense + 9 income labels against v2.3 in one
+page-source dump. App-side alternative that would flip ownership to APP CODE: if "Obat-obat" is
+the intended string, the app's category name changes instead — but "Obat-obatan" is the standard
+Indonesian word for medication. The fragility's root cause is the missing sheet-row tag
+(BUG_Found-07); tagging the rows retires this whole lookup class.
+
 ## Additional Notes
 
 - **Fix is a doc + map edit, not code:** correct `category-labels.ts:43` and TESTABILITY.md:302 to

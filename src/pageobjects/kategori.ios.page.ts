@@ -291,15 +291,26 @@ export class KategoriIosPage extends BaseIosPage {
 
   /**
    * Creates a custom category through the Tambah kategori form and waits for
-   * the list again. Returns the id derived from the new row, since the app
-   * generates it at runtime (`cus_pem_<epochMs>`).
+   * the list again. `type` selects the form's segmented toggle (Pemasukan is
+   * the form's default) and re-selects the matching list tab, since the list
+   * keeps its previous tab after the form closes and the new row only renders
+   * in its own type's list. Returns the id derived from the new row, since
+   * the app generates it at runtime (`cus_pem_<epochMs>` income /
+   * `cus_pen_<epochMs>` expense).
    */
-  async createCategory(name: string): Promise<string> {
+  async createCategory(
+    name: string,
+    type: "pemasukan" | "pengeluaran" = "pemasukan",
+  ): Promise<string> {
     await this.openAddForm();
+    if (type === "pengeluaran") {
+      await iosByTag(tags.kategori.toggleExpense).click();
+    }
     await iosTypeIntoTaggedField(this.formName, name, tags.kategori.formName);
     await this.formSave.click();
     await this.addFormScreen.waitForExist({ timeout: SCREEN_READY, reverse: true });
     await this.waitForScreen();
+    await this.selectType(type);
     return this.findCustomCategoryId();
   }
 

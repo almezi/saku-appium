@@ -59,6 +59,137 @@ shortcuts exist for `list`, `edit`, `backup`, `val`, `amt`, `inc`, `exp`, `pers`
 `src/**/*.ts`, `wdio.conf.ts` and `wdio.ios.conf.ts`. (The `code_review.md` finding **S1** gap
 that used to exclude it is closed.)
 
+### Capabilities — the same session, started by hand
+
+Use these when you want **Appium Inspector** (or your own Appium server) instead of `npm test` /
+`npm run test:ios`. They are the capabilities the two runner configs actually send, so a
+hand-started session sees the same app, with the same isolation, as the suite. The values to
+re-aim at your machine are `appium:app`, and `appium:udid` if your simulator or device differs —
+`xcrun simctl list devices` and `adb devices -l` print them.
+
+#### 1. iOS Simulator capabilities (`wdio.ios.conf.ts`)
+
+```json
+{
+  "platformName": "iOS",
+  "appium:automationName": "XCUITest",
+  "appium:deviceName": "iPhone 18 Pro",
+  "appium:platformVersion": "27.0",
+  "appium:udid": "80FCD259-BA75-4018-8FE6-31F4E812AD9B",
+  "appium:app": "/Users/yourusername/AndroidStudioProjects/SimpleMoneyTrackerKT/iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/Saku.app",
+  "appium:bundleId": "id.almezi.saku",
+  "appium:wdaLocalPort": 8100,
+  "appium:noReset": false,
+  "appium:newCommandTimeout": 240
+}
+```
+
+- **`platformName`** — the OS, `iOS` here.
+- **`appium:automationName`** — the engine: Apple's **XCUITest**. On first session Appium builds
+  WebDriverAgent from its own bundled source and caches it in `DerivedData`; that is why the first
+  run is slow and later ones are not.
+- **`appium:deviceName`** — the simulator model exactly as Xcode lists it (`xcrun simctl list
+  devices`). Once `appium:udid` is set this is only a display hint — Inspector's form wants the
+  model name, the suite sends the generic `"iPhone"` and pins by `udid`.
+- **`appium:platformVersion`** — the iOS runtime installed on that simulator. Optional, but it
+  makes the session fail loudly on a version mismatch instead of silently picking another device.
+- **`appium:udid`** — the simulator's UUID. This is what actually selects the device; two
+  simulators must never share a session.
+- **`appium:app`** — absolute path to the **`.app` bundle built for the simulator** (a real device
+  takes a `.ipa`, and a simulator build will not install on one). This repo's default is the
+  Compose Multiplatform build from the app repo — `iosApp/build-app.sh` — overridable with
+  `SAKU_IOS_APP`.
+- **`appium:bundleId`** — `id.almezi.saku`. With `app` + `bundleId` both set, the driver installs
+  if needed, launches, and knows when the app is up; `bundleId` alone attaches to an already
+  installed app.
+- **`appium:wdaLocalPort`** — the host port Appium forwards to WDA. `wdio.ios.conf.ts` assigns
+  `8100 + index` per simulator so parallel sessions never collide; a second hand-started session
+  against another device needs a different port.
+- **`appium:noReset`** — `false` means **install the app and wipe its data** at session start: the
+  same clean-DB-per-spec isolation contract the suite relies on. Anything you create by hand does
+  not survive the next session. Set it to `true` when inspecting if you want your data to persist.
+- **`appium:newCommandTimeout`** — seconds of idleness before the server kills the session. 240 is
+  fine for short Inspector looks; raise it if you work slowly, or the session dies mid-inspection.
+
+> **This machine needs `DEVELOPER_DIR`.** `xcode-select -p` points at Command Line Tools, which
+> ship no iOS SDK, so `xcrun simctl` — and session creation — fails. `src/helpers/ios-app.ts`
+> exports the right value for WDIO runs only; a server you start yourself must do it too:
+> `export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
+
+#### 2. Android Emulator capabilities (`wdio.conf.ts`)
+
+```json
+{
+  "platformName": "Android",
+  "appium:automationName": "UiAutomator2",
+  "appium:deviceName": "emulator-5554",
+  "appium:udid": "emulator-5554",
+  "appium:app": "/Users/yourusername/Documents/github/saku-appium/resources/SimpleMoneyTrackerKT-v2.2.apk",
+  "appium:appPackage": "id.almezi.simplemoneytracker_kt",
+  "appium:appActivity": ".MainActivity",
+  "appium:systemPort": 8200,
+  "appium:noReset": false,
+  "appium:disableWindowAnimation": true,
+  "appium:newCommandTimeout": 240
+}
+```
+
+- **`platformName`** — the OS, `Android` here.
+- **`appium:automationName`** — Google's **UiAutomator2** engine, the only supported choice for
+  modern Android.
+- **`appium:deviceName`** — either `Android Emulator` or the concrete serial. The suite uses the
+  serial (`emulator-5554`, from `adb devices -l`); this machine's AVD is `Pixel_10`, started with
+  `emulator -avd Pixel_10`.
+- **`appium:udid`** — the device serial. Required as soon as more than one device or emulator is
+  attached, otherwise the driver cannot pick one.
+- **`appium:app`** — absolute path to the `.apk`. The tracked build is
+  `resources/SimpleMoneyTrackerKT-v2.2.apk` (`SAKU_APK` overrides). **Appium never downgrades an
+  installed package**, so if the emulator already carries a newer app this path is ignored and the
+  newer build is exercised — the `code_review.md` verification-gate trap, worth checking with
+  `adb shell dumpsys package id.almezi.simplemoneytracker_kt | grep versionName`.
+- **`appium:appPackage`** / **`appium:appActivity`** — `id.almezi.simplemoneytracker_kt` and
+  `.MainActivity`. Together they let the driver launch and detect the app without going through
+  the launcher, and make a session recover an already-running app.
+- **`appium:systemPort`** — the host port forwarded to the UiAutomator2 server on the device.
+  `wdio.conf.ts` assigns `8200 + index` per device, so parallel sessions never collide.
+- **`appium:noReset`** — `false`, as on iOS: fresh app data per session. `true` keeps data and
+  skips the reinstall, which is usually what you want while inspecting by hand.
+- **`appium:disableWindowAnimation`** — `true`. Real devices with system animations on have frozen
+  the instrumentation during element-visibility checks; this suppresses window animations for the
+  session. Harmless on an emulator with animation scales already zeroed.
+- **`appium:newCommandTimeout`** — idleness before the server drops the session, same as iOS.
+
+Two capabilities the suite sets only because it runs long, and that you can skip in Inspector:
+`appium:uiautomator2ServerLaunchTimeout` / `…ServerInstallTimeout` (`120_000`) and
+`appium:adbExecTimeout` (`60_000`). **`appium:autoGrantPermissions` is not used by this repo** —
+the app's own permission surfaces are exercised deliberately (the SAF picker in `TC-BACKUP-04`
+is filed as `BUG_Found_02`), so auto-granting would hide the behavior under test. Add it to a
+hand-started session only if a permission dialog is in your way.
+
+#### Starting a server the suite can also see
+
+```bash
+# Android: base path /wd/hub  (= npm run appium:server1, port 4723)
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+npx appium server --base-path=/wd/hub --port 4723
+
+# iOS: default base path /
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+npx appium server --port 4723
+```
+
+In Appium Inspector, match the base path — **Remote Path `/wd/hub`** for the Android server above,
+**`/`** for the iOS one (Inspector defaults to `/`). To make the runner use your server instead of
+spawning its own on `4725`, export `SAKU_APPIUM_PORTS="4723"` — one server per device, device *N* →
+server *N*.
+
+> **Never attach while a run is live.** The emulator exposes **one** UiAutomator2 instrumentation
+> slot, so a second session — even a read-only Inspector or MCP one — tears down the
+> instrumentation the suite owns, and both sides then report HTTP 500 "instrumentation process is
+> not running", which looks exactly like a broken locator. The same collision applies on iOS, where
+> a WDIO run kills an externally launched WDA. Check with `pgrep -fl "wdio run|am instrument"`
+> before attaching.
+
 ### Twin parity gate
 
 The suite keeps every screen twice — `X.page.ts` / `X.ios.page.ts`, `name.spec.ts` /
