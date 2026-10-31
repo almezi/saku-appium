@@ -1,12 +1,39 @@
-import { $ } from '@wdio/globals'
-import { iosByTag } from '../helpers/locators'
-import { iosTypeIntoTaggedField, iosFieldText, iosDismissKeyboard, iosKeyboardShown } from '../helpers/input'
-import { iosExtractChildTexts } from '../helpers/elements'
-import { tags } from '../config/tags'
-import { accounts, type TransactionType } from '../config/categories'
-import { BaseIosPage } from './base.ios.page'
-import type { ChainablePromiseElement } from '../types'
-import type { TransactionFormInput } from './tambah.page'
+/**
+ * iOS twin of tambah.page.ts — the Tambah (add transaction) form. Locators
+ * are accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); the only label-matched lookup is the date picker's
+ * day cells, which carry no tags (verified on the Android twin). The class
+ * block below records the spike-verified iOS behaviors baked into this port.
+ */
+import {} from "@wdio/globals";
+import { iosByTag } from "../helpers/locators";
+import {
+  iosTypeIntoTaggedField,
+  iosFieldText,
+  iosDismissKeyboard,
+  iosKeyboardShown,
+} from "../helpers/input";
+import { iosExtractChildTexts } from "../helpers/elements";
+import { tags } from "../config/tags";
+import { accounts, type TransactionType } from "../config/categories";
+import { BaseIosPage } from "./base.ios.page";
+import type { ChainablePromiseElement } from "../types";
+import type { TransactionFormInput } from "./tambah.page";
+import {
+  DATE_PAGE_ANIM,
+  KEYBOARD_RETRY,
+  SHEET_CLOSE_SETTLE,
+  STALE_RETRY,
+  STALE_RETRY_SLOW,
+  SWIPE_ANIM,
+} from "../config/settles";
+import {
+  COMPOSITION_WAIT,
+  ELEMENT_PRESENT,
+  STATE_SYNC,
+  SURFACE_DISMISS,
+  TOAST_PROBE,
+} from "../config/timeouts";
 
 /**
  * Tambah screen on iOS — accessibility-id twin of TambahPage, driven by the
@@ -28,43 +55,48 @@ import type { TransactionFormInput } from './tambah.page'
  */
 export class TambahIosPage extends BaseIosPage {
   constructor() {
-    super(tags.tambah.screen)
+    super(tags.tambah.screen);
   }
 
   get amountInput(): ChainablePromiseElement {
-    return iosByTag(tags.tambah.inputAmount)
+    return iosByTag(tags.tambah.inputAmount);
   }
 
   get noteInput(): ChainablePromiseElement {
-    return iosByTag(tags.tambah.inputNote)
+    return iosByTag(tags.tambah.inputNote);
   }
 
   get saveButton(): ChainablePromiseElement {
-    return iosByTag(tags.tambah.buttonSave)
+    return iosByTag(tags.tambah.buttonSave);
   }
 
   get helperText(): ChainablePromiseElement {
-    return iosByTag(tags.tambah.helper)
+    return iosByTag(tags.tambah.helper);
   }
 
   async open(): Promise<void> {
-    await iosByTag(tags.navTambah).click()
-    await this.waitForScreen()
+    await iosByTag(tags.navTambah).click();
+    await this.waitForScreen();
   }
 
   async selectType(type: TransactionType): Promise<void> {
-    const toggle = type === 'pemasukan' ? tags.tambah.toggleIncome : tags.tambah.toggleExpense
-    await iosByTag(toggle).click()
+    const toggle = type === "pemasukan" ? tags.tambah.toggleIncome : tags.tambah.toggleExpense;
+    await iosByTag(toggle).click();
   }
 
   async fillAmount(amount: number): Promise<void> {
     // 'digits': the field live-formats the input as currency ("254000"
     // renders "Rp 254.000"), so exact-equality verification can never hold.
-    await iosTypeIntoTaggedField(this.amountInput, String(amount), tags.tambah.inputAmount, 'digits')
+    await iosTypeIntoTaggedField(
+      this.amountInput,
+      String(amount),
+      tags.tambah.inputAmount,
+      "digits",
+    );
   }
 
   async fillNote(note: string): Promise<void> {
-    await iosTypeIntoTaggedField(this.noteInput, note, tags.tambah.inputNote)
+    await iosTypeIntoTaggedField(this.noteInput, note, tags.tambah.inputNote);
   }
 
   /**
@@ -75,36 +107,36 @@ export class TambahIosPage extends BaseIosPage {
    * swipe inside the sheet area before re-querying.
    */
   async selectCategory(categoryId: string): Promise<void> {
-    const rowTag = tags.tambah.categoryItem(categoryId)
-    await iosByTag(tags.tambah.categoryPager).waitForExist({ timeout: 15_000 })
-    await iosByTag(tags.tambah.categoryPager).click()
+    const rowTag = tags.tambah.categoryItem(categoryId);
+    await iosByTag(tags.tambah.categoryPager).waitForExist({ timeout: COMPOSITION_WAIT });
+    await iosByTag(tags.tambah.categoryPager).click();
 
     // The sheet root reuses the bare category-item tag (TransactionForm.kt
     // passes TAMBAH_CATEGORY_ITEM as the sheet testTag; rows carry _<id>).
-    await iosByTag(tags.tambah.categorySheetRoot).waitForExist({ timeout: 10_000 })
+    await iosByTag(tags.tambah.categorySheetRoot).waitForExist({ timeout: ELEMENT_PRESENT });
 
     for (let attempt = 0; attempt < 4; attempt++) {
-      const row = iosByTag(rowTag)
+      const row = iosByTag(rowTag);
       if (await row.isExisting().catch(() => false)) {
         try {
-          await row.click()
-          await this.waitForSheetClosed(tags.tambah.categorySheetRoot)
-          return
+          await row.click();
+          await this.waitForSheetClosed(tags.tambah.categorySheetRoot);
+          return;
         } catch {
           // Stale handle or mid-recompose ghost — settle, re-query below.
-          await driver.pause(500)
+          await driver.pause(STALE_RETRY);
         }
       }
-      await this.swipeSheetContentUp()
+      await this.swipeSheetContentUp();
     }
-    throw new Error(`Category row "${categoryId}" never became tappable in the iOS sheet`)
+    throw new Error(`Category row "${categoryId}" never became tappable in the iOS sheet`);
   }
 
   async selectAccount(accountId: string): Promise<void> {
-    await iosByTag(tags.tambah.selectAccount).click()
-    await iosByTag(tags.tambah.sheetAccount).waitForExist({ timeout: 10_000 })
-    await iosByTag(tags.tambah.accountItem(accountId)).click()
-    await this.waitForSheetClosed(tags.tambah.sheetAccount)
+    await iosByTag(tags.tambah.selectAccount).click();
+    await iosByTag(tags.tambah.sheetAccount).waitForExist({ timeout: ELEMENT_PRESENT });
+    await iosByTag(tags.tambah.accountItem(accountId)).click();
+    await this.waitForSheetClosed(tags.tambah.sheetAccount);
   }
 
   /**
@@ -121,56 +153,63 @@ export class TambahIosPage extends BaseIosPage {
    */
   async selectDate(date: Date): Promise<void> {
     const label = [
-      new Intl.DateTimeFormat('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+      new Intl.DateTimeFormat("en-GB", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       }).format(date),
-      new Intl.DateTimeFormat('en-US', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+      new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       }).format(date),
-    ]
-    await iosByTag(tags.tambah.selectDate).click()
-    await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: 10_000 })
+    ];
+    await iosByTag(tags.tambah.selectDate).click();
+    await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: ELEMENT_PRESENT });
     for (let attempt = 0; attempt < 3; attempt++) {
       const cells = await $$(
         `-ios predicate string: type == "XCUIElementTypeButton" AND ` +
-          `(${label.map((l) => `(label == "${l}" OR label == "Today, ${l}")`).join(' OR ')})`,
-      )
+          `(${label.map((l) => `(label == "${l}" OR label == "Today, ${l}")`).join(" OR ")})`,
+      );
       for (const cell of cells) {
         if (await cell.isDisplayed()) {
-          await cell.click()
-          await iosByTag(tags.tambah.datePickerOk).click()
-          await iosByTag(tags.tambah.datePicker).waitForDisplayed({ timeout: 10_000, reverse: true })
-          return
+          await cell.click();
+          await iosByTag(tags.tambah.datePickerOk).click();
+          await iosByTag(tags.tambah.datePicker).waitForDisplayed({
+            timeout: SURFACE_DISMISS,
+            reverse: true,
+          });
+          return;
         }
       }
       // Not on the visible page — step back one month (Saku allows no future
       // dates, so stepping back is always the right direction).
-      const prev = await $$('-ios predicate string: label == "Change to previous month"')
-      await prev[0].click()
-      await driver.pause(400)
+      const prev = await $$('-ios predicate string: label == "Change to previous month"');
+      const prevButton = prev[0];
+      if (!prevButton) {
+        throw new Error('iOS date-picker "Change to previous month" button not found');
+      }
+      await prevButton.click();
+      await driver.pause(DATE_PAGE_ANIM);
     }
-    throw new Error(`Date cell "${label[0]}" never became visible in the iOS date picker`)
+    throw new Error(`Date cell "${label[0]}" never became visible in the iOS date picker`);
   }
 
   async fillForm(input: TransactionFormInput): Promise<void> {
-    if (input.type) await this.selectType(input.type)
-    await this.fillAmount(input.amount)
-    await this.selectCategory(input.categoryId)
+    if (input.type) await this.selectType(input.type);
+    await this.fillAmount(input.amount);
+    await this.selectCategory(input.categoryId);
     if (input.accountId && input.accountId !== accounts.tunai) {
-      await this.selectAccount(input.accountId)
+      await this.selectAccount(input.accountId);
     }
-    if (input.date) await this.selectDate(input.date)
-    if (input.note) await this.fillNote(input.note)
+    if (input.date) await this.selectDate(input.date);
+    if (input.note) await this.fillNote(input.note);
   }
 
   async isSaveEnabled(): Promise<boolean> {
-    return this.saveButton.isEnabled()
+    return this.saveButton.isEnabled();
   }
 
   /**
@@ -187,42 +226,44 @@ export class TambahIosPage extends BaseIosPage {
    * therefore dismisses and verifies the keyboard away before tapping.
    */
   async save(): Promise<void> {
-    let lastState = ''
+    let lastState = "";
     for (let attempt = 0; attempt < 3; attempt++) {
-      await iosDismissKeyboard()
+      await iosDismissKeyboard();
       if (await iosKeyboardShown().catch(() => false)) {
-        lastState = 'keyboard still shown'
-        await driver.pause(500)
-        continue
+        lastState = "keyboard still shown";
+        await driver.pause(KEYBOARD_RETRY);
+        continue;
       }
-      lastState = `saveEnabled=${await this.saveButton.isEnabled().catch(() => false)}`
-      await this.saveButton.click()
+      lastState = `saveEnabled=${await this.saveButton.isEnabled().catch(() => false)}`;
+      await this.saveButton.click();
       try {
         await driver.waitUntil(
           async () => {
-            const text = await iosFieldText(this.amountInput).catch(() => '')
-            return text === '' || text === '0' || text === 'Rp 0'
+            const text = await iosFieldText(this.amountInput).catch(() => "");
+            return text === "" || text === "0" || text === "Rp 0";
           },
-          { timeout: 6_000 },
-        )
+          { timeout: STATE_SYNC },
+        );
         // Best-effort: confirm any toast that might surface on newer builds.
-        const toast = iosByTag(tags.component.toast)
-        await toast.waitForExist({ timeout: 2_000 }).catch(() => undefined)
-        return
+        const toast = iosByTag(tags.component.toast);
+        await toast.waitForExist({ timeout: TOAST_PROBE }).catch(() => undefined);
+        return;
       } catch {
         // Click raced a recomposition — settle and retry on a fresh query.
-        await driver.pause(700)
+        await driver.pause(STALE_RETRY_SLOW);
       }
     }
-    throw new Error(`Save did not reset the amount field after 3 attempts (last state: ${lastState})`)
+    throw new Error(
+      `Save did not reset the amount field after 3 attempts (last state: ${lastState})`,
+    );
   }
 
   async getAmountText(): Promise<string> {
-    return iosFieldText(this.amountInput)
+    return iosFieldText(this.amountInput);
   }
 
   async getNoteText(): Promise<string> {
-    return iosFieldText(this.noteInput)
+    return iosFieldText(this.noteInput);
   }
 
   /**
@@ -232,10 +273,15 @@ export class TambahIosPage extends BaseIosPage {
    * which is stripped when the fallback has to use it.
    */
   async getAccountText(): Promise<string> {
-    const children = await iosExtractChildTexts(iosByTag(tags.tambah.selectAccount))
-    if (children.length > 0) return children[0]
-    const own = ((await iosByTag(tags.tambah.selectAccount).getText().catch(() => '')) || '').trim()
-    return own.replace(/,\s*Buka pilihan$/, '').trim()
+    const children = await iosExtractChildTexts(iosByTag(tags.tambah.selectAccount));
+    const first = children.at(0);
+    if (first !== undefined) return first;
+    const own = (
+      (await iosByTag(tags.tambah.selectAccount)
+        .getText()
+        .catch(() => "")) || ""
+    ).trim();
+    return own.replace(/,\s*Buka pilihan$/, "").trim();
   }
 
   /**
@@ -244,10 +290,10 @@ export class TambahIosPage extends BaseIosPage {
    * wrapper re-composes, so try both.
    */
   async getHelperText(): Promise<string> {
-    const own = ((await this.helperText.getText().catch(() => '')) || '').trim()
-    if (own) return own
-    const children = await iosExtractChildTexts(this.helperText)
-    return children[0] ?? ''
+    const own = ((await this.helperText.getText().catch(() => "")) || "").trim();
+    if (own) return own;
+    const children = await iosExtractChildTexts(this.helperText);
+    return children[0] ?? "";
   }
 
   /**
@@ -256,28 +302,28 @@ export class TambahIosPage extends BaseIosPage {
    * covers the rest.
    */
   private async waitForSheetClosed(rootTag: string): Promise<void> {
-    await driver.pause(500)
-    await iosByTag(rootTag).waitForExist({ timeout: 10_000, reverse: true })
+    await driver.pause(SHEET_CLOSE_SETTLE);
+    await iosByTag(rootTag).waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
   }
 
   /** One swipe upward over the sheet's list area (lower half of the screen). */
   private async swipeSheetContentUp(): Promise<void> {
-    const { width, height } = await driver.getWindowSize()
-    const x = Math.floor(width / 2)
+    const { width, height } = await driver.getWindowSize();
+    const x = Math.floor(width / 2);
     await driver.performActions([
       {
-        type: 'pointer',
-        id: 'finger1',
-        parameters: { pointerType: 'touch' },
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
         actions: [
-          { type: 'pointerMove', duration: 0, x, y: Math.floor(height * 0.75) },
-          { type: 'pointerDown', button: 0 },
-          { type: 'pause', duration: 150 },
-          { type: 'pointerMove', duration: 500, x, y: Math.floor(height * 0.45) },
-          { type: 'pointerUp', button: 0 },
+          { type: "pointerMove", duration: 0, x, y: Math.floor(height * 0.75) },
+          { type: "pointerDown", button: 0 },
+          { type: "pause", duration: 150 },
+          { type: "pointerMove", duration: 500, x, y: Math.floor(height * 0.45) },
+          { type: "pointerUp", button: 0 },
         ],
       },
-    ])
-    await driver.pause(400)
+    ]);
+    await driver.pause(SWIPE_ANIM);
   }
 }

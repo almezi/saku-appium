@@ -10,7 +10,7 @@
 
 ## Where the port actually stands
 
-**Done** — 8 iOS page objects and 14 iOS spec files, 117 passing test cases:
+**Done** — 8 iOS page objects and 16 iOS spec files, 139 passing test cases:
 
 | Area | iOS spec | Status |
 |---|---|---|
@@ -18,7 +18,9 @@
 | 1.B Add income | `src/tests/tambah/add-income.ios.spec.ts` | 9/9 |
 | 1.C Add expense | `src/tests/tambah/add-expense.ios.spec.ts` | 8/8 |
 | 1.D Transaction list | `src/tests/transaksi/transaction-list.ios.spec.ts` | 9/9 (3 skipped by design) |
+| 1.E Summary | `src/tests/ringkasan/summary.ios.spec.ts` | 13/13 (2026-10-29) |
 | 1.F Edit transaction | `src/tests/transaksi/edit-transaction.ios.spec.ts` | 8/8 |
+| 1.G/1.H Delete + undo | `src/tests/transaksi/delete-undo.ios.spec.ts` | 9/9 (2026-10-29) |
 | 2.A Budget | `src/tests/anggaran/budget.ios.spec.ts` | 11/11 |
 | 2.B Categories | `src/tests/kategori/category-management.ios.spec.ts` | 13/13 |
 | 2.C Backup | `src/tests/transaksi/backup.ios.spec.ts` | 5/5 (TC-BACKUP-04 skipped) |
@@ -32,12 +34,8 @@
 Page objects: `base`, `tambah`, `daftar`, `ringkasan`, `ubah`, `anggaran`, `kategori`,
 `cadangan` — all eight exist as `*.ios.page.ts`.
 
-**Not yet ported (Android-only):**
-
-| Area | Android spec | Note |
-|---|---|---|
-| 1.E Summary | `src/tests/ringkasan/summary.spec.ts` | `ringkasan.ios.page.ts` exists but is unported — 13 cases |
-| 1.G Delete / 1.H Undo | `src/tests/transaksi/delete-undo.spec.ts` | No iOS spec — 9 cases; the delete confirmation is a bottom sheet, whose iOS accessibility tree is the open risk (see below) |
+**Not yet ported (Android-only):** none — every Android spec has an iOS twin as of
+2026-10-29 (`npm run check:parity` reports `0 baselined missing twin(s)`).
 
 ## Environment (all verified 2026-10-27)
 
@@ -78,16 +76,16 @@ Page objects: `base`, `tambah`, `daftar`, `ringkasan`, `ubah`, `anggaran`, `kate
   return nothing — read by **geometry from one page-source dump** instead. The dump order
   is also not the visual order (a day header dumps weekday → total → date), so split the
   frame in half and read the left column first to restore the Android reading order.
-  See `BUG_Found_13.md` and `src/helpers/elements.ts` (`iosStaticTexts`, `iosTextsInRect`,
+  See `bugs/BUG_Found_13.md` and `src/helpers/elements.ts` (`iosStaticTexts`, `iosTextsInRect`,
   `iosColumnTexts`).
 - The Material3 date picker labels its day cells in the **device's** day-first order
   ("Monday, 26 October 2026"), so `Intl.DateTimeFormat('en-US')` never matched — match
-  both renderings. See `BUG_Found_11.md`.
+  both renderings. See `bugs/BUG_Found_11.md`.
 - There is **no `component_toast` tag on iOS** — the save is confirmed by the **form reset**
   (amount cleared + save re-disabled), which is what the Android TC-INC-08 also asserts.
 - The numeric keypad's Delete key is a silent no-op after the category sheet closes (the
   dismissed keyboard lingers in the tree with `visible="false"`). Use the hardware
-  backspace (U+E003), the twin of Android's DEL keycode 67. See `BUG_Found_14.md`.
+  backspace (U+E003), the twin of Android's DEL keycode 67. See `bugs/BUG_Found_14.md`.
 - The app is **PORTRAIT-ONLY** (`UISupportedInterfaceOrientations`) and WDA **cannot rotate**
   an iOS simulator — the W3C orientation endpoint answers "Unable To Rotate Device" and
   `mobile: rotate` is not implemented by appium-xcuitest-driver 12.21. Rotation cases are
@@ -101,40 +99,52 @@ Page objects: `base`, `tambah`, `daftar`, `ringkasan`, `ubah`, `anggaran`, `kate
 - `mobile: scrollGesture` is not implemented by appium-xcuitest-driver 12.21 — a sweep uses
   `mobile: scroll`.
 - `dumpsys meminfo` has no simulator counterpart, so TC-PERF-05 cannot run on iOS
-  (`BUG_Found_12.md`).
+  (`bugs/BUG_Found_12.md`). Decided 2026-10-31: the skip stays on both platforms; the memory
+  guard lives out-of-band — `scripts/perf_memcycles.sh` on Android (last attempt ~30/50 cycles
+  before emulator crashes), and a host-`ps` RSS script on iOS still to be written (the bug's
+  Expected Result names the shape).
 - iOS interaction budgets sit at ~2× Android's because every interaction crosses the WDA
   boundary (a tap alone costs ~0.4 s) — the iOS budgets are 1.5 s / 2 s / 8 s.
 
 ## Remaining work
 
-### 1.E TC-SUM — Summary (13 cases) — not ported
+### 1.E TC-SUM — Summary (13 cases) — ✅ ported 2026-10-29, 13/13
 
-`ringkasan.ios.page.ts` exists but has never been exercised. Port `summary.spec.ts` to
-`summary.ios.spec.ts` using `ringkasan.ios.page.ts` + `iosReadAmount`.
+`src/tests/ringkasan/summary.ios.spec.ts` on `ringkasan.ios.page.ts`. Four things the port
+needed that the Android spec does not:
 
-- MCP-verify live **first**: the breakdown rows, the month switcher, and the savings "—"
-  case (income 0 renders "—" with the hint "Tambah pemasukan…", not "0,0%").
-- Android facts that need an iOS counterpart: breakdown bars are untagged container+fill
-  Views (the share is `fill width / container width`, 80 % → 712 px of 890 px); an empty
-  month hides balance/savings/comparison/breakdown/buttons entirely and shows
-  `ringkasan_empty_state` + `ringkasan_empty_action`.
-- **Risk:** the sibling-string rendering (above) applies to the breakdown rows. Expect to
-  reuse `iosColumnTexts` / `iosTextsInRect` rather than the Android child-text reads.
+- **The month switcher is not sticky.** It scrolls with the content, and an XCUITest click is a
+  screen-coordinate tap, so an arrow above the fold silently does nothing — while its label
+  still reads. `TC-SUM-10` straight after `TC-SUM-13` (which leaves the screen at the bottom)
+  produced exactly that: three prev clicks, label unmoved, the R1 guard throwing.
+  `ringkasan.ios.page.ts` now swipes the switcher into view inside `switchMonth` — the method is
+  **private** so the twins' callable surfaces stay equal. Android needs no equivalent:
+  UiAutomator2 clicks the node itself, visibility included.
+- No `UiScrollable` on iOS, so "scroll until the row composes" is a bounded `performActions`
+  swipe loop (`scrollToVisible` in the spec, `scrollContentDown`/`scrollToBottom` on the page).
+- A tagged container's strings are siblings, not children (`bugs/BUG_Found_13.md`), so the
+  comparison card and empty state are read from ONE page-source dump by frame geometry.
+- The NaN/Infinity probe is a `getPageSource()` `toContain` check instead of Android's two
+  `textContains` selectors — one request, same assertion.
 
-### 1.G / 1.H TC-DEL + TC-UNDO (delete-undo.ios.spec.ts, 9+3 cases) — not ported
+### 1.G / 1.H TC-DEL + TC-UNDO (9 cases) — ✅ ported 2026-10-29, 9/9
 
-- **Spike the delete sheet FIRST via MCP.** The delete confirmation is a bottom sheet;
-  `TESTABILITY.md` flags sheets as OPEN for iOS because they may expose an empty
-  accessibility tree. If the tree is empty, file a bug (Blocker for these cases, P1),
-  mark the cases `~[BUG]~` in `progress.md`, and continue with the rest.
-- Note the sheet root is `daftar_delete_sheet` (not the documented `component_sheet_bottom`,
-  which does not exist in v2.2) and the empty list drops the summary cards in favour of
-  `daftar_empty_state`.
-- The Android delete sheet was confirmed to open over a pending undo toast, so
-  back-to-back deletes are safe.
-- Android's toast-expiry wait uses a plain 6 s pause because the toast node can linger
-  composed after its 5 s expiry — the iOS equivalent probably differs (there is no toast
-  tag at all), so verify the undo affordance's lifetime live.
+Both risks flagged below resolved in the harness's favour, measured live:
+
+- **The delete sheet's iOS tree IS populated** — `daftar_delete_sheet`,
+  `component_sheet_button_confirm` and `component_sheet_button_cancel` all resolve. No Blocker
+  bug, no `~[BUG]~` marks: all 9 cases run.
+- **The undo toast IS automatable after a delete.** `component_toast` and
+  `component_toast_action` both appear and the tap restores the transaction
+  (`tapUndoActionIos`). It is only the **save** toast that iOS renders untagged — the two are
+  different components, and the `TC-AMT`/`TC-BACKUP` experience with the save toast does not
+  generalise to it. The window is the app's 5 s, so the helper is one find-then-click, no retry.
+- Row counting uses `-ios predicate string: name MATCHES "daftar_item_[0-9]+$"`
+  (`iosAllByTagMatches`), the twin of Android's `resourceIdMatches`. The `[0-9]+$` anchor is
+  load-bearing: without it every per-row delete button matches the card pattern too.
+- Toast-expiry waits stay plain `driver.pause(UNDO_TOAST_EXPIRY)` as on Android — the toast node
+  can linger composed after its 5 s expiry, so a disappearance wait is unreliable on both
+  platforms.
 
 ### Regression gate
 
@@ -167,4 +177,4 @@ The Android-side edits inside `src/helpers/input.ts`
 (setValueIntoTaggedField), `src/pageobjects/kategori.page.ts`, `src/pageobjects/daftar.page.ts`
 (swipeList). TC-LIST-11 is no longer parked work: it was retired on 2026-10-27 across
 `transaction-list.spec.ts`, `transaction-list.ios.spec.ts`, the catalog, `progress.md`
-and `BUG_Found_09.md`. When committing iOS work, `git add` explicit paths only.
+and `bugs/BUG_Found_09.md`. When committing iOS work, `git add` explicit paths only.

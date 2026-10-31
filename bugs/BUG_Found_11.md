@@ -70,6 +70,11 @@ P1 (fix before Phase 1 completion)
 - **App build:** Saku.app Debug (bundle `id.almezi.saku`)
 - **Android API level:** n/a
 
+## Fix Ownership
+**AUTOMATION CODE.** The app is correct — the picker renders the device's day-first order and the
+page object matched the US order. Fixed at the root in `src/pageobjects/tambah.ios.page.ts`:
+`selectDate()` now matches both orderings, with and without the "Today, " prefix.
+
 ## Additional Notes
 Fixed in `src/pageobjects/tambah.ios.page.ts`: `selectDate()` now matches BOTH renderings (the
 device's day-first order via `en-GB` and the US order via `en-US`), each with and without the

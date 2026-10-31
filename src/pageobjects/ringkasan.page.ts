@@ -1,56 +1,66 @@
-import { byTag, scrollToTag } from '../helpers/locators'
-import { barFillRatio, extractChildTexts, readAmount } from '../helpers/elements'
-import { tags } from '../config/tags'
-import { BasePage } from './base.page'
+/**
+ * Android page for the Ringkasan (summary) screen; iOS twin:
+ * ringkasan.ios.page.ts. Locators are TESTABILITY.md tags
+ * (src/config/tags.ts). Deep LazyColumn rows (the expense breakdown) stale
+ * between find and read, so breakdownItemTexts parses one atomic page-source
+ * dump; scrollGesture 'down' is a no-op here, so scrolling is raw W3C swipes.
+ */
+import { byTag, scrollToTag } from "../helpers/locators";
+import { barFillRatio, extractChildTexts, readAmount } from "../helpers/elements";
+import { formatMonthYear, parseMonthLabel, shiftMonthYear } from "../helpers/months";
+import { tags } from "../config/tags";
+import { BasePage } from "./base.page";
+import { MONTH_LABEL_RECOMPOSE, STALE_RETRY, SWIPE_ANIM } from "../config/settles";
+import { ELEMENT_PRESENT } from "../config/timeouts";
 
 /** Non-empty text attributes of the subtree under the node with `resourceId`. */
 function childTextsFromSource(xml: string, resourceId: string): string[] {
-  const marker = `resource-id="${resourceId}"`
-  const start = xml.indexOf(marker)
-  if (start === -1) return []
-  const rest = xml.slice(start + marker.length)
+  const marker = `resource-id="${resourceId}"`;
+  const start = xml.indexOf(marker);
+  if (start === -1) return [];
+  const rest = xml.slice(start + marker.length);
   // The subtree ends where the next tagged summary node begins.
   const next = rest.search(
     /resource-id="ringkasan_(category_item_|breakdown_|totals_|savings_|balance_|anggaran_|kelola_|comparison|empty_)/,
-  )
-  const segment = next === -1 ? rest.slice(0, 10_000) : rest.slice(0, next)
+  );
+  const segment = next === -1 ? rest.slice(0, 10_000) : rest.slice(0, next);
   return [...segment.matchAll(/text="([^"]+)"/g)]
-    .map((m) => m[1].replace(/&amp;/g, '&').trim())
-    .filter((t) => t.length > 0)
+    .map((m) => (m[1] ?? "").replace(/&amp;/g, "&").trim())
+    .filter((t) => t.length > 0);
 }
 
 export class RingkasanPage extends BasePage {
   constructor() {
-    super(tags.ringkasan.screen)
+    super(tags.ringkasan.screen);
   }
 
   async open(): Promise<void> {
-    await byTag(tags.navRingkasan).click()
-    await this.waitForScreen()
+    await byTag(tags.navRingkasan).click();
+    await this.waitForScreen();
   }
 
   async balanceValue(): Promise<number> {
-    return readAmount(byTag(tags.ringkasan.balanceValue))
+    return readAmount(byTag(tags.ringkasan.balanceValue));
   }
 
   async balanceText(): Promise<string> {
-    return byTag(tags.ringkasan.balanceValue).getText()
+    return byTag(tags.ringkasan.balanceValue).getText();
   }
 
   async incomeTotal(): Promise<number> {
-    return readAmount(byTag(tags.ringkasan.totalsCardIncome))
+    return readAmount(byTag(tags.ringkasan.totalsCardIncome));
   }
 
   async expenseTotal(): Promise<number> {
-    return readAmount(byTag(tags.ringkasan.totalsCardExpense))
+    return readAmount(byTag(tags.ringkasan.totalsCardExpense));
   }
 
   async savingsText(): Promise<string> {
-    return byTag(tags.ringkasan.savingsValue).getText()
+    return byTag(tags.ringkasan.savingsValue).getText();
   }
 
   async monthLabel(): Promise<string> {
-    return byTag(tags.ringkasan.monthLabel).getText()
+    return byTag(tags.ringkasan.monthLabel).getText();
   }
 
   // Click-wait audit (code review Step 10): openAnggaran() and
@@ -64,11 +74,11 @@ export class RingkasanPage extends BasePage {
   // Arrival on the target screen is asserted by the calling spec, matching
   // openFromRingkasan() in the anggaran/kategori page objects.
   async openAnggaran(): Promise<void> {
-    await byTag(tags.ringkasan.anggaranButton).click()
+    await byTag(tags.ringkasan.anggaranButton).click();
   }
 
   async openKelolaKategori(): Promise<void> {
-    await byTag(tags.ringkasan.kelolaButton).click()
+    await byTag(tags.ringkasan.kelolaButton).click();
   }
 
   /**
@@ -87,19 +97,19 @@ export class RingkasanPage extends BasePage {
    * category when it never appears in the page source.
    */
   async breakdownItemTexts(categoryId: string): Promise<string[]> {
-    const tag = tags.ringkasan.categoryItem(categoryId)
+    const tag = tags.ringkasan.categoryItem(categoryId);
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await scrollToTag(tag)
+        await scrollToTag(tag);
       } catch {
         // Row not reachable by UiScrollable — the dump below decides.
       }
-      const xml = await driver.getPageSource()
-      const texts = childTextsFromSource(xml, tag)
-      if (texts.length > 0) return texts
-      await this.scrollContentDown()
+      const xml = await driver.getPageSource();
+      const texts = childTextsFromSource(xml, tag);
+      if (texts.length > 0) return texts;
+      await this.scrollContentDown();
     }
-    throw new Error(`Breakdown item ${categoryId} not found in page source`)
+    throw new Error(`Breakdown item ${categoryId} not found in page source`);
   }
 
   /**
@@ -108,7 +118,7 @@ export class RingkasanPage extends BasePage {
    * summary LazyColumn.
    */
   async comparisonTexts(): Promise<string[]> {
-    return extractChildTexts(scrollToTag(tags.ringkasan.comparison))
+    return extractChildTexts(scrollToTag(tags.ringkasan.comparison));
   }
 
   /**
@@ -118,7 +128,7 @@ export class RingkasanPage extends BasePage {
    * to — and it always sits at the top of the screen.
    */
   async emptyStateTexts(): Promise<string[]> {
-    return extractChildTexts(byTag(tags.ringkasan.emptyState))
+    return extractChildTexts(byTag(tags.ringkasan.emptyState));
   }
 
   /**
@@ -137,27 +147,30 @@ export class RingkasanPage extends BasePage {
   async breakdownBarRatio(categoryId: string): Promise<number> {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const item = await scrollToTag(tags.ringkasan.categoryItem(categoryId))
+        const item = await scrollToTag(tags.ringkasan.categoryItem(categoryId));
         // UiScrollable can resolve a ghost reference when the row never
         // composes — confirm existence for a clear failure instead of an
         // opaque child-enumeration error.
-        await item.waitForExist({ timeout: 10_000 })
+        await item.waitForExist({ timeout: ELEMENT_PRESENT });
         // WDIO v9 types the `$$` chainable's `length` as Promise<number>;
         // spread the awaited result into a real array before indexing.
         const viewList = [
           ...(await item.$$('android=new UiSelector().className("android.view.View")')),
-        ]
-        if (viewList.length !== 2) continue
-        const container = await viewList[0].getSize()
-        const fill = await viewList[1].getSize()
-        return barFillRatio(container.width, fill.width)
+        ];
+        if (viewList.length !== 2) continue;
+        const containerNode = viewList[0];
+        const fillNode = viewList[1];
+        if (!containerNode || !fillNode) continue;
+        const container = await containerNode.getSize();
+        const fill = await fillNode.getSize();
+        return barFillRatio(container.width, fill.width);
       } catch {
         // Stale element or mid-recompose ghost — back off before the fresh
         // re-query (same error-path pause as DaftarPage.tapRowAction).
-        await driver.pause(500)
+        await driver.pause(STALE_RETRY);
       }
     }
-    throw new Error(`Breakdown item ${categoryId} has no measurable bar views`)
+    throw new Error(`Breakdown item ${categoryId} has no measurable bar views`);
   }
 
   /**
@@ -168,23 +181,23 @@ export class RingkasanPage extends BasePage {
    * actions instead.
    */
   async scrollContentDown(): Promise<void> {
-    const { width, height } = await driver.getWindowSize()
-    const x = Math.floor(width / 2)
+    const { width, height } = await driver.getWindowSize();
+    const x = Math.floor(width / 2);
     await driver.performActions([
       {
-        type: 'pointer',
-        id: 'finger1',
-        parameters: { pointerType: 'touch' },
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
         actions: [
-          { type: 'pointerMove', duration: 0, x, y: Math.floor(height * 0.75) },
-          { type: 'pointerDown', button: 0 },
-          { type: 'pause', duration: 150 },
-          { type: 'pointerMove', duration: 500, x, y: Math.floor(height * 0.3) },
-          { type: 'pointerUp', button: 0 },
+          { type: "pointerMove", duration: 0, x, y: Math.floor(height * 0.75) },
+          { type: "pointerDown", button: 0 },
+          { type: "pause", duration: 150 },
+          { type: "pointerMove", duration: 500, x, y: Math.floor(height * 0.3) },
+          { type: "pointerUp", button: 0 },
         ],
       },
-    ])
-    await driver.pause(400)
+    ]);
+    await driver.pause(SWIPE_ANIM);
   }
 
   /**
@@ -194,37 +207,55 @@ export class RingkasanPage extends BasePage {
    */
   async scrollToBottom(): Promise<void> {
     for (let i = 0; i < 3; i++) {
-      await this.scrollContentDown()
+      await this.scrollContentDown();
     }
   }
 
   /**
    * Month switching with a verify-retry (same as the Daftar list): the arrow
-   * click can race recomposition and silently not register.
+   * click can race recomposition and silently not register. The switch is
+   * verified against the PARSED target (month, year), not merely a changed
+   * label — R1: a double-registered or wrong-direction click also changes
+   * the label and used to pass; it now fails immediately with the landed
+   * vs. target month.
    *
    * @param arrow Test tag of the switcher arrow to tap —
    * tags.ringkasan.monthPrev or tags.ringkasan.monthNext.
+   * @param direction Which way the arrow steps the month — 'prev' for
+   * monthPrev, 'next' for monthNext; selects the expected target month.
    */
-  private async switchMonth(arrow: string): Promise<void> {
-    const before = await this.monthLabel()
+  private async switchMonth(arrow: string, direction: "prev" | "next"): Promise<void> {
+    const before = await this.monthLabel();
+    const start = parseMonthLabel(before);
+    const target = shiftMonthYear(start, direction);
     for (let attempt = 0; attempt < 3; attempt++) {
-      await byTag(arrow).click()
+      await byTag(arrow).click();
       // Recomposition is not instantaneous: a label read immediately after
       // the click returns the old value, and re-clicking on it steps two
       // months. Settle first, then let a failed read surface instead of
       // masking it as "unchanged".
-      await driver.pause(300)
-      const after = await this.monthLabel()
-      if (after !== before) return
+      await driver.pause(MONTH_LABEL_RECOMPOSE);
+      const after = parseMonthLabel(await this.monthLabel());
+      if (after.monthIndex === target.monthIndex && after.year === target.year) return;
+      // Only retry the still-showing-old-month case (the silent no-op). A
+      // label that moved to the WRONG month means a click double-registered —
+      // re-clicking would step further away, so fail with the landed month.
+      if (after.monthIndex !== start.monthIndex || after.year !== start.year) {
+        throw new Error(
+          `Month switch via ${arrow} landed on "${formatMonthYear(after)}" instead of "${formatMonthYear(target)}"`,
+        );
+      }
     }
-    throw new Error(`Month switch via ${arrow} did not change the label from "${before}"`)
+    throw new Error(
+      `Month switch via ${arrow} did not reach ${formatMonthYear(target)} from "${before}"`,
+    );
   }
 
   async prevMonth(): Promise<void> {
-    await this.switchMonth(tags.ringkasan.monthPrev)
+    await this.switchMonth(tags.ringkasan.monthPrev, "prev");
   }
 
   async nextMonth(): Promise<void> {
-    await this.switchMonth(tags.ringkasan.monthNext)
+    await this.switchMonth(tags.ringkasan.monthNext, "next");
   }
 }

@@ -1,0 +1,85 @@
+{
+  "_generatedBy": "node scripts/check_parity.mjs --update",
+  "_note": "Known twin drift, ratcheted: a gap added here must be closed to remove it, and a closed gap left in this file fails the check. Keep \"reason\" honest — it is the audit trail for why a platform diverges.",
+  "missingTwins": [],
+  "specIdDiffs": {
+    "anggaran/budget": {
+      "androidOnly": [],
+      "iosOnly": [
+        "TC-BUDGET-03",
+        "TC-BUDGET-04",
+        "TC-BUDGET-05"
+      ],
+      "reason": "Prefix shared since the M3 convergence, but Android folds the total-card and per-category card content INTO TC-BUDGET-08/09's row-text assertions instead of asserting them as their own cases, and its Ubah/Hapus flow is one case where iOS has 05. Ids match; coverage granularity does not (residual of code_review.md M3/M11). Close: split Android 08/09 into -03/-04/-05 — budget.spec.ts is device-green at 8 passing, so the split re-verifies in ~1m."
+    },
+    "transaksi/transaction-list": {
+      "androidOnly": [],
+      "iosOnly": [
+        "TC-LIST-08a"
+      ],
+      "reason": "Partly a stated scanner blind spot: Android's bulk-seed chunks are built in a loop and their titles come from a variable (transaction-list.spec.ts:220), so no id is visible at that single call site, while iOS's matching it.skip placeholder names TC-LIST-08a literally — which reads as iOS-only. The divergence underneath is real: iOS never ported bulk seeding and BOTH TC-LIST-08 cases are it.skip there. Close: port the seed and scroll cases to iOS, then this pair lines up literally."
+    }
+  },
+  "surfaceGaps": {
+    "anggaran": {
+      "androidOnly": [],
+      "iosOnly": [
+        "cancelDeleteSheet",
+        "formDelete",
+        "formLimit",
+        "getLimitText",
+        "isDeleteSheetDisplayed",
+        "isFormDisplayed",
+        "isFormSaveEnabled",
+        "monthLabel",
+        "rowBarWidth",
+        "screenText",
+        "tapRowDelete",
+        "totalCardBarWidth",
+        "totalCardTexts"
+      ],
+      "reason": "One-directional: iOS is the richer API (code_review.md parity row 'anggaran 100 % — iOS adds 14 helpers'). Two drivers, both platform mechanics rather than neglect: iOS has no UiScrollable and no implicit system back, so sheet and form state is probed explicitly (isFormDisplayed, isFormSaveEnabled, isDeleteSheetDisplayed, cancelDeleteSheet, tapRowDelete); and the progress bar's FILL fraction is not exposed to accessibility on iOS — only the track node — so proportion is measured via rowBarWidth/totalCardBarWidth plus the rendered 'Rp X dari Rp Y' text (anggaran.ios.page.ts:199-211). Close: port a helper to Android only when an Android spec needs it; do not add dead API."
+    },
+    "cadangan": {
+      "androidOnly": [],
+      "iosOnly": [
+        "shareSheetCaption"
+      ],
+      "reason": "Not portable. The iOS helper reads UIKit's LP.CaptionBar.TopCaption from the share popover (cadangan.ios.page.ts:59) and is asserted by backup.ios.spec.ts:109. On Android the same export opens the SYSTEM share sheet (com.android.intentresolver) whose contents sit outside the app's tree, so the Android twin verifies the export by reading cache/backups/saku-cadangan.* through adb run-as while the sheet is up (cadangan.page.ts header, BUG_Found_02). Close: assert the written file on both sides and drop the iOS caption read — do not fake an Android getter."
+    },
+    "daftar": {
+      "androidOnly": [
+        "emptyState",
+        "monthLabelEl"
+      ],
+      "iosOnly": [
+        "countTransactionRows",
+        "findTransactionRow",
+        "firstCardPosition"
+      ],
+      "reason": "Both directions are locator mechanics. The Android-only names are element handles used by Android waits: monthLabelEl feeds monthLabel(), emptyState backs emptyStateTexts() and backup.spec.ts:268 — and the iOS specs reach that same tag by calling iosByTag directly (backup.ios.spec.ts:158, edit-transaction.ios.spec.ts:121), so the getter is genuinely absent from the iOS page object. The iOS-only names exist because rows must be located by GEOMETRY: a tagged Compose container hoists its strings to siblings (BUG_Found_13) and there is no UiScrollable scrollIntoView to match text — hence findTransactionRow/countTransactionRows/firstCardPosition. Close: add the two getters to DaftarIosPage and switch those three call sites; keep the iOS geometry reads as designed."
+    },
+    "kategori": {
+      "androidOnly": [
+        "renameInDialog",
+        "toggleHidden"
+      ],
+      "iosOnly": [
+        "addButton",
+        "addFormScreen",
+        "cancelRename",
+        "dismissSheet",
+        "isHidden",
+        "renameFieldText",
+        "rowEdit",
+        "rowHide",
+        "saveRename",
+        "setHidden",
+        "typeRename",
+        "waitForDialogClosed"
+      ],
+      "reason": "Residual of code_review.md M13: iOS still exposes more step-level API than Android's composites (renameInDialog, toggleHidden). The add-form trio is now CONVERGED (openAddForm/createCategory/findCustomCategoryId exist on both twins; createCategory gained a type param on both when app v2.4 removed the pencil from default kategori rows and transaction-list.spec.ts TC-LIST-07 switched to creating a custom expense category). The remaining iOS-only methods are the rename-dialog step API (rowEdit/typeRename/saveRename/cancelRename/renameFieldText/waitForDialogClosed), the hidden-state API (rowHide/setHidden/isHidden/dismissSheet) and the addButton/addFormScreen getters, which Android folds into its composites; Android's composites back TC-KAT-08/10, which are it.skip there (BUG_Found_04) yet run on iOS through the step API. Close: converge Android onto the iOS granularity when TC-KAT-08/10 are unskipped; do not collapse iOS into composites."
+    }
+  },
+  "reason": "Baseline recorded 2026-10-28, rebaselined 2026-10-29 when S17 closed: missingTwins is empty now that summary.ios.spec.ts and delete-undo.ios.spec.ts exist (code_review.md S17), and both twins reuse their Android TC- id sets exactly, so neither pair appears in specIdDiffs. Both new specs are device-green on iPhone 18 Pro (2026-10-29): summary 13/13, delete-undo 9/9. The undo path the earlier note said was missing does exist on iOS: the delete confirmation raises component_toast with a reachable component_toast_action — it is only the SAVE toast that iOS renders untagged. Remaining entries are the accepted drift listed above, each with its own close action. Gate note: check_parity.mjs deliberately does not trust indentation when it reads a class member (the 3-space selectCategory block that used to trip an indent-strict parser is now Prettier-normal, but the narrower rule stays). Re-run with `npm run check:parity -- --update` only after a deliberate tree change: reasons carry over per group, and a group whose drift has vanished still FAILS until its entry is removed."
+}

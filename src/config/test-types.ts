@@ -23,27 +23,27 @@ export const TEST_TYPES = {
    * The fast, always-on set: the app launches and the core path is intact.
    * Runs on every change, so it must stay short and free of setup.
    */
-  sanity: '@sanity',
+  sanity: "@sanity",
   /**
    * The functional suite: every feature behaves as specified. This is the
    * bulk of the suite and what a release candidate must pass.
    */
-  regression: '@regression',
+  regression: "@regression",
   /**
    * Cases that span several screens or flows at once — a delete that must
    * move the list, the summary AND the breakdown, an undo that has to
    * restore all three. They are slower and depend on the state the
    * single-screen specs leave behind, so they run as their own group.
    */
-  integration: '@integration',
-} as const
+  integration: "@integration",
+} as const;
 
-export type TestType = keyof typeof TEST_TYPES
+export type TestType = keyof typeof TEST_TYPES;
 
 /** Every recognized type name, in the order the docs list them. */
-export const TEST_TYPE_NAMES = Object.keys(TEST_TYPES) as TestType[]
+export const TEST_TYPE_NAMES = Object.keys(TEST_TYPES) as TestType[];
 
 /** The recognized type tags a title carries. */
 export function testTypesOf(title: string): TestType[] {
-  return TEST_TYPE_NAMES.filter((name) => title.includes(TEST_TYPES[name]))
+  return TEST_TYPE_NAMES.filter((name) => title.includes(TEST_TYPES[name]));
 }
