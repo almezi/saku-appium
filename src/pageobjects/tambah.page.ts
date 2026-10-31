@@ -110,14 +110,12 @@ export class TambahPage extends BasePage {
     const item = $(`android=new UiSelector().text("${label}")`);
     try {
       await searchBox.waitForExist({ timeout: ELEMENT_PRESENT_QUICK });
+      // typeIntoTaggedField dismisses the keyboard after typing (its own
+      // hideKeyboard) — do NOT send ESC here: with the IME already down,
+      // keycode 111 pops the whole back stack and the next row click lands
+      // on Daftar (verified live). With the keyboard gone the row click
+      // reaches the node.
       await typeIntoTaggedField(searchBox, label, tags.tambah.categorySearch);
-      // Dismiss the keyboard the typing opened — a W3C click at the row's
-      // coordinates lands on the IME while it is up (verified live: the row
-      // tap hit the suggestion strip and the sheet closed unselected), and
-      // hideKeyboard() inside the typing helper is best-effort only. ESC
-      // (keycode 111) dismisses the IME without closing the sheet.
-      await driver.pressKeyCode(111).catch(() => undefined);
-      await driver.pause(KEYBOARD_DISMISS);
       await item.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK });
       await item.click();
     } catch {
@@ -133,9 +131,14 @@ export class TambahPage extends BasePage {
       await item.click();
     }
 
-    // The sheet closes on selection. The label text also renders in the form's
-    // category pager afterwards, so a reverse-wait on the text node is
-    // unreliable — a short settle pause lets the dismiss animation finish.
+    // The sheet closes on selection, and the selected label keeps rendering
+    // inside the form's pager — so the selection is verified by the sheet
+    // root disappearing (the pager keeps the text, the sheet does not).
+    await byTag(tags.tambah.categorySheetRoot)
+      .waitForExist({ timeout: ELEMENT_PRESENT_QUICK, reverse: true })
+      .catch(() => undefined);
+    // A short settle pause lets the dismiss animation finish before the
+    // caller re-reads the form.
     await driver.pause(SHEET_CLOSE_SETTLE);
   }
 
