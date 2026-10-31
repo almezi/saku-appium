@@ -12,21 +12,23 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 
 | Phase | Sub-phases | Total Tasks | Completed | Remaining |
 |-------|-----------|-------------|-----------|-----------|
-| Phase 1 — Core Flows | 8 (1.A–1.H) | 66 | 62 | 4 |
+| Phase 1 — Core Flows | 8 (1.A–1.H) | 66 | 61 | 5 |
 | Phase 2 — Advanced Features | 3 (2.A–2.C) | 32 | 32 | 0 |
 | Phase 3 — Edge Cases | 6 (3.A–3.F) | 47 | 44 | 3 |
-| **All** | **17** | **145** | **138** | **7** |
+| **All** | **17** | **145** | **137** | **8** |
 
 > Counts are live catalogue cases (TC-LIST-11 was retired on 2026-10-27, so 1.D holds 10).
-> The 7 remaining, all on Android: TC-EXP-08 and TC-SUM-10/11/12 (`~[BUG]~`, root cause
-> `bugs/BUG_Found_16.md`), TC-VAL-17 (`~[BUG]~`, `bugs/BUG_Found_18.md`), TC-ROT-06
-> (`~[BUG]~`, `bugs/BUG_Found_06.md` — an app defect) and TC-PERF-05 (skip'ed, exceeds the
-> mocha budget; `test_seed` does not exist — see `bugs/BUG_Found_07.md`). Their iOS twins
-> all pass. TC-KAT-08/10 are skip'ed on Android (`bugs/BUG_Found_04.md`) but run and pass on
-> iOS, so they stay counted as completed with a per-platform caveat. TC-BACKUP-04/06 were
-> unblocked and went green on 2026-10-28 (v2.3 update). App v2.4 (2026-10-29, app commit
-> `acfc059`) removed the pencil from default kategori rows, so a future TC-KAT-08/10 unskip
-> must run the rename against a custom category (the createCategory path TC-LIST-07 now uses).
+> The 8 remaining, all on Android: TC-LIST-08 (rewritten to UiScrollable flings 2026-10-30,
+> unexecuted — the host's emulator graphics stack kept dying mid-run, see 1.D), TC-EXP-08 and
+> TC-SUM-10/11/12 (`~[BUG]~`, root cause `bugs/BUG_Found_16.md`), TC-VAL-17 (`~[BUG]~`,
+> `bugs/BUG_Found_18.md`), TC-ROT-06 (`~[BUG]~`, `bugs/BUG_Found_06.md` — an app defect) and
+> TC-PERF-05 (skip'ed, exceeds the mocha budget; `test_seed` does not exist — see
+> `bugs/BUG_Found_07.md`). Their iOS twins all pass. TC-KAT-08/10 are skip'ed on Android
+> (`bugs/BUG_Found_04.md`) but run and pass on iOS, so they stay counted as completed with a
+> per-platform caveat. TC-BACKUP-04/06 were unblocked and went green on 2026-10-28 (v2.3
+> update). App v2.4 (2026-10-29, app commit `acfc059`) removed the pencil from default kategori
+> rows, so a future TC-KAT-08/10 unskip must run the rename against a custom category (the
+> createCategory path TC-LIST-07 now uses).
 >
 > Platform status (2026-10-29): Android — complete (137/146 passing, 9 skipped per retry policy);
 > iOS — **every Android sub-phase now has a twin**: TC-NAV 8/8, TC-INC 9/9, TC-EXP 8/8,
@@ -142,13 +144,30 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 - [x] TC-LIST-04: Items sorted newest first
 - [x] TC-LIST-05: Row shows category, type label, formatted amount
 - [x] TC-LIST-06: Income row no minus; day total `−Rp` for expenses
-- [ ] TC-LIST-07: Long category name truncates/wraps, no overlap — **SKIPPED** (4× 2026-10-24, 4× 2026-10-25): the "Ubah kategori" dialog dismisses mid-interaction under WebdriverIO (scrim misclick on keyboard-resize recompose) even after three helper-layer fixes (currency verify, EditText-is-the-tagged-node fieldText, fresh re-resolution per retry); the identical flow works live via Appium MCP `set_value`. Next lever: setValue-based entry or app-side stable dialog state
-- [ ] TC-LIST-08: Scroll 100+ items, no crash — **SKIPPED** (failed 4×): seeding 100 items through the real form (~12 s/item) exceeds the 20-min test timeout; blocked on the app's unimplemented `test_seed` intent
+- [x] TC-LIST-07: Long category name truncates/wraps, no overlap — **GREEN 2026-10-30** on app
+  v2.4 (wdio run 4, `/tmp/tclist_v24_run4.log`; had also passed in run 2 before that run's
+  emulator died). Rewritten for v2.4 (app commit `acfc059` removed the pencil from default
+  kategori rows): the long name is created directly as a custom EXPENSE category
+  (`kategori.createCategory`, new cross-twin method), selected in the Tambah sheet via its
+  search box + id-tagged row, and the row's name/amount bounds are read from a fresh
+  `daftar_item_<n>` enumeration (`findRowText`'s textContains can resolve to the bare amount
+  TextView, whose child list is empty). Live MCP proof: name right edge 693 px vs amount left
+  edge 778 px — 85 px clear, no overlap
+- [ ] TC-LIST-08: Scroll 100+ items, no crash — the seeding is SOLVED (chunked TC-LIST-08a–g,
+  15 items per chunk to fit the 180 s mocha budget, since the app's `test_seed` intent still
+  does not exist; all 7 chunks green in runs 1 and 4). The scroll case itself failed 2×
+  (2026-10-30, runs 1 and 4): raw W3C swipes are read as row taps once a row expands, and the
+  expanded rows (Ubah/Hapus open, two viewport-rows tall) push the day headers out of the
+  viewport — the header read finds none (failure screenshots in `reports/screenshots/`).
+  Rewritten 2026-10-30 to container-level UiScrollable flings (`flingToEnd`/`flingToBeginning`)
+  — that rewrite has NOT executed yet: runs 5 and 6 died to uiautomator2 instrumentation
+  crashes at 2 min / 76 s (host-GPU ColorBuffer decay, the TC-PERF-05 pattern) before reaching
+  it. Left active, not `it.skip`-ed, pending one run on a stable host
 - [x] TC-LIST-09: `daftar_summary_masuk` = sum income in month
 - [x] TC-LIST-10: `daftar_summary_keluar` = sum expense in month
 - ~~TC-LIST-11: Pull-to-refresh → data still correct~~ — **RETIRED 2026-10-27**, not skipped: pull-to-refresh is out of scope in the app's `UI_SPEC.md` §7 (the list is a reactive local query, so there is nothing to re-fetch). Spec block and iOS placeholder removed; see `bugs/BUG_Found_09.md`.
 
-**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24; re-validated on device 2026-10-25 (9 passing incl. seed, 0 failing) after helper fixes from the review remediation. Counts are of the 11-case set at the time; TC-LIST-11 was retired on 2026-10-27, so the live set is 10.
+**Spec:** `src/tests/transaksi/transaction-list.spec.ts` | **Agent:** ZCode (GLM-5.3) — live set is 10 cases + the 7 TC-LIST-08a–g seed blocks; 9/10 green + TC-LIST-08 blocked by environment (2026-10-30, see the v2.4 note below). Earlier: 8/11 passing, 3 skipped per >1-failure policy, 2026-10-24; re-validated on device 2026-10-25; TC-LIST-11 retired 2026-10-27.
 
 > **iOS run 2026-10-27:** ported as `src/tests/transaksi/transaction-list.ios.spec.ts` — **9/9
 > running cases passing** (iPhone 18 Pro sim / iOS 27.0, `npm run test:list:ios`, 1m 32.2s; the
@@ -160,6 +179,30 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > the empty state, the day header, the transaction row and the edit header are read by GEOMETRY
 > from one page-source dump now, and the day header is read column by column (weekday + date at
 > the left, total at the right) to restore the Android reading order (`bugs/BUG_Found_13.md`).
+
+> **v2.4 adaptation (2026-10-30, emulator-5554 Pixel_10 / API 37, app v2.4 pulled via SAKU_APK,
+> wdio-managed Appium @ :4725):** app commit `acfc059` (2026-10-27) removed the pencil/trash from
+> DEFAULT kategori rows — `KelolaKategoriScreen.kt` composes them only for `!row.isDefault` — so
+> the v2.2-era flow (rename `exp_daily_other` through the dialog) is dead, and the "unblocked
+> 2026-10-27" spec state had never actually executed green. Facts probed live via Appium MCP on
+> v2.4 and baked into the port: ① the rename dialog PREFILLS the current name (v2.2 opened
+> empty) and does NOT self-dismiss under the keyboard any more — BUG_Found_04's signature is
+> gone on v2.4; ② Compose fields REJECT instrumentation setText (the element/value POST fails
+> with "Cannot set the element"), so the working write is the keyboard-event path
+> (`driver.keys`, what `typeIntoTaggedField` does) and a prefilled field needs a MOVE_END +
+> DEL-burst clear first; ③ the "Tambah kategori" form reuses `kategori_toggle_type` for its own
+> income/expense toggle, and the created row's runtime id encodes the type (`cus_pem_<epochMs>`
+> income, `cus_pen_<epochMs>` expense); ④ the new row lands at the end of its type's list (below
+> the fold), and the Tambah picker sheet's search box (`tambah_category_search`) surfaces it for
+> the id-tagged tap (`tambah_category_item_<id>`); ⑤ TC-LIST-07's layout contract measured green
+> live: name right edge 693 px ≤ amount left edge 778 px. ⑥ Environment: the host's emulator
+> graphics stack decays under the bulk-seeding load — runs 2/3 died at bulk item 56 (qemu
+> ColorBuffer hang + crash, the TC-PERF-05 pattern; two `qemu-system-aarch64` crash reports),
+> run 4 (booted with `-gpu swiftshader_indirect`) survived the FULL seeding and came back 16/17
+> cases green, and the subsequent reused / fresh boots died in 1–2 min. Cross-twin changes:
+> `kategori.page.ts` gained `openAddForm`/`createCategory`/`findCustomCategoryId` (closing three
+> iOS-only parity gaps), `createCategory` gained the `type` param on BOTH twins, and
+> `scripts/parity-baseline.json`'s kategori entry was re-baselined accordingly.
 
 
 ### 1.E — Summary / Ringkasan (TC-SUM) — 13 tasks

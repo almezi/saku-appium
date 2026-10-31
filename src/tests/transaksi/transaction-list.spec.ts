@@ -9,6 +9,7 @@ import { categories } from "../../config/categories";
 import { createTransaction, uniqueNote } from "../../helpers/transactions";
 import { typeIntoTaggedField } from "../../helpers/input";
 import { STALE_RETRY } from "../../config/settles";
+import { $ } from "@wdio/globals";
 import { DaftarPage } from "../../pageobjects/daftar.page";
 import { RingkasanPage } from "../../pageobjects/ringkasan.page";
 import { KategoriPage } from "../../pageobjects/kategori.page";
@@ -257,22 +258,17 @@ describe("TC-LIST — transaction list (Phase 1) @regression", () => {
 
   it("TC-LIST-08 scrolling 100+ items does not crash @regression", async () => {
     await daftar.open();
-    // Down to the bottom of the LazyColumn and back: 14 swipes ≈ 100+ rows
-    // at ~7–8 rows per screenful. A crash or freeze surfaces as a command
-    // timeout here.
-    for (let i = 0; i < 14; i++) await daftar.swipeList("up");
+    // Fling the LazyColumn to its end and back with container-level
+    // UiScrollable flings — the same driver the row lookups use. Raw W3C
+    // swipes (daftar.swipeList) get read as row taps here once a row expands:
+    // each expanded row is two viewport-rows tall, the day headers leave the
+    // viewport entirely, and the header read finds none (seen live on the
+    // failure screenshots of the first two green-seeding runs). A crash or
+    // freeze surfaces as a command timeout here.
+    await $("android=new UiScrollable(new UiSelector().scrollable(true)).flingToEnd(20)");
+    // At the far end the yesterday header still renders above its row.
     expect(await daftar.dayHeaderCount()).toBeGreaterThanOrEqual(1);
-    for (let i = 0; i < 14; i++) await daftar.swipeList("down");
-    // 14 blind swipes can undershoot the return sweep: all 100 bulk items are
-    // dated today, so a viewport left inside today's block renders rows only —
-    // no day header at all. Sweep down until the top row (C) is back.
-    for (
-      let i = 0;
-      i < 14 && (await daftar.rowAmountTextsInOrder())[0] !== formatRp(C_TODAY_INCOME);
-      i++
-    ) {
-      await daftar.swipeList("down");
-    }
+    await $("android=new UiScrollable(new UiSelector().scrollable(true)).flingToBeginning(20)");
     // Back at the top the list is intact: no creation lost, top rows still
     // render, and the month summary still accounts for every bulk expense.
     const amounts = await daftar.rowAmountTextsInOrder();

@@ -12,7 +12,7 @@ import { accounts, type TransactionType } from "../config/categories";
 import { categoryLabels } from "../config/category-labels";
 import { BasePage } from "./base.page";
 import type { ChainablePromiseElement } from "../types";
-import { SHEET_CLOSE_SETTLE } from "../config/settles";
+import { SHEET_CLOSE_SETTLE, SWIPE_ANIM, KEYBOARD_DISMISS } from "../config/settles";
 import { COMPOSITION_WAIT, ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK } from "../config/timeouts";
 
 export interface TransactionFormInput {
@@ -74,11 +74,12 @@ export class TambahPage extends BasePage {
    * Opens the category sheet and taps the category; the sheet closes itself
    * on select.
    *
-   * Release APK v2.2: the Tambah category sheet rows carry NO resource-ids —
-   * `tambah_category_item_<id>` tags are absent from the accessibility tree
-   * (BUG_Found-07). The only stable locator signal is the row's Indonesian
-   * display-label text, so we scroll the sheet's LazyColumn via UiScrollable
-   * and match by text. Long lists scroll inside the sheet.
+   * The sheet rows carry NO resource-ids in the release APK (BUG_Found-07), so
+   * the row is matched by its Indonesian display-label text. UiScrollable
+   * cannot scroll this sheet (BUG_Found_16: rows below the initial 9-row
+   * window are unreachable, and its fling can DISMISS the modal), so the row
+   * is reached through the sheet's own search box — the same path TC-LIST-07
+   * drives manually — with a bounded W3C swipe-and-check as the fallback.
    *
    * On screen transitions (Daftar → Tambah) the `tambah_screen` tag can
    * display before child Compose nodes compose — wait for the pager to exist
@@ -94,14 +95,43 @@ export class TambahPage extends BasePage {
     await pager.waitForExist({ timeout: COMPOSITION_WAIT });
     await pager.click();
 
-    // UiScrollable finds the row whether it's already visible or below the
-    // fold; `text()` is an exact match on the TextView label.
-    const item = $(
-      `android=new UiScrollable(new UiSelector().scrollable(true))` +
-        `.scrollIntoView(new UiSelector().text("${label}"))`,
-    );
-    await item.waitForDisplayed({ timeout: ELEMENT_PRESENT });
-    await item.click();
+    // UiScrollable cannot scroll this sheet (BUG_Found_16: rows below the
+    // initial 9-row window are unreachable, and its fling can DISMISS the
+    // modal), so reach the row through the sheet's own search box — the same
+    // path TC-LIST-07 drives manually. Exact-match the single filtered row;
+    // when the label carries punctuation the search treats it literally, so
+    // the one hit is the row. Search-box miss → bounded swipe-and-check with
+    // raw W3C actions (the kategori.scrollToRow pattern) before giving up.
+    // NOTE: the label text ALSO renders inside the form's closed pager as a
+    // child TextView (verified live on v2.4), so the row's text selector must
+    // resolve BEFORE the sheet closes — after selection it would match the
+    // pager's TextView too. Hence the display wait lives inside the try.
+    const searchBox = byTag(tags.tambah.categorySearch);
+    const item = $(`android=new UiSelector().text("${label}")`);
+    try {
+      await searchBox.waitForExist({ timeout: ELEMENT_PRESENT_QUICK });
+      await typeIntoTaggedField(searchBox, label, tags.tambah.categorySearch);
+      // Dismiss the keyboard the typing opened — a W3C click at the row's
+      // coordinates lands on the IME while it is up (verified live: the row
+      // tap hit the suggestion strip and the sheet closed unselected), and
+      // hideKeyboard() inside the typing helper is best-effort only. ESC
+      // (keycode 111) dismisses the IME without closing the sheet.
+      await driver.pressKeyCode(111).catch(() => undefined);
+      await driver.pause(KEYBOARD_DISMISS);
+      await item.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK });
+      await item.click();
+    } catch {
+      // Search miss: clear the filter and sweep the sheet manually. The item
+      // may genuinely be absent (search mismatch), so the sweep re-checks it
+      // after every swipe — up to 4 content-up swipes.
+      await searchBox.setValue("");
+      for (let sweep = 0; sweep < 4; sweep++) {
+        if (await item.isDisplayed().catch(() => false)) break;
+        await this.swipeSheetContentUp();
+      }
+      await item.waitForDisplayed({ timeout: ELEMENT_PRESENT });
+      await item.click();
+    }
 
     // The sheet closes on selection. The label text also renders in the form's
     // category pager afterwards, so a reverse-wait on the text node is
@@ -157,6 +187,33 @@ export class TambahPage extends BasePage {
 
   async isSaveEnabled(): Promise<boolean> {
     return this.saveButton.isEnabled();
+  }
+
+  /**
+   * One raw-touch content-up swipe of the open category sheet (~40% of the
+   * screen). Raw W3C actions, not `mobile: scrollGesture` (a silent no-op on
+   * Compose LazyColumns here) and not UiScrollable (its fling dismissed the
+   * sheet — BUG_Found_16). Private: the surface the twins share is
+   * selectCategory; the fallback mechanism is Android-only.
+   */
+  private async swipeSheetContentUp(): Promise<void> {
+    const { width, height } = await driver.getWindowSize();
+    const x = Math.floor(width / 2);
+    await driver.performActions([
+      {
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
+        actions: [
+          { type: "pointerMove", duration: 0, x, y: Math.floor(height * 0.7) },
+          { type: "pointerDown", button: 0 },
+          { type: "pause", duration: 150 },
+          { type: "pointerMove", duration: 500, x, y: Math.floor(height * 0.3) },
+          { type: "pointerUp", button: 0 },
+        ],
+      },
+    ]);
+    await driver.pause(SWIPE_ANIM);
   }
 
   /** Saves and waits for the confirmation toast (the app stays on Tambah). */
