@@ -12,7 +12,7 @@ import { accounts, type TransactionType } from "../config/categories";
 import { categoryLabels } from "../config/category-labels";
 import { BasePage } from "./base.page";
 import type { ChainablePromiseElement } from "../types";
-import { SHEET_CLOSE_SETTLE, SWIPE_ANIM, KEYBOARD_DISMISS } from "../config/settles";
+import { SHEET_CLOSE_SETTLE, SWIPE_ANIM } from "../config/settles";
 import { COMPOSITION_WAIT, ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK } from "../config/timeouts";
 
 export interface TransactionFormInput {
