@@ -77,6 +77,13 @@ P1
 - **Android API level:** 37
 - **Display:** 1080×2424, 60 Hz (software-rendered GPU, ~3fps per dumpsys gfxinfo)
 
+## Fix Ownership
+**AUTOMATION CODE.** The failure was in `TambahPage.selectCategory()`'s pager-retry loop, not in
+the app (fixed 2026-10-26 — see the fix notes below). The app-side contribution is the *enabling*
+gap: v2.2's TestTags.kt does not tag the category-sheet rows, which forced the text-label lookup
+(`category-labels.ts`). Optional app-side closer that retires the whole workaround family: emit
+`tambah_category_item_<id>` on sheet rows so `selectCategory()` returns to `byTag()`.
+
 ## Additional Notes
 - **Fix owner:** automation code — `TambahPage.selectCategory()` in
   `src/pageobjects/tambah.page.ts`. The `before` hook in `performance.spec.ts`
@@ -95,7 +102,9 @@ P1
 - **TC-PERF-01–04:** all pass after the fix (verified 2026-10-26).
 - **TC-PERF-05:** still `it.skip` — not blocked by BUG_Found-07 (fixed). The
   50 UI-driven add/delete cycles (~10 s each) exceed the 180 s mocha timeout,
-  and `test_seed` is debug-only (absent from release APK).
+  and `test_seed` is debug-only (absent from release APK). Decision 2026-10-31:
+  the skip stands on both platforms; the memory guard lives out-of-band via
+  `scripts/perf_memcycles.sh` (see `progress.md` 3.F for the full decision).
 - **TC-PERF-03 measurement:** gfxinfo jank ratio is unusable on this emulator
   (100 % of frames exceed 16.7 ms due to software GPU at ~3fps). Switched to a
   timing-budget approach: 8 scroll gestures must complete in < 60 s, plus a

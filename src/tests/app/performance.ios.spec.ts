@@ -31,125 +31,135 @@
  *    mocha timeout, so TC-PERF-05 stays skipped, exactly like on Android
  *    (where scripts/perf_memcycles.sh runs the same loop out of band).
  */
-import { categories } from '../../config/categories'
-import { tags } from '../../config/tags'
-import { iosByTag } from '../../helpers/locators'
-import { iosDismissKeyboard, iosFieldText } from '../../helpers/input'
-import { IOS_BUNDLE_ID } from '../../helpers/ios-app'
-import { createTransactionIos } from '../../helpers/transactions'
-import { TambahIosPage } from '../../pageobjects/tambah.ios.page'
-import { DaftarIosPage } from '../../pageobjects/daftar.ios.page'
+import { categories } from "../../config/categories";
+import { tags } from "../../config/tags";
+import { iosByTag } from "../../helpers/locators";
+import { iosDismissKeyboard, iosFieldText } from "../../helpers/input";
+import { IOS_BUNDLE_ID } from "../../helpers/ios-app";
+import { createTransactionIos } from "../../helpers/transactions";
+import { TambahIosPage } from "../../pageobjects/tambah.ios.page";
+import { DaftarIosPage } from "../../pageobjects/daftar.ios.page";
+import { APP_RESTART_SETTLE, POST_NAV, SCROLL_SETTLE } from "../../config/settles";
+import {
+  APP_LAUNCH_MEASURED,
+  ELEMENT_PRESENT,
+  ELEMENT_PRESENT_QUICK,
+  POLL_INTERVAL_QUICK,
+} from "../../config/timeouts";
 
-const tambah = new TambahIosPage()
-const daftar = new DaftarIosPage()
+const tambah = new TambahIosPage();
+const daftar = new DaftarIosPage();
 
 /** The amount field is empty again — the iOS equivalent of the Android toast. */
 async function amountFieldCleared(): Promise<boolean> {
-  const text = await iosFieldText(tambah.amountInput).catch(() => '')
-  return text === '' || text === '0' || text === 'Rp 0'
+  const text = await iosFieldText(tambah.amountInput).catch(() => "");
+  return text === "" || text === "0" || text === "Rp 0";
 }
 
-describe('TC-PERF — performance (Phase 3.F) on iOS @regression', () => {
+describe("TC-PERF — performance (Phase 3.F) on iOS @regression", () => {
   before(async function () {
     // Seeding 15 rows through the form takes longer than the default
     // per-test timeout; the list needs enough rows to be scrollable.
-    this.timeout(600_000)
+    this.timeout(600_000);
     for (let i = 0; i < 15; i++) {
       await createTransactionIos({
-        type: 'pemasukan',
+        type: "pemasukan",
         amount: 10_000 + i * 1_000,
         categoryId: categories.income.salary,
-      })
+      });
     }
-  })
+  });
 
-  it('TC-PERF-02 tab switch completes in under 1.5s @regression', async () => {
-    await tambah.open()
-    await driver.pause(500)
-    const t0 = Date.now()
-    await iosByTag(tags.navDaftar).click()
-    await iosByTag(tags.daftar.screen).waitForDisplayed({ timeout: 10_000 })
-    const t = Date.now() - t0
-    console.log(`[TC-PERF-02] tab switch: ${t} ms`)
-    expect(t).toBeLessThan(1_500)
-  })
+  it("TC-PERF-02 tab switch completes in under 1.5s @regression", async () => {
+    await tambah.open();
+    await driver.pause(POST_NAV);
+    const t0 = Date.now();
+    await iosByTag(tags.navDaftar).click();
+    await expect(iosByTag(tags.daftar.screen)).toBeDisplayed({ wait: ELEMENT_PRESENT });
+    const t = Date.now() - t0;
+    console.log(`[TC-PERF-02] tab switch: ${t} ms`);
+    expect(t).toBeLessThan(1_500);
+  });
 
-  it('TC-PERF-04 saving a transaction completes in under 2s @regression', async () => {
-    await tambah.open()
+  it("TC-PERF-04 saving a transaction completes in under 2s @regression", async () => {
+    await tambah.open();
     await tambah.fillForm({
-      type: 'pemasukan',
+      type: "pemasukan",
       amount: 20_000,
       categoryId: categories.income.salary,
-    })
+    });
     // The category sheet can hand focus back to the amount field, which
     // re-opens the keyboard over the save button.
-    await iosDismissKeyboard()
+    await iosDismissKeyboard();
 
-    const t0 = Date.now()
-    await tambah.saveButton.click()
-    await driver.waitUntil(amountFieldCleared, { timeout: 5_000, interval: 100 })
-    const t = Date.now() - t0
-    console.log(`[TC-PERF-04] save: ${t} ms`)
-    expect(t).toBeLessThan(2_000)
-  })
+    const t0 = Date.now();
+    await tambah.saveButton.click();
+    await driver.waitUntil(amountFieldCleared, {
+      timeout: ELEMENT_PRESENT_QUICK,
+      interval: POLL_INTERVAL_QUICK,
+    });
+    const t = Date.now() - t0;
+    console.log(`[TC-PERF-04] save: ${t} ms`);
+    expect(t).toBeLessThan(2_000);
+  });
 
-  it('TC-PERF-03 list scroll stays fluid with 100+ items @regression', async () => {
-    await daftar.open()
+  it("TC-PERF-03 list scroll stays fluid with 100+ items @regression", async () => {
+    await daftar.open();
     // Normalise the scroll position: the list must not start at its end,
     // where further sweeps would move nothing.
-    await driver.execute('mobile: scroll', { direction: 'up', distance: 0.25 })
-    await driver.pause(500)
+    await driver.execute("mobile: scroll", { direction: "up", distance: 0.25 });
+    await driver.pause(SCROLL_SETTLE);
 
-    const before = await daftar.firstCardPosition()
-    const t0 = Date.now()
+    const before = await daftar.firstCardPosition();
+    const t0 = Date.now();
     for (let i = 0; i < 8; i++) {
       // The element id dies with the Compose recomposition the scroll
       // triggers, so it is resolved again for every sweep.
-      const listId = await iosByTag(tags.daftar.screen).elementId
-      await driver.execute('mobile: scroll', {
+      const listId = await iosByTag(tags.daftar.screen).elementId;
+      await driver.execute("mobile: scroll", {
         elementId: listId,
-        direction: 'down',
+        direction: "down",
         distance: 0.25,
-      })
+      });
     }
-    const elapsed = Date.now() - t0
-    const after = await daftar.firstCardPosition()
+    const elapsed = Date.now() - t0;
+    const after = await daftar.firstCardPosition();
 
     // No ANR/crash after sustained scrolling; the 60s ceiling catches stalls.
-    expect(await daftar.isDisplayed()).toBe(true)
-    expect(elapsed).toBeLessThan(60_000)
+    await expect(daftar.screen).toBeDisplayed();
+    expect(elapsed).toBeLessThan(60_000);
     // The sweeps actually moved the list: the topmost card changed or moved up.
-    expect(before).not.toBeNull()
-    expect(after).not.toBeNull()
-    expect(after!.id !== before!.id || after!.y < before!.y).toBe(true)
+    expect(before).not.toBeNull();
+    expect(after).not.toBeNull();
+    expect(after!.id !== before!.id || after!.y < before!.y).toBe(true);
     console.log(
       `[TC-PERF-03] scroll: ${elapsed} ms, top card ${before!.id}@${before!.y} -> ${after!.id}@${after!.y}`,
-    )
-  })
+    );
+  });
 
   // Runs LAST: the relaunch disrupts the Appium session.
-  it('TC-PERF-01 cold start completes in under 8s @regression', async () => {
-    const totals: number[] = []
+  it("TC-PERF-01 cold start completes in under 8s @regression", async () => {
+    const totals: number[] = [];
     for (let attempt = 0; attempt < 3; attempt++) {
-      await driver.terminateApp(IOS_BUNDLE_ID)
-      await driver.pause(3_000) // settle before measuring
-      const t0 = Date.now()
-      await driver.execute('mobile: launchApp', { bundleId: IOS_BUNDLE_ID })
-      await iosByTag(tags.navBottom).waitForExist({ timeout: 30_000 })
-      totals.push(Date.now() - t0)
+      await driver.terminateApp(IOS_BUNDLE_ID);
+      await driver.pause(APP_RESTART_SETTLE); // settle before measuring
+      const t0 = Date.now();
+      await driver.execute("mobile: launchApp", { bundleId: IOS_BUNDLE_ID });
+      await iosByTag(tags.navBottom).waitForExist({ timeout: APP_LAUNCH_MEASURED });
+      totals.push(Date.now() - t0);
     }
     // Min-of-3: cold starts vary wildly under system load (4.1 s vs 7.5 s
     // measured); the minimum isolates the app's true launch cost.
-    const minTotal = Math.min(...totals)
-    console.log(`[TC-PERF-01] cold starts (ms): ${totals.join(', ')} — min=${minTotal}`)
-    expect(totals.length).toBeGreaterThan(0)
-    expect(minTotal).toBeLessThan(8_000)
-  })
+    const minTotal = Math.min(...totals);
+    console.log(`[TC-PERF-01] cold starts (ms): ${totals.join(", ")} — min=${minTotal}`);
+    expect(totals.length).toBeGreaterThan(0);
+    expect(minTotal).toBeLessThan(8_000);
+  });
 
   // Skipped in wdio: 50 UI cycles exceed the mocha timeout.
-  it.skip('TC-PERF-05 memory stays stable across 50 add/delete cycles @regression', async () => {
+  it.skip("TC-PERF-05 memory stays stable across 50 add/delete cycles @regression", async () => {
     // iOS has no `dumpsys meminfo`; the app's RSS is readable from the
     // host `ps -A -o pid,rss,comm` (~316 MB measured), which is out of the
     // driver's reach — the case is exercised out of band.
-  })
-})
+  });
+});

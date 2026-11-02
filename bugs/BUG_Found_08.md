@@ -42,6 +42,13 @@
 | **App build** | Saku.app Debug (bundle `id.almezi.saku`, CFBundleShortVersionString 1.0) — builds fine after the fix |
 | **Xcode** | /Applications/Xcode.app (full Xcode required; CommandLineTools has no iOS SDK) |
 
+## Fix Ownership
+**APP CODE.** The defect is in the app repo's shared Xcode scheme
+(`iosApp/iosApp.xcodeproj/xcshareddata/xcschemes/Saku.xcscheme`, malformed by commit `0a50aa4`).
+The fix is applied in the app repo working tree and verified (BUILD SUCCEEDED, TC-NAV 8/8), but it
+is uncommitted — the remaining action is the app owner's: commit the scheme fix, optionally adding
+a scheme-lint smoke (`xcodebuild -scheme Saku -showBuildSettings`) to catch this defect class.
+
 ## Additional Notes
 
 - **Fix applied (uncommitted in the app repo):** `iosApp/iosApp.xcodeproj/xcshareddata/xcschemes/Saku.xcscheme` — LaunchAction `BuildableReference` corrected to match the valid BuildAction entry: `BlueprintIdentifier = "SAKU0000000000000000TGT01"`, `BuildableName = "Saku.app"`, `ReferencedContainer = "container:iosApp.xcodeproj"`. After the fix the same command completes: **BUILD SUCCEEDED**, and the built app passed the full TC-NAV suite 8/8 on the simulator (see `progress.md` 1.A).

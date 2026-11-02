@@ -14,61 +14,63 @@
  * only, for currency fields the app formats as you type ("254000" renders
  * "Rp 254.000", so exact equality can never hold there).
  */
-import { $, $$ } from '@wdio/globals'
-import type { ChainablePromiseElement } from '../types'
+import { $, $$ } from "@wdio/globals";
+import type { ChainablePromiseElement } from "../types";
+import { FIELD_CLEAR, FIELD_WRITE, KEYBOARD_DISMISS, STALE_RETRY } from "../config/settles";
+import { COMPOSITION_WAIT } from "../config/timeouts";
 
-export type FieldVerify = 'exact' | 'digits'
+export type FieldVerify = "exact" | "digits";
 
 export async function typeIntoTaggedField(
   field: ChainablePromiseElement,
   text: string,
-  label = 'tagged field',
-  verify: FieldVerify = 'exact',
+  label = "tagged field",
+  verify: FieldVerify = "exact",
 ): Promise<void> {
   const landedOk =
-    verify === 'digits'
-      ? (held: string) => held.replace(/\D/g, '') === text.replace(/\D/g, '')
-      : (held: string) => held === text
+    verify === "digits"
+      ? (held: string) => held.replace(/\D/g, "") === text.replace(/\D/g, "")
+      : (held: string) => held === text;
   // Re-resolve the field on EVERY attempt: the kategori rename dialog
   // recomposes while the keyboard resizes, and the handle resolved in an
   // earlier attempt is stale — reusing the passed chainable would fail all
   // retries identically. Resolving from the selector re-queries fresh.
-  const selector = String(await Promise.resolve(field.selector))
-  let landed = ''
-  let lastError: unknown = null
+  const selector = String(await Promise.resolve(field.selector));
+  let landed = "";
+  let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       // Composition wait: on a cold start the first field lookup can run
       // while the screen is still composing, and the interaction retries
       // below span only ~1 s. Wait for the field to enter the tree first;
       // the retry loop then handles interaction-level staleness only.
-      await $(selector).waitForExist({ timeout: 15_000 })
-      const fresh = await $(selector)
+      await $(selector).waitForExist({ timeout: COMPOSITION_WAIT });
+      const fresh = await $(selector);
       // Focus the inner editor node where one exists: a cached-bounds click on
       // the wrapper can land on a scrim once the keyboard resize shifts the
       // layout (seen live on the kategori rename dialog).
-      const editor = await fresh.$('.//android.widget.EditText')
-      const inner = (await editor.isExisting().catch(() => false)) ? editor : fresh
-      await inner.click()
-      const current = await fieldText(fresh).catch(() => '')
+      const editor = await fresh.$(".//android.widget.EditText");
+      const inner = (await editor.isExisting().catch(() => false)) ? editor : fresh;
+      await inner.click();
+      const current = await fieldText(fresh).catch(() => "");
       if (current.length > 0) {
-        await driver.keys('\uE003'.repeat(current.length + 2))
+        await driver.keys("\uE003".repeat(current.length + 2));
       }
-      await driver.keys(text)
-      await driver.hideKeyboard().catch(() => undefined)
-      landed = await fieldText(fresh).catch(() => '')
-      if (landedOk(landed)) return
-      lastError = null
+      await driver.keys(text);
+      await driver.hideKeyboard().catch(() => undefined);
+      landed = await fieldText(fresh).catch(() => "");
+      if (landedOk(landed)) return;
+      lastError = null;
     } catch (e) {
       // Transient interaction failure — settle, then retry on a fresh query.
-      lastError = e
-      await driver.pause(500)
+      lastError = e;
+      await driver.pause(STALE_RETRY);
     }
   }
-  if (lastError) throw lastError
+  if (lastError) throw lastError;
   throw new Error(
     `typeIntoTaggedField: "${label}" holds "${landed}" instead of "${text}" after 3 attempts`,
-  )
+  );
 }
 
 /**
@@ -79,11 +81,11 @@ export async function typeIntoTaggedField(
  * field's own text when no inner editor exists.
  */
 export async function fieldText(field: ChainablePromiseElement): Promise<string> {
-  const editor = await field.$('.//android.widget.EditText')
+  const editor = await field.$(".//android.widget.EditText");
   if (await editor.isExisting().catch(() => false)) {
-    return (await editor.getText()).trim()
+    return (await editor.getText()).trim();
   }
-  return (await field.getText().catch(() => '')).trim()
+  return (await field.getText().catch(() => "")).trim();
 }
 
 /**
@@ -101,33 +103,33 @@ export async function fieldText(field: ChainablePromiseElement): Promise<string>
 export async function setValueIntoTaggedField(
   field: ChainablePromiseElement,
   text: string,
-  label = 'tagged field',
-  verify: FieldVerify = 'exact',
+  label = "tagged field",
+  verify: FieldVerify = "exact",
 ): Promise<void> {
   const landedOk =
-    verify === 'digits'
-      ? (held: string) => held.replace(/\D/g, '') === text.replace(/\D/g, '')
-      : (held: string) => held === text
-  const selector = String(await Promise.resolve(field.selector))
-  let landed = ''
-  let lastError: unknown = null
+    verify === "digits"
+      ? (held: string) => held.replace(/\D/g, "") === text.replace(/\D/g, "")
+      : (held: string) => held === text;
+  const selector = String(await Promise.resolve(field.selector));
+  let landed = "";
+  let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      await $(selector).waitForExist({ timeout: 15_000 })
-      const fresh = await $(selector)
-      await fresh.setValue(text)
-      landed = await fieldText(fresh).catch(() => '')
-      if (landedOk(landed)) return
-      lastError = null
+      await $(selector).waitForExist({ timeout: COMPOSITION_WAIT });
+      const fresh = await $(selector);
+      await fresh.setValue(text);
+      landed = await fieldText(fresh).catch(() => "");
+      if (landedOk(landed)) return;
+      lastError = null;
     } catch (e) {
-      lastError = e
-      await driver.pause(500)
+      lastError = e;
+      await driver.pause(STALE_RETRY);
     }
   }
-  if (lastError) throw lastError
+  if (lastError) throw lastError;
   throw new Error(
     `setValueIntoTaggedField: "${label}" holds "${landed}" instead of "${text}" after 3 attempts`,
-  )
+  );
 }
 
 /* ------------------------------------------------------------------ *
@@ -136,12 +138,12 @@ export async function setValueIntoTaggedField(
 
 /** Inner editor node of an iOS Compose field (measured: XCUIElementTypeTextView). */
 const IOS_EDITOR_PREDICATE =
-  '-ios predicate string: type == "XCUIElementTypeTextView" OR type == "XCUIElementTypeTextField"'
+  '-ios predicate string: type == "XCUIElementTypeTextView" OR type == "XCUIElementTypeTextField"';
 
 /** Accessibility identifier carried by the passed field, or null when the selector is not a `~tag`. */
 async function iosTagOf(field: ChainablePromiseElement): Promise<string | null> {
-  const selector = String(await Promise.resolve(field.selector))
-  return selector.startsWith('~') ? selector.slice(1) : null
+  const selector = String(await Promise.resolve(field.selector));
+  return selector.startsWith("~") ? selector.slice(1) : null;
 }
 
 /**
@@ -154,20 +156,25 @@ async function iosTagOf(field: ChainablePromiseElement): Promise<string | null> 
  *    — a descendant query 404s there, which is why the sibling XPath
  *    fallback exists.
  */
-export async function iosFieldEditor(field: ChainablePromiseElement): Promise<ChainablePromiseElement | null> {
-  const descendant = field.$(IOS_EDITOR_PREDICATE)
-  if (await descendant.isExisting().catch(() => false)) return descendant
-  const tag = await iosTagOf(field)
-  if (!tag) return null
+export async function iosFieldEditor(
+  field: ChainablePromiseElement,
+): Promise<ChainablePromiseElement | null> {
+  const descendant = field.$(IOS_EDITOR_PREDICATE);
+  if (await descendant.isExisting().catch(() => false)) return descendant;
+  const tag = await iosTagOf(field);
+  if (!tag) return null;
   // Session-scoped XPath (leading //* so WDIO detects the xpath strategy —
   // element-scoped queries mangle custom-strategy strings into text matches,
   // verified in the Appium log). WDA's libxml2 supports following-sibling.
   const sibling = $$(
     `(//*[@name="${tag}"]/following-sibling::` +
       `*[self::XCUIElementTypeTextView or self::XCUIElementTypeTextField])[1]`,
-  )
-  if ((await sibling.length) > 0) return sibling[0]
-  return null
+  );
+  if ((await sibling.length) > 0) {
+    const first = sibling[0];
+    if (first !== undefined) return first;
+  }
+  return null;
 }
 
 /**
@@ -178,18 +185,18 @@ export async function iosFieldEditor(field: ChainablePromiseElement): Promise<Ch
  * it is an accessible=false placeholder node.
  */
 export async function iosFieldText(field: ChainablePromiseElement): Promise<string> {
-  const editor = await iosFieldEditor(field)
+  const editor = await iosFieldEditor(field);
   if (editor) {
-    const value = ((await editor.getAttribute('value').catch(() => '')) || '').trim()
-    if (value) return value
+    const value = ((await editor.getAttribute("value").catch(() => "")) || "").trim();
+    if (value) return value;
   }
-  return ((await field.getText().catch(() => '')) || '').trim()
+  return ((await field.getText().catch(() => "")) || "").trim();
 }
 
 /** True while the iOS software keyboard is present in the accessibility tree. */
 export async function iosKeyboardShown(): Promise<boolean> {
-  const keyboards = await $$('-ios predicate string: type == "XCUIElementTypeKeyboard"')
-  return (await keyboards.length) > 0
+  const keyboards = await $$('-ios predicate string: type == "XCUIElementTypeKeyboard"');
+  return (await keyboards.length) > 0;
 }
 
 /**
@@ -202,25 +209,25 @@ export async function iosKeyboardShown(): Promise<boolean> {
  * it is not attempted.
  */
 export async function iosDismissKeyboard(): Promise<void> {
-  if (!(await iosKeyboardShown().catch(() => false))) return
+  if (!(await iosKeyboardShown().catch(() => false))) return;
   const tapDeadZone = async () => {
-    const { width } = await driver.getWindowSize()
+    const { width } = await driver.getWindowSize();
     await driver.performActions([
       {
-        type: 'pointer',
-        id: 'finger1',
-        parameters: { pointerType: 'touch' },
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
         actions: [
-          { type: 'pointerMove', duration: 0, x: Math.floor(width / 2), y: 30 },
-          { type: 'pointerDown', button: 0 },
-          { type: 'pointerUp', button: 0 },
+          { type: "pointerMove", duration: 0, x: Math.floor(width / 2), y: 30 },
+          { type: "pointerDown", button: 0 },
+          { type: "pointerUp", button: 0 },
         ],
       },
-    ])
-    await driver.pause(400)
-  }
-  await tapDeadZone()
-  if (!(await iosKeyboardShown().catch(() => false))) return
+    ]);
+    await driver.pause(KEYBOARD_DISMISS);
+  };
+  await tapDeadZone();
+  if (!(await iosKeyboardShown().catch(() => false))) return;
   // The dead-zone tap does not always clear focus (measured on the Tambah
   // amount field, which keeps focus across the category sheet). The Return
   // IME action does close the Compose keyboard; currency editors filter the
@@ -229,15 +236,15 @@ export async function iosDismissKeyboard(): Promise<void> {
   // rejected ("Key value must be present...", measured 2026-10-27).
   await driver.performActions([
     {
-      type: 'key',
-      id: 'keyboard1',
+      type: "key",
+      id: "keyboard1",
       actions: [
-        { type: 'keyDown', value: '\uE007' },
-        { type: 'keyUp', value: '\uE007' },
+        { type: "keyDown", value: "\uE007" },
+        { type: "keyUp", value: "\uE007" },
       ],
     },
-  ])
-  await driver.pause(400)
+  ]);
+  await driver.pause(KEYBOARD_DISMISS);
 }
 
 /**
@@ -251,16 +258,16 @@ export async function iosDismissKeyboard(): Promise<void> {
  * into a field that still holds the previous test's data.
  */
 export async function iosClearField(field: ChainablePromiseElement): Promise<void> {
-  await field.click()
-  const editor = await iosFieldEditor(field)
-  await editor?.clearValue().catch(() => undefined)
-  if ((await iosFieldText(field).catch(() => '')).length > 0) {
-    await field.addValue('\uE003'.repeat(64))
-    await driver.pause(300)
+  await field.click();
+  const editor = await iosFieldEditor(field);
+  await editor?.clearValue().catch(() => undefined);
+  if ((await iosFieldText(field).catch(() => "")).length > 0) {
+    await field.addValue("\uE003".repeat(64));
+    await driver.pause(FIELD_CLEAR);
   }
-  const left = await iosFieldText(field).catch(() => '')
+  const left = await iosFieldText(field).catch(() => "");
   if (left.length > 0) {
-    throw new Error(`iosClearField: "${left}" survived the clear`)
+    throw new Error(`iosClearField: "${left}" survived the clear`);
   }
 }
 
@@ -281,23 +288,23 @@ export async function iosClearField(field: ChainablePromiseElement): Promise<voi
 export async function iosWriteRaw(
   field: ChainablePromiseElement,
   text: string,
-  label = 'tagged field',
+  label = "tagged field",
 ): Promise<string> {
-  const selector = String(await Promise.resolve(field.selector))
+  const selector = String(await Promise.resolve(field.selector));
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const lazy = $(selector)
-      await lazy.waitForExist({ timeout: 15_000 })
-      await iosClearField(lazy)
-      await lazy.addValue(text)
-      await driver.pause(300)
-      return await iosFieldText(lazy)
+      const lazy = $(selector);
+      await lazy.waitForExist({ timeout: COMPOSITION_WAIT });
+      await iosClearField(lazy);
+      await lazy.addValue(text);
+      await driver.pause(FIELD_WRITE);
+      return await iosFieldText(lazy);
     } catch {
       // Transient interaction failure — settle, then retry on a fresh query.
-      await driver.pause(500)
+      await driver.pause(STALE_RETRY);
     }
   }
-  throw new Error(`iosWriteRaw: could not write "${text}" into "${label}" after 3 attempts`)
+  throw new Error(`iosWriteRaw: could not write "${text}" into "${label}" after 3 attempts`);
 }
 
 /**
@@ -314,27 +321,29 @@ export async function iosWriteRaw(
 export async function iosWriteNote(
   field: ChainablePromiseElement,
   text: string,
-  label = 'tagged field',
+  label = "tagged field",
 ): Promise<string> {
-  const selector = String(await Promise.resolve(field.selector))
-  let lastError: unknown = null
+  const selector = String(await Promise.resolve(field.selector));
+  let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const lazy = $(selector)
-      await lazy.waitForExist({ timeout: 15_000 })
-      await iosClearField(lazy)
-      const editor = await iosFieldEditor(lazy)
-      if (!editor) throw new Error(`No editor node behind "${label}"`)
-      await editor.setValue(text)
-      await driver.pause(300)
-      return await iosFieldText(lazy)
+      const lazy = $(selector);
+      await lazy.waitForExist({ timeout: COMPOSITION_WAIT });
+      await iosClearField(lazy);
+      const editor = await iosFieldEditor(lazy);
+      if (!editor) throw new Error(`No editor node behind "${label}"`);
+      await editor.setValue(text);
+      await driver.pause(FIELD_WRITE);
+      return await iosFieldText(lazy);
     } catch (e) {
-      lastError = e
-      await driver.pause(500)
+      lastError = e;
+      await driver.pause(STALE_RETRY);
     }
   }
-  const detail = lastError instanceof Error ? ` (${lastError.message})` : ''
-  throw new Error(`iosWriteNote: could not write "${text}" into "${label}" after 3 attempts${detail}`)
+  const detail = lastError instanceof Error ? ` (${lastError.message})` : "";
+  throw new Error(
+    `iosWriteNote: could not write "${text}" into "${label}" after 3 attempts${detail}`,
+  );
 }
 
 /**
@@ -355,16 +364,16 @@ export async function iosWriteNote(
 export async function iosTypeIntoTaggedField(
   field: ChainablePromiseElement,
   text: string,
-  label = 'tagged field',
-  verify: FieldVerify = 'exact',
+  label = "tagged field",
+  verify: FieldVerify = "exact",
 ): Promise<void> {
   const landedOk =
-    verify === 'digits'
-      ? (held: string) => held.replace(/\D/g, '') === text.replace(/\D/g, '')
-      : (held: string) => held === text
-  const selector = String(await Promise.resolve(field.selector))
-  let landed = ''
-  let lastError: unknown = null
+    verify === "digits"
+      ? (held: string) => held.replace(/\D/g, "") === text.replace(/\D/g, "")
+      : (held: string) => held === text;
+  const selector = String(await Promise.resolve(field.selector));
+  let landed = "";
+  let lastError: unknown = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       // Keep the chainable LAZY — never pin a resolved element. The focus
@@ -373,34 +382,34 @@ export async function iosTypeIntoTaggedField(
       // it ("No matches found for Identity Binding" law from TC-NAV) and
       // addValue on the stale handle no-ops silently. Every command below
       // re-resolves through the chainable, exactly like the working spike.
-      const lazy = $(selector)
-      await lazy.waitForExist({ timeout: 15_000 })
-      await lazy.click()
-      const current = await iosFieldText(lazy).catch(() => '')
+      const lazy = $(selector);
+      await lazy.waitForExist({ timeout: COMPOSITION_WAIT });
+      await lazy.click();
+      const current = await iosFieldText(lazy).catch(() => "");
       if (current.length > 0) {
         // Clear the editor node (the wrapper itself is not editable); the
         // keyboard backspace key is the fallback (WDA maps \uE003).
-        const editor = await iosFieldEditor(lazy)
-        await editor?.clearValue().catch(() => undefined)
-        const afterClear = await iosFieldText(lazy).catch(() => '')
+        const editor = await iosFieldEditor(lazy);
+        await editor?.clearValue().catch(() => undefined);
+        const afterClear = await iosFieldText(lazy).catch(() => "");
         if (afterClear.length > 0) {
-          await lazy.addValue('\uE003'.repeat(afterClear.length + 2))
+          await lazy.addValue("\uE003".repeat(afterClear.length + 2));
         }
       }
-      await lazy.addValue(text)
+      await lazy.addValue(text);
       // Dismiss the keyboard so it cannot cover the save button or sheet
       // taps that follow; iOS has no system back to do it implicitly.
-      await iosDismissKeyboard()
-      landed = await iosFieldText(lazy).catch(() => '')
-      if (landedOk(landed)) return
-      lastError = null
+      await iosDismissKeyboard();
+      landed = await iosFieldText(lazy).catch(() => "");
+      if (landedOk(landed)) return;
+      lastError = null;
     } catch (e) {
-      lastError = e
-      await driver.pause(500)
+      lastError = e;
+      await driver.pause(STALE_RETRY);
     }
   }
-  if (lastError) throw lastError
+  if (lastError) throw lastError;
   throw new Error(
     `iosTypeIntoTaggedField: "${label}" holds "${landed}" instead of "${text}" after 3 attempts`,
-  )
+  );
 }

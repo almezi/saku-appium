@@ -8,7 +8,7 @@ The executable suite lives in `src/`. It drives the Android app (UiAutomator2) t
 
 ### Prerequisites
 
-- Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires `>=20`) and Android emulator(s)/device(s) connected via `adb` (default udid `emulator-5554`; select devices with `SAKU_DEVICES` or the legacy `ANDROID_UDID`/`REAL_DEVICE_UDID`)
+- Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires `>=22`) and Android emulator(s)/device(s) connected via `adb` (default udid `emulator-5554`; select devices with `SAKU_DEVICES` or the legacy `ANDROID_UDID`/`REAL_DEVICE_UDID`)
 - The app APK at `resources/SimpleMoneyTrackerKT-v2.2.apk` (override with `SAKU_APK`, e.g. to point at a debug build)
 - Appium is installed automatically with `npm install` — no global install needed
 
@@ -46,16 +46,185 @@ npm run test:navigasi:ios  # single iOS spec
 npm run test:list:ios      # transaction list
 npm run test:edit:ios      # edit transaction
 npm run test:backup:ios    # backup & export
+npm run test:inc:ios       # add income
+npm run test:exp:ios       # add expense
 ```
 
 iOS needs macOS + Xcode, a booted simulator (`xcrun simctl list devices`), and the
 XCUITest driver — `npm run test:ios` starts its own Appium server. Per-spec iOS
-shortcuts exist for `list`, `edit`, `backup`, `val`, `amt`, `pers`, `rot`, `perf`,
-`a11y`, `anggaran`, `kategori`, and `navigasi`.
+shortcuts exist for `list`, `edit`, `backup`, `val`, `amt`, `inc`, `exp`, `pers`, `rot`,
+`perf`, `a11y`, `anggaran`, `kategori`, and `navigasi`.
 
-**`wdio.ios.conf.ts` is not covered by `tsc --noEmit`** — `tsconfig.json` includes only
-`src/**/*.ts` and `wdio.conf.ts`. Run `npm run typecheck` with that file added before
-trusting the iOS config. See `code_review.md` finding **S1**.
+`wdio.ios.conf.ts` **is** covered by `npm run typecheck` — `tsconfig.json` includes
+`src/**/*.ts`, `wdio.conf.ts` and `wdio.ios.conf.ts`. (The `code_review.md` finding **S1** gap
+that used to exclude it is closed.)
+
+### Capabilities — the same session, started by hand
+
+Use these when you want **Appium Inspector** (or your own Appium server) instead of `npm test` /
+`npm run test:ios`. They are the capabilities the two runner configs actually send, so a
+hand-started session sees the same app, with the same isolation, as the suite. The values to
+re-aim at your machine are `appium:app`, and `appium:udid` if your simulator or device differs —
+`xcrun simctl list devices` and `adb devices -l` print them.
+
+#### 1. iOS Simulator capabilities (`wdio.ios.conf.ts`)
+
+```json
+{
+  "platformName": "iOS",
+  "appium:automationName": "XCUITest",
+  "appium:deviceName": "iPhone 18 Pro",
+  "appium:platformVersion": "27.0",
+  "appium:udid": "80FCD259-BA75-4018-8FE6-31F4E812AD9B",
+  "appium:app": "/Users/yourusername/AndroidStudioProjects/SimpleMoneyTrackerKT/iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/Saku.app",
+  "appium:bundleId": "id.almezi.saku",
+  "appium:wdaLocalPort": 8100,
+  "appium:noReset": false,
+  "appium:newCommandTimeout": 240
+}
+```
+
+- **`platformName`** — the OS, `iOS` here.
+- **`appium:automationName`** — the engine: Apple's **XCUITest**. On first session Appium builds
+  WebDriverAgent from its own bundled source and caches it in `DerivedData`; that is why the first
+  run is slow and later ones are not.
+- **`appium:deviceName`** — the simulator model exactly as Xcode lists it (`xcrun simctl list
+  devices`). Once `appium:udid` is set this is only a display hint — Inspector's form wants the
+  model name, the suite sends the generic `"iPhone"` and pins by `udid`.
+- **`appium:platformVersion`** — the iOS runtime installed on that simulator. Optional, but it
+  makes the session fail loudly on a version mismatch instead of silently picking another device.
+- **`appium:udid`** — the simulator's UUID. This is what actually selects the device; two
+  simulators must never share a session.
+- **`appium:app`** — absolute path to the **`.app` bundle built for the simulator** (a real device
+  takes a `.ipa`, and a simulator build will not install on one). This repo's default is the
+  Compose Multiplatform build from the app repo — `iosApp/build-app.sh` — overridable with
+  `SAKU_IOS_APP`.
+- **`appium:bundleId`** — `id.almezi.saku`. With `app` + `bundleId` both set, the driver installs
+  if needed, launches, and knows when the app is up; `bundleId` alone attaches to an already
+  installed app.
+- **`appium:wdaLocalPort`** — the host port Appium forwards to WDA. `wdio.ios.conf.ts` assigns
+  `8100 + index` per simulator so parallel sessions never collide; a second hand-started session
+  against another device needs a different port.
+- **`appium:noReset`** — `false` means **install the app and wipe its data** at session start: the
+  same clean-DB-per-spec isolation contract the suite relies on. Anything you create by hand does
+  not survive the next session. Set it to `true` when inspecting if you want your data to persist.
+- **`appium:newCommandTimeout`** — seconds of idleness before the server kills the session. 240 is
+  fine for short Inspector looks; raise it if you work slowly, or the session dies mid-inspection.
+
+> **This machine needs `DEVELOPER_DIR`.** `xcode-select -p` points at Command Line Tools, which
+> ship no iOS SDK, so `xcrun simctl` — and session creation — fails. `src/helpers/ios-app.ts`
+> exports the right value for WDIO runs only; a server you start yourself must do it too:
+> `export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
+
+#### 2. Android Emulator capabilities (`wdio.conf.ts`)
+
+```json
+{
+  "platformName": "Android",
+  "appium:automationName": "UiAutomator2",
+  "appium:deviceName": "emulator-5554",
+  "appium:udid": "emulator-5554",
+  "appium:app": "/Users/yourusername/Documents/github/saku-appium/resources/SimpleMoneyTrackerKT-v2.2.apk",
+  "appium:appPackage": "id.almezi.simplemoneytracker_kt",
+  "appium:appActivity": ".MainActivity",
+  "appium:systemPort": 8200,
+  "appium:noReset": false,
+  "appium:disableWindowAnimation": true,
+  "appium:newCommandTimeout": 240
+}
+```
+
+- **`platformName`** — the OS, `Android` here.
+- **`appium:automationName`** — Google's **UiAutomator2** engine, the only supported choice for
+  modern Android.
+- **`appium:deviceName`** — either `Android Emulator` or the concrete serial. The suite uses the
+  serial (`emulator-5554`, from `adb devices -l`); this machine's AVD is `Pixel_10`, started with
+  `emulator -avd Pixel_10`.
+- **`appium:udid`** — the device serial. Required as soon as more than one device or emulator is
+  attached, otherwise the driver cannot pick one.
+- **`appium:app`** — absolute path to the `.apk`. The tracked build is
+  `resources/SimpleMoneyTrackerKT-v2.2.apk` (`SAKU_APK` overrides). **Appium never downgrades an
+  installed package**, so if the emulator already carries a newer app this path is ignored and the
+  newer build is exercised — the `code_review.md` verification-gate trap, worth checking with
+  `adb shell dumpsys package id.almezi.simplemoneytracker_kt | grep versionName`.
+- **`appium:appPackage`** / **`appium:appActivity`** — `id.almezi.simplemoneytracker_kt` and
+  `.MainActivity`. Together they let the driver launch and detect the app without going through
+  the launcher, and make a session recover an already-running app.
+- **`appium:systemPort`** — the host port forwarded to the UiAutomator2 server on the device.
+  `wdio.conf.ts` assigns `8200 + index` per device, so parallel sessions never collide.
+- **`appium:noReset`** — `false`, as on iOS: fresh app data per session. `true` keeps data and
+  skips the reinstall, which is usually what you want while inspecting by hand.
+- **`appium:disableWindowAnimation`** — `true`. Real devices with system animations on have frozen
+  the instrumentation during element-visibility checks; this suppresses window animations for the
+  session. Harmless on an emulator with animation scales already zeroed.
+- **`appium:newCommandTimeout`** — idleness before the server drops the session, same as iOS.
+
+Two capabilities the suite sets only because it runs long, and that you can skip in Inspector:
+`appium:uiautomator2ServerLaunchTimeout` / `…ServerInstallTimeout` (`120_000`) and
+`appium:adbExecTimeout` (`60_000`). **`appium:autoGrantPermissions` is not used by this repo** —
+the app's own permission surfaces are exercised deliberately (the SAF picker in `TC-BACKUP-04`
+is filed as `BUG_Found_02`), so auto-granting would hide the behavior under test. Add it to a
+hand-started session only if a permission dialog is in your way.
+
+#### Starting a server the suite can also see
+
+```bash
+# Android: base path /wd/hub  (= npm run appium:server1, port 4723)
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+npx appium server --base-path=/wd/hub --port 4723
+
+# iOS: default base path /
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+npx appium server --port 4723
+```
+
+In Appium Inspector, match the base path — **Remote Path `/wd/hub`** for the Android server above,
+**`/`** for the iOS one (Inspector defaults to `/`). To make the runner use your server instead of
+spawning its own on `4725`, export `SAKU_APPIUM_PORTS="4723"` — one server per device, device *N* →
+server *N*.
+
+> **Never attach while a run is live.** The emulator exposes **one** UiAutomator2 instrumentation
+> slot, so a second session — even a read-only Inspector or MCP one — tears down the
+> instrumentation the suite owns, and both sides then report HTTP 500 "instrumentation process is
+> not running", which looks exactly like a broken locator. The same collision applies on iOS, where
+> a WDIO run kills an externally launched WDA. Check with `pgrep -fl "wdio run|am instrument"`
+> before attaching.
+
+### Twin parity gate
+
+The suite keeps every screen twice — `X.page.ts` / `X.ios.page.ts`, `name.spec.ts` /
+`name.ios.spec.ts` — and that pairing drifts silently when only one side is edited.
+`npm run check:parity` needs no device and fails on:
+
+| Check | Catches |
+|---|---|
+| Public method surface of each page-object twin | a screen API added on one platform only (**M1/M2**) |
+| One `TC-<AREA>-<NN>` id → one case, per platform | a defect report that cannot name the failed case (**M4**) |
+| Spec twins share a common id set, and never an *empty* one | `TC-BUD` vs `TC-BUDGET` (**M3**) |
+| Every `X.spec.ts` has a `.ios.spec.ts` | a flow that exists on Android only |
+
+Explained drift is recorded in [`scripts/parity-baseline.json`](scripts/parity-baseline.json)
+with a `reason` and a **ratchet**: a new gap fails, and a gap closed while still listed also
+fails. After a deliberate twin change, re-baseline with
+`npm run check:parity -- --update` and justify the new entries. `AGENTS.md` → *The parity gate*
+covers the parser's limitations.
+
+### Timing constants
+
+No call site writes a number for time. Two config modules hold them, split by what the number
+*does* (`code_review.md` findings **M5**/**M6**):
+
+| Module | Holds | Examples |
+|---|---|---|
+| [`src/config/timeouts.ts`](src/config/timeouts.ts) | wait **deadlines** — the ceiling on a `waitFor…` / `toBe…({ wait })` | `SCREEN_READY` 15 s, `SCREEN_READY_IOS` 30 s, `ELEMENT_PRESENT` 10 s, `COMPOSITION_WAIT`, `SYSTEM_SHEET`, `DEFAULT_TIMEOUT` (= the runner configs' `waitforTimeout`) |
+| [`src/config/settles.ts`](src/config/settles.ts) | **sleeps** — `driver.pause()`, which costs the full duration every run | `STALE_RETRY`, `SWIPE_ANIM`, `MONTH_LABEL_RECOMPOSE`, `UNDO_TOAST_EXPIRY`, `ORIENTATION_SETTLE` |
+
+`npm run test:unit` enforces it (`src/config/__tests__/timing-literals.test.ts`, TypeScript AST):
+an inline numeric `timeout:`/`wait:`/`interval:`, a numeric `timeout =` default parameter or a
+numeric `pause(N)` under `src/` fails the build, and so does a constant nothing waits on. Pick a
+name by **intent**, never because the number matches; a `_QUICK`/`_SLOW` twin is a recorded
+inconsistency for **S9** to re-tune, not a menu. `AGENTS.md` → *Wait budgets and settle pauses*
+is the full contract.
 
 ### Test types
 
@@ -74,7 +243,7 @@ it('TC-NAV-01 app launches on the Tambah screen @sanity', async () => { … })
 | `@integration` | Cases that span screens or flows at once (a delete must move the list, the summary AND the breakdown) | `src/tests/transaksi/delete-undo.spec.ts` |
 
 All the cases in a file share one type, so a file is never half-in and half-out of a
-filtered run. Today that is 262 cases: 16 `@sanity`, 237 `@regression`, 9 `@integration`.
+filtered run. Today that is 263 cases: 16 `@sanity`, 238 `@regression`, 9 `@integration`.
 
 Run one type on either platform — the scripts set `TEST_GREP`, which both runner configs
 pass to mocha's `grep`:
@@ -89,8 +258,8 @@ npm run test:regression:ios  # iOS, @regression
 npm run test:integration:ios # iOS, @integration
 ```
 
-`@integration` is Android-only so far — `delete-undo` has no iOS twin yet, so its iOS
-variant selects nothing.
+Both platforms now carry all three types: `@integration` is the `delete-undo` twin pair
+(9 cases each), ported to iOS on 2026-10-29 (**S17**).
 
 **A new test case must carry a type tag.** An untagged case is not a loud failure: mocha's
 `grep` matches the tag in the test's full title, so the case is silently excluded from
@@ -122,11 +291,13 @@ SAKU_APPIUM_PORTS="4723,4725" SAKU_DEVICES="emulator-5554,140892554V003873" npm 
 
 ```
 wdio.conf.ts          runner config (Android caps, Appium service, Mocha)
-wdio.ios.conf.ts      runner config (iOS/XCUITest caps, simulator) — NOT typechecked
+wdio.ios.conf.ts      runner config (iOS/XCUITest caps, simulator) — typechecked like the rest
 src/config/tags.ts    test-tag contract, mirrors TestTags.kt (single source: the app repo)
 src/config/categories.ts      stable category/account IDs (TESTABILITY.md § CATEGORIES)
 src/config/category-labels.ts the one text-based exception; states its removal condition
-src/helpers/          tag locators, rupiah formatting/parsing, transaction factory
+src/config/timeouts.ts        every wait deadline, named by intent
+src/config/settles.ts         every settle pause, named by intent
+src/helpers/          tag locators, rupiah formatting/parsing, transaction factory, a11y parsers
 src/pageobjects/      Tambah, Daftar, Ringkasan, Ubah, Anggaran, Kategori, Cadangan pages
 src/tests/navigasi/    TC-NAV navigation smoke (bottom bar, back, rapid switching)
 src/tests/tambah/      Tambah form flows: TC-INC, TC-EXP
@@ -134,7 +305,7 @@ src/tests/transaksi/   Transaksi list flows: TC-LIST, TC-EDIT, TC-DEL/TC-UNDO, T
 src/tests/ringkasan/   Ringkasan flows: TC-SUM
 src/tests/anggaran/    Anggaran/budget flows: TC-BUDGET
 src/tests/kategori/    Kelola kategori flows: TC-KAT
-src/tests/app/         TC-PERS, TC-ROT, TC-A11Y, TC-PERF + a11y-parse helpers
+src/tests/app/         TC-PERS, TC-ROT, TC-A11Y, TC-PERF
 ```
 
 **The Android/iOS twin convention** — each screen that exists on both platforms has a
@@ -146,21 +317,30 @@ src/tests/tambah/add-income.spec.ts ←→  src/tests/tambah/add-income.ios.spec
 ```
 
 The two halves are **independent implementations**, not generated from a shared base.
-They are expected to expose the same public method surface, but today they have drifted
-(see `code_review.md` § Maintainability, findings M1–M4). When you add a screen
-method, add it to **both** twins.
+They are expected to expose the same public method surface, and `npm run check:parity` fails
+the run when they drift (residual, explained drift is itemised in
+`scripts/parity-baseline.json` — the worst remaining is `kategori`, finding **M13**). When you
+add a screen method, add it to **both** twins.
 
-Current scale: **30 spec files** (16 Android + 14 iOS), **254 test cases**
-(137 Android + 117 iOS) plus 8 `it.skip` cases — **262 cases in all**, every one of them
-type-tagged — **16 page objects** (8 screens × 2 platforms), **148 unique
-test-case IDs** across 19 prefixes, **6 helper modules** (+ 3 unit-test files under
-`src/helpers/__tests__/` and `src/config/__tests__/`), and **4 config modules**.
+Current scale (measured 2026-10-29): **32 spec files** (16 Android + 16 iOS — every Android spec
+now has a twin), **285 test cases** (141 Android + 144 iOS), 8 of them `it.skip`, every one
+type-tagged — **16 page objects** (7 screen twins + the Android/iOS base classes), **144 unique
+test-case IDs** across 18 prefixes, **9 helper modules**, and **6 config modules** (`tags`,
+`categories`, `category-labels`, `test-types`, `timeouts`, `settles`). Four unit-test files under
+`src/helpers/__tests__/` and `src/config/__tests__/` guard the tree itself.
 
 ### Notes
 
 - Test data setup goes through the real UI (`createTransaction` helper). The `test_seed` / `test_now` intent extras in TESTABILITY.md are not implemented in the app yet; seed-based specs (TC-SEED) wait on that.
-- Execution status per sub-phase lives in `progress.md`. Known issues are filed as `BUG_FOUND.md` … `BUG_Found_14.md`; see `code_review.md` for the current state of each.
-- **Two Android specs have no iOS twin**: `transaksi/delete-undo.spec.ts` (destructive flow) and `transaksi/backup.spec.ts` has one but with different case coverage (`TC-BUDGET` vs `TC-BUD` prefix divergence — see M3).
+- Execution status per sub-phase lives in `progress.md`. Known issues are filed as `bugs/BUG_Found_01.md` … `bugs/BUG_Found_18.md` (index: `bugs/BUGS.md`); see `code_review.md` for the current state of each.
+- **Arrange blocks are `TC-SETUP-NN`, not bare titles.** A `before`-style seed that is written as an `it()` (so it shares the spec's isolation rules) carries a `TC-SETUP-` id — `TC-SETUP-01` in both `transaction-list` twins, `TC-SETUP-02` in both `summary` twins. It is not a catalogue case: the prefix exists so a report never shows an untitled test.
+
+## CI
+
+Every push and pull request runs the device-free gates on GitHub Actions: `npm run verify` —
+typecheck, lint, unit tests and the twin-parity check chained by one script — plus
+`npm run format:check`, on the Node version pinned in `.nvmrc` (24). Device/emulator runs
+remain manual by design; the workflow lives in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Generated test cases
 
@@ -169,7 +349,9 @@ test-case IDs** across 19 prefixes, **6 helper modules** (+ 3 unit-test files un
 - Covers all screens: Tambah (Add), Transaksi (List), Ringkasan (Summary), Kelola Kategori, and Anggaran (Budget)
 - Includes navigation, form validation, data persistence, accessibility, performance, and edge cases
 - Locators verified via live page source (xpath fallback used where id strategy failed)
-- **148 of these ids are implemented** in `src/tests/` (254 cases, 30 spec files, both platforms)
+- **141 of these ids are implemented** in `src/tests/` (285 cases across 32 spec files, both
+  platforms; measured 2026-10-29 as the intersection of `TC-` ids in the specs and in this
+  catalogue — the 3 spec-only ids are `TC-SETUP-01`/`-02` and the `TC-LIST-08a` chunk suffix)
 
 ## Legacy: Appium MCP exploration (historical)
 
@@ -305,7 +487,7 @@ Now you can use the Appium MCP tools to drive the simulator:
 | `code_review.md` | Senior QA review — structure, conventions, maintainability | Before refactoring; see **S1**–**S22**, **M1**–**M14** |
 | `pr_review.md` | Review of PR #3 (historical) | Looking back at that PR |
 | `IOS_PHASE1_HANDOFF.md` | iOS Phase 1 port handoff notes | Continuing the iOS port |
-| `BUGS.md` | Index of all 14 filed defects (newest last) | A test fails and you need precedent |
-| `BUG_FOUND.md` … `BUG_Found_14.md` | The 14 bug reports themselves | Full reproduction steps for one defect |
+| `bugs/BUGS.md` | Index of all 14 filed defects (newest last) | A test fails and you need precedent |
+| `bugs/BUG_Found_01.md` … `bugs/BUG_Found_18.md` | The 18 bug reports themselves | Full reproduction steps for one defect |
 | `docs/` | Product/design/development docs (see `docs/README.md`) | Understanding the app itself |
 | `improve/` | Design package — design system and screen specs | Doing UI work |

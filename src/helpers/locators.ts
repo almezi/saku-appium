@@ -14,8 +14,8 @@
  *  - tree depth is not fixed (CMP inserts wrapper levels), so never chain
  *    positional child selectors off a tag.
  */
-import { $, $$ } from '@wdio/globals'
-import type { ChainablePromiseElement, ChainablePromiseArray } from '../types'
+import { $, $$ } from "@wdio/globals";
+import type { ChainablePromiseElement, ChainablePromiseArray } from "../types";
 
 /**
  * Exact tag match, e.g. byTag(tags.tambah.buttonSave). Chain the result
@@ -24,11 +24,11 @@ import type { ChainablePromiseElement, ChainablePromiseArray } from '../types'
  * resolved value.
  */
 export const byTag = (tag: string): ChainablePromiseElement =>
-  $(`android=new UiSelector().resourceId("${tag}")`)
+  $(`android=new UiSelector().resourceId("${tag}")`);
 
 /** All elements whose tag matches an exact string. */
 export const allByTag = (tag: string): ChainablePromiseArray =>
-  $$(`android=new UiSelector().resourceId("${tag}")`)
+  $$(`android=new UiSelector().resourceId("${tag}")`);
 
 /**
  * Exact tag match on iOS — the accessibility-id twin of byTag. Re-resolves
@@ -37,16 +37,23 @@ export const allByTag = (tag: string): ChainablePromiseArray =>
  * handles die with it (verified live: "No matches found for Identity
  * Binding" when reusing a handle across a screen switch).
  */
-export const iosByTag = (tag: string): ChainablePromiseElement =>
-  $(`~${tag}`)
+export const iosByTag = (tag: string): ChainablePromiseElement => $(`~${tag}`);
 
 /** All elements whose tag matches an exact string on iOS. */
-export const iosAllByTag = (tag: string): ChainablePromiseArray =>
-  $$(`~${tag}`)
+export const iosAllByTag = (tag: string): ChainablePromiseArray => $$(`~${tag}`);
 
 /** All elements whose tag matches a Java regex. */
 export const allByTagMatches = (pattern: string): ChainablePromiseArray =>
-  $$(`android=new UiSelector().resourceIdMatches("${pattern}")`)
+  $$(`android=new UiSelector().resourceIdMatches("${pattern}")`);
+
+/**
+ * All iOS elements whose accessibility identifier matches a regex — the
+ * `allByTagMatches` twin. NSPredicate `MATCHES` is ICU regex, so anchor the
+ * pattern (`[0-9]+$`) when a suffix-bearing node like `daftar_item_1_delete_…`
+ * must not match alongside the card root.
+ */
+export const iosAllByTagMatches = (pattern: string): ChainablePromiseArray =>
+  $$(`-ios predicate string: name MATCHES "${pattern}"`);
 
 /**
  * Scroll the first scrollable container until an element with the given tag
@@ -58,11 +65,11 @@ export const scrollToTagMatches = (pattern: string): ChainablePromiseElement =>
   $(
     `android=new UiScrollable(new UiSelector().scrollable(true))` +
       `.scrollIntoView(new UiSelector().resourceIdMatches("${pattern}"))`,
-  )
+  );
 
 /** Same as scrollToTagMatches but for an exact tag. */
 export const scrollToTag = (tag: string): ChainablePromiseElement =>
   $(
     `android=new UiScrollable(new UiSelector().scrollable(true))` +
       `.scrollIntoView(new UiSelector().resourceId("${tag}"))`,
-  )
+  );

@@ -68,7 +68,21 @@ P3 (nice-to-have; the Android run already covers the memory behaviour)
 - **App build:** Saku.app Debug (bundle `id.almezi.saku`)
 - **Android API level:** n/a
 
+## Fix Ownership
+**AUTOMATION CODE.** No app defect — the measurement path simply does not exist inside the iOS
+simulator. The follow-up is harness-side: an out-of-band script sampling the simulator's Saku.app
+RSS from the host `ps` around the 50-cycle loop (the shape named under Expected Result), as a
+backup for the incomplete Android run — `scripts/perf_memcycles.sh` last reached ~30/50 cycles
+before emulator crashes (decision 2026-10-31, see progress.md 3.F).
+
 ## Additional Notes
 The iOS spec documents the missing measurement path in its header, and the progress.md entry for
 3.F lists TC-PERF-05 as skipped. The Android counterpart of this skip is recorded in
 `BUG_Found_07.md` / the progress.md note for 3.F (50 UI-driven cycles vs the 180 s mocha timeout).
+
+**Decision 2026-10-31:** the wdio skip on both platforms stands, and this report's priority
+reasoning ("the Android run already covers the memory behaviour") is corrected — the Android
+out-of-band run (`scripts/perf_memcycles.sh`) reached only ~30/50 cycles before three emulator
+crashes, so no completed 50-cycle measurement exists on any platform. The host-`ps` RSS-sampling
+script named under Expected Result remains the wanted follow-up (P3 stands), as a backup for the
+incomplete Android run rather than a redundant twin.

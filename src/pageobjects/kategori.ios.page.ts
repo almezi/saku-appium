@@ -1,33 +1,42 @@
-import { $$ } from '@wdio/globals'
-import { iosByTag } from '../helpers/locators'
+/**
+ * iOS twin of kategori.page.ts — the Kelola kategori screen. Locators are
+ * accessibility ids from the TESTABILITY.md tag contract
+ * (src/config/tags.ts); row texts are read by geometry, since Compose hoists
+ * them out of the tagged container (same class of read as
+ * anggaran.ios.page.ts). Live-verified iOS constraints: see the class block.
+ */
+import { $$ } from "@wdio/globals";
+import { iosByTag } from "../helpers/locators";
+import { iosNodeContains, type IosRect } from "../helpers/elements";
 import {
   iosDismissKeyboard,
   iosFieldEditor,
   iosFieldText,
   iosKeyboardShown,
   iosTypeIntoTaggedField,
-} from '../helpers/input'
-import { tags } from '../config/tags'
-import { kategoriTags } from './kategori.page'
-import { BaseIosPage } from './base.ios.page'
-import type { ChainablePromiseElement } from '../types'
-
-type Rect = { x: number; y: number; width: number; height: number }
-
-function containsCenter(outer: Rect, inner: Rect): boolean {
-  const cx = inner.x + inner.width / 2
-  const cy = inner.y + inner.height / 2
-  return (
-    cx >= outer.x &&
-    cx <= outer.x + outer.width &&
-    cy >= outer.y &&
-    cy <= outer.y + outer.height
-  )
-}
+} from "../helpers/input";
+import { tags } from "../config/tags";
+import { BaseIosPage } from "./base.ios.page";
+import type { ChainablePromiseElement } from "../types";
+import {
+  KEY_RETURN_SETTLE,
+  POLL_CADENCE,
+  SHEET_CLOSE_SETTLE_QUICK,
+  STALE_RETRY,
+  STALE_RETRY_QUICK,
+  SWIPE_ANIM,
+} from "../config/settles";
+import {
+  COMPOSITION_WAIT,
+  POLL_INTERVAL,
+  SCREEN_READY,
+  STATE_SYNC,
+  SURFACE_DISMISS,
+} from "../config/timeouts";
 
 /** Eye-icon labels, verified live on iOS 27.0 (state is readable in both states). */
-const EYE_HIDDEN = /Tampilkan/i
-const EYE_VISIBLE = /Sembunyikan/i
+const EYE_HIDDEN = /Tampilkan/i;
+const EYE_VISIBLE = /Sembunyikan/i;
 
 /**
  * Flat list viewport, measured live: title/back to y=130, type toggle 150-198,
@@ -35,12 +44,12 @@ const EYE_VISIBLE = /Sembunyikan/i
  * (402×874 screen). Rows only exist as children of that node, and a row is
  * tappable only once its eye toggle sits inside the band.
  */
-const LIST_TOP = 272
-const LIST_BOTTOM_PAD = 60
+const LIST_TOP = 272;
+const LIST_BOTTOM_PAD = 60;
 
 /** Every category row composes exactly one eye toggle, top-to-bottom in tree order. */
 const ROW_TOGGLES =
-  '-ios predicate string: type == "XCUIElementTypeButton" AND name BEGINSWITH "kategori_row_hide_"'
+  '-ios predicate string: type == "XCUIElementTypeButton" AND name BEGINSWITH "kategori_row_hide_"';
 
 /**
  * Kelola kategori on iOS — accessibility-id twin of KategoriPage, driven by
@@ -74,58 +83,60 @@ const ROW_TOGGLES =
  */
 export class KategoriIosPage extends BaseIosPage {
   constructor() {
-    super(kategoriTags.screen)
+    super(tags.kategori.screen);
   }
 
   get addButton(): ChainablePromiseElement {
-    return iosByTag(kategoriTags.addButton)
+    return iosByTag(tags.kategori.addButton);
   }
 
   get addFormScreen(): ChainablePromiseElement {
-    return iosByTag(kategoriTags.formScreen)
+    return iosByTag(tags.kategori.formScreen);
   }
 
   get formName(): ChainablePromiseElement {
-    return iosByTag(kategoriTags.formName)
+    return iosByTag(tags.kategori.formName);
   }
 
   get formSave(): ChainablePromiseElement {
-    return iosByTag(kategoriTags.formSave)
+    return iosByTag(tags.kategori.formSave);
   }
 
   get formCancel(): ChainablePromiseElement {
-    return iosByTag(kategoriTags.formCancel)
+    return iosByTag(tags.kategori.formCancel);
   }
 
   row(categoryId: string): ChainablePromiseElement {
-    return iosByTag(kategoriTags.row(categoryId))
+    return iosByTag(tags.kategori.row(categoryId));
   }
 
   /** Eye toggle — the row's always-composed anchor node. */
   rowHide(categoryId: string): ChainablePromiseElement {
-    return iosByTag(kategoriTags.rowHide(categoryId))
+    return iosByTag(tags.kategori.rowHide(categoryId));
   }
 
   rowEdit(categoryId: string): ChainablePromiseElement {
-    return iosByTag(kategoriTags.rowEdit(categoryId))
+    return iosByTag(tags.kategori.rowEdit(categoryId));
   }
 
   mark(categoryId: string): ChainablePromiseElement {
-    return iosByTag(`mark_${categoryId}`)
+    return iosByTag(`mark_${categoryId}`);
   }
 
   async openFromRingkasan(): Promise<void> {
-    await iosByTag(tags.ringkasan.kelolaButton).click()
-    await this.waitForScreen()
+    await iosByTag(tags.ringkasan.kelolaButton).click();
+    await this.waitForScreen();
   }
 
   async openFromTambah(): Promise<void> {
-    await iosByTag(tags.tambah.linkKelolaKategori).click()
-    await this.waitForScreen()
+    await iosByTag(tags.tambah.linkKelolaKategori).click();
+    await this.waitForScreen();
   }
 
-  async selectType(type: 'pemasukan' | 'pengeluaran'): Promise<void> {
-    await iosByTag(type === 'pemasukan' ? kategoriTags.toggleIncome : kategoriTags.toggleExpense).click()
+  async selectType(type: "pemasukan" | "pengeluaran"): Promise<void> {
+    await iosByTag(
+      type === "pemasukan" ? tags.kategori.toggleIncome : tags.kategori.toggleExpense,
+    ).click();
   }
 
   /**
@@ -134,24 +145,24 @@ export class KategoriIosPage extends BaseIosPage {
    * string, so the filter is removed by clearing the editor node directly.
    */
   async search(query: string): Promise<void> {
-    const field = iosByTag(tags.component.fieldSearch)
+    const field = iosByTag(tags.component.fieldSearch);
     if (query.length > 0) {
-      await iosTypeIntoTaggedField(field, query, tags.component.fieldSearch)
-      return
+      await iosTypeIntoTaggedField(field, query, tags.component.fieldSearch);
+      return;
     }
     for (let attempt = 0; attempt < 3; attempt++) {
-      const current = await iosFieldText(field).catch(() => '')
-      if (current.length === 0) return
-      await field.click()
-      const editor = await iosFieldEditor(field)
-      await editor?.clearValue().catch(() => undefined)
-      const afterClear = await iosFieldText(field).catch(() => '')
+      const current = await iosFieldText(field).catch(() => "");
+      if (current.length === 0) return;
+      await field.click();
+      const editor = await iosFieldEditor(field);
+      await editor?.clearValue().catch(() => undefined);
+      const afterClear = await iosFieldText(field).catch(() => "");
       if (afterClear.length > 0) {
-        await (editor ?? field).addValue('\uE003'.repeat(afterClear.length + 2))
+        await (editor ?? field).addValue("\uE003".repeat(afterClear.length + 2));
       }
-      await iosDismissKeyboard()
+      await iosDismissKeyboard();
     }
-    throw new Error('kategori search field never cleared')
+    throw new Error("kategori search field never cleared");
   }
 
   /**
@@ -161,14 +172,14 @@ export class KategoriIosPage extends BaseIosPage {
    * composes beyond the band are skipped, so the count matches what a user sees.
    */
   async categoryRowCount(): Promise<number> {
-    const toggles = await $$(ROW_TOGGLES)
-    const { height } = await driver.getWindowSize()
-    let count = 0
+    const toggles = await $$(ROW_TOGGLES);
+    const { height } = await driver.getWindowSize();
+    let count = 0;
     for (const toggle of toggles) {
-      const rect = await this.rectOf(toggle).catch(() => null)
-      if (rect && rect.y >= LIST_TOP && rect.y + rect.height <= height - LIST_BOTTOM_PAD) count++
+      const rect = await this.rectOf(toggle).catch(() => null);
+      if (rect && rect.y >= LIST_TOP && rect.y + rect.height <= height - LIST_BOTTOM_PAD) count++;
     }
-    return count
+    return count;
   }
 
   /**
@@ -183,19 +194,19 @@ export class KategoriIosPage extends BaseIosPage {
    * from "the other end of the list" for a row that is not composed at all.
    */
   async scrollToRow(categoryId: string): Promise<void> {
-    let direction: 'up' | 'down' = 'up'
-    let lastTop = await this.topRowY()
+    let direction: "up" | "down" = "up";
+    let lastTop = await this.topRowY();
     for (let step = 0; step < 30; step++) {
-      const state = await this.rowState(categoryId)
-      if (state === 'inView') return
-      if (state === 'above') direction = 'down'
-      else if (state === 'below') direction = 'up'
-      await this.swipeContent(direction)
-      const top = await this.topRowY()
-      if (top === lastTop) direction = direction === 'up' ? 'down' : 'up'
-      lastTop = top
+      const state = await this.rowState(categoryId);
+      if (state === "inView") return;
+      if (state === "above") direction = "down";
+      else if (state === "below") direction = "up";
+      await this.swipeContent(direction);
+      const top = await this.topRowY();
+      if (top === lastTop) direction = direction === "up" ? "down" : "up";
+      lastTop = top;
     }
-    throw new Error(`kategori row ${categoryId} never settled inside the list viewport`)
+    throw new Error(`kategori row ${categoryId} never settled inside the list viewport`);
   }
 
   /**
@@ -207,33 +218,33 @@ export class KategoriIosPage extends BaseIosPage {
   async rowText(categoryId: string): Promise<string> {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await this.scrollToRow(categoryId)
-        const row = this.row(categoryId)
+        await this.scrollToRow(categoryId);
+        const row = this.row(categoryId);
         if (!(await row.isExisting().catch(() => false))) {
           // Container pruned at the list edge — nudge content down and retry.
-          await this.swipeContent('down')
-          continue
+          await this.swipeContent("down");
+          continue;
         }
-        const texts = await this.textsInside(await this.rectOf(row))
-        if (texts.length > 0) return texts.join(' ')
+        const texts = await this.textsInside(await this.rectOf(row));
+        if (texts.length > 0) return texts.join(" ");
       } catch {
         // Stale handle mid-recompose — settle and re-query.
       }
-      await driver.pause(300)
+      await driver.pause(STALE_RETRY_QUICK);
     }
-    throw new Error(`kategori row "${categoryId}" rendered no text on iOS`)
+    throw new Error(`kategori row "${categoryId}" rendered no text on iOS`);
   }
 
   /** True while the category is hidden (eye shows "Tampilkan kategori"). */
   async isHidden(categoryId: string): Promise<boolean> {
-    const toggle = this.rowHide(categoryId)
+    const toggle = this.rowHide(categoryId);
     for (let attempt = 0; attempt < 10; attempt++) {
-      const label = ((await toggle.getAttribute('label').catch(() => '')) || '').trim()
-      if (EYE_HIDDEN.test(label)) return true
-      if (EYE_VISIBLE.test(label)) return false
-      await driver.pause(200)
+      const label = ((await toggle.getAttribute("label").catch(() => "")) || "").trim();
+      if (EYE_HIDDEN.test(label)) return true;
+      if (EYE_VISIBLE.test(label)) return false;
+      await driver.pause(POLL_CADENCE);
     }
-    throw new Error(`eye state unreadable for kategori row "${categoryId}"`)
+    throw new Error(`eye state unreadable for kategori row "${categoryId}"`);
   }
 
   /**
@@ -244,52 +255,63 @@ export class KategoriIosPage extends BaseIosPage {
    * the write.
    */
   async setHidden(categoryId: string, hidden: boolean): Promise<void> {
-    await this.scrollToRow(categoryId)
+    await this.scrollToRow(categoryId);
     for (let attempt = 0; attempt < 3; attempt++) {
       if ((await this.isHidden(categoryId)) !== hidden) {
-        await this.rowHide(categoryId).click()
+        await this.rowHide(categoryId).click();
       }
       try {
         await driver.waitUntil(async () => (await this.isHidden(categoryId)) === hidden, {
-          timeout: 6_000,
-          interval: 300,
-        })
-        return
+          timeout: STATE_SYNC,
+          interval: POLL_INTERVAL,
+        });
+        return;
       } catch {
-        await this.scrollToRow(categoryId)
+        await this.scrollToRow(categoryId);
       }
     }
-    throw new Error(`kategori row "${categoryId}" never reached hidden=${hidden}`)
+    throw new Error(`kategori row "${categoryId}" never reached hidden=${hidden}`);
   }
 
   /** Opens the "Tambah kategori" form (the row pencil/trash need a custom row). */
   async openAddForm(): Promise<void> {
     // The button is the LazyColumn's last item — below the default rows — so
     // walk the list to the end before tapping it.
-    let lastTop = await this.topRowY()
+    let lastTop = await this.topRowY();
     for (let step = 0; step < 20; step++) {
-      if (await this.addButtonInView()) break
-      await this.swipeContent('up')
-      const top = await this.topRowY()
-      if (top === lastTop) throw new Error('kategori add button never entered the list viewport')
-      lastTop = top
+      if (await this.addButtonInView()) break;
+      await this.swipeContent("up");
+      const top = await this.topRowY();
+      if (top === lastTop) throw new Error("kategori add button never entered the list viewport");
+      lastTop = top;
     }
-    await this.addButton.click()
-    await this.addFormScreen.waitForDisplayed({ timeout: 15_000 })
+    await this.addButton.click();
+    await this.addFormScreen.waitForDisplayed({ timeout: SCREEN_READY });
   }
 
   /**
    * Creates a custom category through the Tambah kategori form and waits for
-   * the list again. Returns the id derived from the new row, since the app
-   * generates it at runtime (`cus_pem_<epochMs>`).
+   * the list again. `type` selects the form's segmented toggle (Pemasukan is
+   * the form's default) and re-selects the matching list tab, since the list
+   * keeps its previous tab after the form closes and the new row only renders
+   * in its own type's list. Returns the id derived from the new row, since
+   * the app generates it at runtime (`cus_pem_<epochMs>` income /
+   * `cus_pen_<epochMs>` expense).
    */
-  async createCategory(name: string): Promise<string> {
-    await this.openAddForm()
-    await iosTypeIntoTaggedField(this.formName, name, kategoriTags.formName)
-    await this.formSave.click()
-    await this.addFormScreen.waitForExist({ timeout: 15_000, reverse: true })
-    await this.waitForScreen()
-    return this.findCustomCategoryId()
+  async createCategory(
+    name: string,
+    type: "pemasukan" | "pengeluaran" = "pemasukan",
+  ): Promise<string> {
+    await this.openAddForm();
+    if (type === "pengeluaran") {
+      await iosByTag(tags.kategori.toggleExpense).click();
+    }
+    await iosTypeIntoTaggedField(this.formName, name, tags.kategori.formName);
+    await this.formSave.click();
+    await this.addFormScreen.waitForExist({ timeout: SCREEN_READY, reverse: true });
+    await this.waitForScreen();
+    await this.selectType(type);
+    return this.findCustomCategoryId();
   }
 
   /**
@@ -302,25 +324,25 @@ export class KategoriIosPage extends BaseIosPage {
       const toggles = await $$(
         '-ios predicate string: type == "XCUIElementTypeButton" AND ' +
           'name BEGINSWITH "kategori_row_hide_cus_"',
-      )
+      );
       if (toggles[0]) {
-        const name = String(await toggles[0].getAttribute('name'))
-        return name.replace('kategori_row_hide_', '')
+        const name = String(await toggles[0].getAttribute("name"));
+        return name.replace("kategori_row_hide_", "");
       }
-      await this.swipeContent('up')
+      await this.swipeContent("up");
     }
-    throw new Error('custom kategori row never appeared in the list')
+    throw new Error("custom kategori row never appeared in the list");
   }
 
   async openEditDialog(categoryId: string): Promise<void> {
-    await this.scrollToRow(categoryId)
-    await this.rowEdit(categoryId).click()
-    await this.formName.waitForDisplayed({ timeout: 15_000 })
+    await this.scrollToRow(categoryId);
+    await this.rowEdit(categoryId).click();
+    await this.formName.waitForDisplayed({ timeout: COMPOSITION_WAIT });
   }
 
   /** Rendered value of the open rename dialog's field (prefilled on iOS). */
   async renameFieldText(): Promise<string> {
-    return iosFieldText(this.formName)
+    return iosFieldText(this.formName);
   }
 
   /**
@@ -333,54 +355,54 @@ export class KategoriIosPage extends BaseIosPage {
    * sibling, not its child).
    */
   async typeRename(name: string): Promise<void> {
-    let landed = ''
-    let lastError: unknown = null
+    let landed = "";
+    let lastError: unknown = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await this.formName.waitForExist({ timeout: 15_000 })
-        await this.formName.click()
-        const current = await iosFieldText(this.formName).catch(() => '')
+        await this.formName.waitForExist({ timeout: COMPOSITION_WAIT });
+        await this.formName.click();
+        const current = await iosFieldText(this.formName).catch(() => "");
         if (current.length > 0) {
-          const editor = await iosFieldEditor(this.formName)
-          await editor?.clearValue().catch(() => undefined)
-          const afterClear = await iosFieldText(this.formName).catch(() => '')
+          const editor = await iosFieldEditor(this.formName);
+          await editor?.clearValue().catch(() => undefined);
+          const afterClear = await iosFieldText(this.formName).catch(() => "");
           if (afterClear.length > 0) {
-            await (editor ?? this.formName).addValue('\uE003'.repeat(afterClear.length + 2))
+            await (editor ?? this.formName).addValue("\uE003".repeat(afterClear.length + 2));
           }
         }
         if (name.length > 0) {
-          const editor = (await iosFieldEditor(this.formName)) ?? this.formName
-          await editor.addValue(name)
+          const editor = (await iosFieldEditor(this.formName)) ?? this.formName;
+          await editor.addValue(name);
         }
-        await this.closeDialogKeyboard()
-        landed = await iosFieldText(this.formName).catch(() => '')
-        if (landed === name) return
-        lastError = null
+        await this.closeDialogKeyboard();
+        landed = await iosFieldText(this.formName).catch(() => "");
+        if (landed === name) return;
+        lastError = null;
       } catch (e) {
-        lastError = e
-        await driver.pause(500)
+        lastError = e;
+        await driver.pause(STALE_RETRY);
       }
     }
-    if (lastError) throw lastError
-    throw new Error(`Rename field holds "${landed}" instead of "${name}" after 3 attempts`)
+    if (lastError) throw lastError;
+    throw new Error(`Rename field holds "${landed}" instead of "${name}" after 3 attempts`);
   }
 
   /** Taps "Ubah" (save) — does NOT wait for dismissal (an empty name keeps it open). */
   async saveRename(): Promise<void> {
-    await this.closeDialogKeyboard()
-    await this.formSave.click()
+    await this.closeDialogKeyboard();
+    await this.formSave.click();
   }
 
   /** Cancels the dialog and waits for it to disappear. */
   async cancelRename(): Promise<void> {
-    await this.closeDialogKeyboard()
-    await this.formCancel.click()
-    await this.formName.waitForExist({ timeout: 10_000, reverse: true })
+    await this.closeDialogKeyboard();
+    await this.formCancel.click();
+    await this.formName.waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
   }
 
   /** Waits until the rename dialog closes (successful save). */
   async waitForDialogClosed(): Promise<void> {
-    await this.formName.waitForExist({ timeout: 10_000, reverse: true })
+    await this.formName.waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
   }
 
   /**
@@ -388,21 +410,21 @@ export class KategoriIosPage extends BaseIosPage {
    * BACK and the picker sheet has no cancel button.
    */
   async dismissSheet(rootTag: string): Promise<void> {
-    const { width } = await driver.getWindowSize()
+    const { width } = await driver.getWindowSize();
     await driver.performActions([
       {
-        type: 'pointer',
-        id: 'finger1',
-        parameters: { pointerType: 'touch' },
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
         actions: [
-          { type: 'pointerMove', duration: 0, x: Math.floor(width / 2), y: 120 },
-          { type: 'pointerDown', button: 0 },
-          { type: 'pointerUp', button: 0 },
+          { type: "pointerMove", duration: 0, x: Math.floor(width / 2), y: 120 },
+          { type: "pointerDown", button: 0 },
+          { type: "pointerUp", button: 0 },
         ],
       },
-    ])
-    await driver.pause(400)
-    await iosByTag(rootTag).waitForExist({ timeout: 10_000, reverse: true })
+    ]);
+    await driver.pause(SHEET_CLOSE_SETTLE_QUICK);
+    await iosByTag(rootTag).waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
   }
 
   /**
@@ -411,18 +433,18 @@ export class KategoriIosPage extends BaseIosPage {
    * dialog's scrim — tapping it dismisses the dialog (verified live).
    */
   private async closeDialogKeyboard(): Promise<void> {
-    if (!(await iosKeyboardShown().catch(() => false))) return
+    if (!(await iosKeyboardShown().catch(() => false))) return;
     await driver.performActions([
       {
-        type: 'key',
-        id: 'keyboard1',
+        type: "key",
+        id: "keyboard1",
         actions: [
-          { type: 'keyDown', value: '\n' },
-          { type: 'keyUp', value: '\n' },
+          { type: "keyDown", value: "\n" },
+          { type: "keyUp", value: "\n" },
         ],
       },
-    ])
-    await driver.pause(300)
+    ]);
+    await driver.pause(KEY_RETURN_SETTLE);
   }
 
   /**
@@ -430,15 +452,15 @@ export class KategoriIosPage extends BaseIosPage {
    * LazyColumn has disposed it (or pruned its action nodes) — which end of the
    * list it is at cannot be read from the tree, only inferred by scrolling.
    */
-  private async rowState(categoryId: string): Promise<'inView' | 'above' | 'below' | 'absent'> {
-    const toggle = this.rowHide(categoryId)
-    if (!(await toggle.isExisting().catch(() => false))) return 'absent'
-    const rect = await this.rectOf(toggle).catch(() => null)
-    if (!rect) return 'absent'
-    const { height } = await driver.getWindowSize()
-    if (rect.y < LIST_TOP) return 'above'
-    if (rect.y + rect.height > height - LIST_BOTTOM_PAD) return 'below'
-    return 'inView'
+  private async rowState(categoryId: string): Promise<"inView" | "above" | "below" | "absent"> {
+    const toggle = this.rowHide(categoryId);
+    if (!(await toggle.isExisting().catch(() => false))) return "absent";
+    const rect = await this.rectOf(toggle).catch(() => null);
+    if (!rect) return "absent";
+    const { height } = await driver.getWindowSize();
+    if (rect.y < LIST_TOP) return "above";
+    if (rect.y + rect.height > height - LIST_BOTTOM_PAD) return "below";
+    return "inView";
   }
 
   /**
@@ -448,24 +470,24 @@ export class KategoriIosPage extends BaseIosPage {
    * keep the per-swipe cost at three round trips.
    */
   private async topRowY(): Promise<number | null> {
-    const toggles = await $$(ROW_TOGGLES)
-    let top: number | null = null
-    let seen = 0
+    const toggles = await $$(ROW_TOGGLES);
+    let top: number | null = null;
+    let seen = 0;
     for (const toggle of toggles) {
-      if (seen++ >= 3) break
-      const rect = await this.rectOf(toggle).catch(() => null)
-      if (!rect) continue
-      if (top === null || rect.y < top) top = rect.y
+      if (seen++ >= 3) break;
+      const rect = await this.rectOf(toggle).catch(() => null);
+      if (!rect) continue;
+      if (top === null || rect.y < top) top = rect.y;
     }
-    return top
+    return top;
   }
 
   /** True once the "Tambah kategori" button can actually be tapped. */
   private async addButtonInView(): Promise<boolean> {
-    const rect = await this.rectOf(this.addButton).catch(() => null)
-    if (!rect) return false
-    const { height } = await driver.getWindowSize()
-    return rect.y >= LIST_TOP && rect.y + rect.height <= height - LIST_BOTTOM_PAD
+    const rect = await this.rectOf(this.addButton).catch(() => null);
+    if (!rect) return false;
+    const { height } = await driver.getWindowSize();
+    return rect.y >= LIST_TOP && rect.y + rect.height <= height - LIST_BOTTOM_PAD;
   }
 
   /**
@@ -474,46 +496,48 @@ export class KategoriIosPage extends BaseIosPage {
    * in the sticky header band (search field / type toggle) scrolls nothing at
    * all, which is what silently broke the earlier content-down return sweep.
    */
-  private async swipeContent(direction: 'up' | 'down'): Promise<void> {
-    const { width, height } = await driver.getWindowSize()
-    const x = Math.floor(width / 2)
-    const near = Math.floor(height * 0.4)
-    const far = Math.floor(height * 0.72)
-    const yStart = direction === 'up' ? far : near
-    const yEnd = direction === 'up' ? near : far
+  private async swipeContent(direction: "up" | "down"): Promise<void> {
+    const { width, height } = await driver.getWindowSize();
+    const x = Math.floor(width / 2);
+    const near = Math.floor(height * 0.4);
+    const far = Math.floor(height * 0.72);
+    const yStart = direction === "up" ? far : near;
+    const yEnd = direction === "up" ? near : far;
     await driver.performActions([
       {
-        type: 'pointer',
-        id: 'finger1',
-        parameters: { pointerType: 'touch' },
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
         actions: [
-          { type: 'pointerMove', duration: 0, x, y: yStart },
-          { type: 'pointerDown', button: 0 },
-          { type: 'pause', duration: 150 },
-          { type: 'pointerMove', duration: 500, x, y: yEnd },
-          { type: 'pointerUp', button: 0 },
+          { type: "pointerMove", duration: 0, x, y: yStart },
+          { type: "pointerDown", button: 0 },
+          { type: "pause", duration: 150 },
+          { type: "pointerMove", duration: 500, x, y: yEnd },
+          { type: "pointerUp", button: 0 },
         ],
       },
-    ])
-    await driver.pause(400)
+    ]);
+    await driver.pause(SWIPE_ANIM);
   }
 
   /** Static texts whose centers fall inside `rect`, top-to-bottom then left-to-right. */
-  private async textsInside(rect: Rect): Promise<string[]> {
-    const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"')
-    const found: { y: number; x: number; text: string }[] = []
+  private async textsInside(rect: IosRect): Promise<string[]> {
+    const nodes = await $$('-ios predicate string: type == "XCUIElementTypeStaticText"');
+    const found: { y: number; x: number; text: string }[] = [];
     for (const node of nodes) {
-      const inner = await this.rectOf(node).catch(() => null)
-      if (!inner || !containsCenter(rect, inner)) continue
-      const text = ((await node.getText()) || '').trim()
-      if (text) found.push({ y: inner.y, x: inner.x, text })
+      const inner = await this.rectOf(node).catch(() => null);
+      if (!inner || !iosNodeContains(rect, inner)) continue;
+      const text = ((await node.getText()) || "").trim();
+      if (text) found.push({ y: inner.y, x: inner.x, text });
     }
-    return found.sort((a, b) => a.y - b.y || a.x - b.x).map((entry) => entry.text)
+    return found.sort((a, b) => a.y - b.y || a.x - b.x).map((entry) => entry.text);
   }
 
-  private async rectOf(el: Pick<ChainablePromiseElement, 'getLocation' | 'getSize'>): Promise<Rect> {
-    const { x, y } = await el.getLocation()
-    const { width, height } = await el.getSize()
-    return { x, y, width, height }
+  private async rectOf(
+    el: Pick<ChainablePromiseElement, "getLocation" | "getSize">,
+  ): Promise<IosRect> {
+    const { x, y } = await el.getLocation();
+    const { width, height } = await el.getSize();
+    return { x, y, width, height };
   }
 }

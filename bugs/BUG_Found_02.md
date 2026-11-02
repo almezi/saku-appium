@@ -1,8 +1,8 @@
 # BUG_Found_02.md — Bug Report 02
 
 ## Status
-- **State:** Open
-- **Summary:** The app is not at fault — TC-BACKUP-04 blocks on system-surface automation (SAF picker drive), not on the import feature. Import verified working via live MCP.
+- **State:** Fixed
+- **Summary:** The app is not at fault — TC-BACKUP-04 blocks on system-surface automation (SAF picker drive), not on the import feature. Import verified working via live MCP. **Fixed 2026-10-28:** the roots-drawer animation race is closed by the `openDownloadsRoot` verify-retry in backup.spec.ts (wait for the pushed file row itself, re-toggle the drawer per attempt) — TC-BACKUP-04 passed 2 consecutive wdio runs on the Pixel_10 / API 37 / app v2.3.
 
 ## Identity
 - **Reported by:** ZCode automation agent (GLM-5.3, 2.C execution session)

@@ -178,7 +178,9 @@ Notes for future test work:
   services are active. A test that reads the tree immediately after launch may
   see an empty tree.
 
-### ⚠️ OPEN: bottom sheets empty the accessibility tree
+### ✅ RESOLVED (2026-10-29): bottom sheets do NOT empty the tree under a real client
+
+Was: **⚠️ OPEN: bottom sheets empty the accessibility tree.**
 
 Reproduced on CMP 1.12.1, iOS 27.0 simulator. While a `ModalBottomSheet` is
 open, walking `UIView.accessibilityElements` from inside the app returns an
@@ -186,19 +188,19 @@ open, walking `UIView.accessibilityElements` from inside the app returns an
 the underlying screen's are exposed, even though both render correctly on
 screen.
 
-This matters: Saku puts a sheet on every delete confirmation
+This mattered: Saku puts a sheet on every delete confirmation
 (`ConfirmDeleteSheet`) and on every picker (`SakuPickerSheet`,
 `CategoryPickerSheet`). Any automation that must read or tap sheet contents
 would find nothing.
 
-**Not yet confirmed as a real blocker.** The observation came from a probe
-inside the app process, with no accessibility consumer attached. CMP syncs the
-tree lazily, and an XCUITest or Appium session attaches a consumer that
-triggers sync. So this may be an artefact of the probe rather than of CMP.
+**It was an artefact of the probe, as suspected.** Re-verified 2026-10-29 with a real
+accessibility consumer (Appium/XCUITest on iPhone 18 Pro, app v2.3): with the delete
+confirmation open, `daftar_delete_sheet`, `component_sheet_button_confirm` and
+`component_sheet_button_cancel` all resolve and both buttons tap. `src/tests/transaksi/delete-undo.ios.spec.ts`
+runs the whole sheet flow green on that basis (9/9). Sheet-based flows are no longer
+treated as unverified on iOS.
 
-**Must be re-verified with a real accessibility client before relying on it.**
-See `docs/09-ios-migration-plan.md` section 4.2. Treat sheet-based flows as
-unverified on iOS until then.
+See `docs/01-ios-migration-plan.md` section 4.2 for the original probe.
 
 ### Verified against the real app (Stage 1.5)
 
@@ -299,7 +301,7 @@ IDs are stable and never change. Default categories keep their display name in s
 | grp_daily | exp_daily_household | Kebutuhan Rumah Tangga | true |
 | grp_daily | exp_daily_other | Lainnya (Harian) | true |
 | grp_health | exp_health_doctor | Dokter | true |
-| grp_health | exp_health_medicine | Obat-obat | true |
+| grp_health | exp_health_medicine | Obat-obatan | true |
 | grp_health | exp_health_gym | Olahraga / Gym | true |
 | grp_health | exp_health_other | Lainnya (Kesehatan) | true |
 | grp_lifestyle | exp_lifestyle_clothing | Pakaian | true |

@@ -1,4 +1,4 @@
-# 9. iOS Migration Plan
+# 1. iOS Migration Plan
 
 Purpose: turn Saku into a dual-platform (Android + iOS) app using Kotlin
 Multiplatform and Compose Multiplatform, and give you an executable to-do list.
@@ -9,7 +9,7 @@ Multiplatform and Compose Multiplatform, and give you an executable to-do list.
 > live status — the app repository is authoritative for what is actually merged.
 >
 > **This document is about the app, not the test harness.** The harness in this repo has
-> already been ported to iOS independently: 14 iOS spec files and 8 iOS page objects run
+> already been ported to iOS independently: 16 iOS spec files and 8 iOS page objects run
 > against the iPhone 18 Pro simulator via `wdio.ios.conf.ts` (`npm run test:ios`). See
 > `README.md` § Run — iOS and `IOS_PHASE1_HANDOFF.md`.
 

@@ -42,6 +42,12 @@
 | **App build** | SimpleMoneyTrackerKT v2.2 APK (`resources/SimpleMoneyTrackerKT-v2.2.apk`) |
 | **Android API level** | 37 |
 
+## Fix Ownership
+**NONE — RETIRED.** No fix owner on either side: the app owner rejected pull-to-refresh as a
+product change (2026-10-27) and withdrew TC-LIST-11 from the catalogue; `UI_SPEC.md` §7 now lists
+the feature as out of scope. The harness removals are listed under Resolution; nothing remains to
+fix in app or automation code.
+
 ## Additional Notes
 
 - Disposition taken per AGENTS.md retry/bug protocol: TC-LIST-11 is marked skipped with `~[BUG]~` in `progress.md`; the spec's `it.skip` carries a comment pointing here. No "swipe only" substitute pass was fabricated.
