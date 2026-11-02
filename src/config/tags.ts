@@ -32,6 +32,7 @@ export const tags = {
     // Selected-category marker inside the form's category pager
     // (verified live on the Ubah screen; absent when no category is set).
     categoryMark: (categoryId: string) => `mark_${categoryId}`,
+    categoryAvatar: (categoryId: string) => `avatar_${categoryId}`,
     categorySearch: "tambah_category_search",
     categorySearchEmpty: "tambah_category_search_empty",
     linkKelolaKategori: "tambah_link_kelola_kategori",

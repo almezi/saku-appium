@@ -166,6 +166,36 @@ export class TambahIosPage extends BaseIosPage {
   }
 
   /**
+   * Dismisses the category picker sheet without selecting a category. iOS has
+   * no system BACK and the picker sheet has no cancel button, so the sheet is
+   * dismissed by tapping the scrim above it (same proven path as
+   * kategori.ios.page.ts dismissSheet).
+   */
+  async dismissCategorySheet(): Promise<void> {
+    const { width } = await driver.getWindowSize();
+    await driver.performActions([
+      {
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
+        actions: [
+          { type: "pointerMove", duration: 0, x: Math.floor(width / 2), y: 120 },
+          { type: "pointerDown", button: 0 },
+          { type: "pointerUp", button: 0 },
+        ],
+      },
+    ]);
+    await driver.pause(SHEET_CLOSE_SETTLE_QUICK);
+    await iosByTag(tags.tambah.categorySheetRoot)
+      .waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
+  }
+
+  /** The category row's avatar (CategoryAvatar, e.g. avatar_inc_salary). */
+  avatar(categoryId: string): ChainablePromiseElement {
+    return iosByTag(tags.tambah.categoryAvatar(categoryId));
+  }
+
+  /**
    * Picks a date in the Material3 date picker. Day cells are Buttons whose
    * label is the full English long date in iOS order ("Friday, 23 October
    * 2026" — unlike Android's "October 23, 2026"), today's cell prefixes

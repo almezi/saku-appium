@@ -156,6 +156,22 @@ export class TambahPage extends BasePage {
   }
 
   /**
+   * Dismisses the category picker sheet without selecting a category. System
+   * BACK dismisses a modal bottom sheet on Android; the reverse wait proves
+   * the sheet root left the tree before the caller re-reads the form.
+   */
+  async dismissCategorySheet(): Promise<void> {
+    await this.systemBack();
+    await byTag(tags.tambah.categorySheetRoot)
+      .waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS });
+  }
+
+  /** The category row's avatar (CategoryAvatar, e.g. avatar_inc_salary). */
+  avatar(categoryId: string): ChainablePromiseElement {
+    return byTag(tags.tambah.categoryAvatar(categoryId));
+  }
+
+  /**
    * Picks a date in the Material date picker. Day cells carry no tags —
    * verified live, each renders its full English long date ("Friday,
    * October 23, 2026"; today's cell prefixes "Today, "), so textContains on
