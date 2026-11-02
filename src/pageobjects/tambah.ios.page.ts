@@ -23,6 +23,7 @@ import {
   DATE_PAGE_ANIM,
   KEYBOARD_RETRY,
   SHEET_CLOSE_SETTLE,
+  SHEET_CLOSE_SETTLE_QUICK,
   STALE_RETRY,
   STALE_RETRY_SLOW,
   SWIPE_ANIM,
@@ -137,6 +138,31 @@ export class TambahIosPage extends BaseIosPage {
     await iosByTag(tags.tambah.sheetAccount).waitForExist({ timeout: ELEMENT_PRESENT });
     await iosByTag(tags.tambah.accountItem(accountId)).click();
     await this.waitForSheetClosed(tags.tambah.sheetAccount);
+  }
+
+  /**
+   * Dismisses the account picker sheet without selecting an account. iOS has no
+   * system BACK and the picker sheet has no cancel button, so the sheet is
+   * dismissed by tapping the scrim above it (the same proven path as
+   * kategori.ios.page.ts dismissSheet).
+   */
+  async dismissAccountSheet(): Promise<void> {
+    const { width } = await driver.getWindowSize();
+    await driver.performActions([
+      {
+        type: "pointer",
+        id: "finger1",
+        parameters: { pointerType: "touch" },
+        actions: [
+          { type: "pointerMove", duration: 0, x: Math.floor(width / 2), y: 120 },
+          { type: "pointerDown", button: 0 },
+          { type: "pointerUp", button: 0 },
+        ],
+      },
+    ]);
+    await driver.pause(SHEET_CLOSE_SETTLE_QUICK);
+    await iosByTag(tags.tambah.sheetAccount)
+      .waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
   }
 
   /**

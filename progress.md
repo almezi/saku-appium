@@ -661,10 +661,18 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 > relaunches it with `mobile: launchApp`, and the measured window ends when the app's bottom bar
 > is queryable again (the process id changes across the relaunch, so it is a real cold start);
 > `dumpsys meminfo` has no simulator counterpart (the host `ps` shows the app's RSS, ~316 MB).
-
----
-
-## Retrospective — tag audit, coverage gap, rollout plan (2026-11-02)
+>
+> ## S2 — Account picker (TC-ACC) — 3 tasks
+>
+> - [x] TC-ACC-01: Tap `tambah_select_account` → picker opens
+> - [x] TC-ACC-03: Switch account → label updates
+> - [x] TC-ACC-04: Dismiss without select → unchanged
+>
+> **Spec:** `src/tests/tambah/account-picker.spec.ts` | **Agent:** Kilo — 3/3 passing 2026-11-02 on emulator-5554 (Pixel_10 / API 37, app v2.2, wdio-managed Appium @ :4725). iOS twin `account-picker.ios.spec.ts` added; `check:parity` green (same ids, matched `dismissAccountSheet` surface on both twins).
+>
+> ---
+>
+> ## Retrospective — tag audit, coverage gap, rollout plan (2026-11-02)
 
 ### 1. Test-type tag audit — CLOSED
 
