@@ -664,6 +664,224 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 
 ---
 
+## Retrospective — tag audit, coverage gap, rollout plan (2026-11-02)
+
+### 1. Test-type tag audit — CLOSED
+
+All 33 spec files under `src/tests/` scanned against the AGENTS.md contract (every `it()` /
+`it.skip()` title carries exactly one of `@sanity` / `@regression` / `@integration`):
+
+- **286 cases, zero untagged, zero double-tagged, zero files mixing types, zero
+  `describe()`/case mismatches.** Case counts: `@sanity: 16`, `@regression: 252`,
+  `@integration: 18`.
+- One gap was found and fixed: `src/tests/tmp/probe.spec.ts:14` (BUG_Found_06 geometry probe)
+  had no tag, which failed `npm run test:unit` — the guardrail in
+  `src/config/__tests__/test-types.test.ts` — because an untagged case is silently excluded
+  from every filtered run. Tagged `@regression` (its family is nav/font-scale geometry,
+  `TC-ROT-06`).
+- **Caveat:** `src/tests/tmp/` matches the gitignore rule `*tmp*`, so that fix is local only
+  and can never reach a commit. Either move the probe out of `tmp/` or delete it (its header
+  says "Delete after use"; BUG_Found_06 is still Open, so moving is the right call).
+- `npm run test:unit` green: 20/20.
+
+### 2. Catalogue vs. implemented — 51 ids without a standalone `it()`
+
+195 catalogue ids, 146 present in specs (combined titles such as `TC-KAT-03/04` expanded).
+The 51 absent break down as:
+
+| Bucket | Ids | Count |
+|--------|-----|-------|
+| **Real gaps** (no assertion anywhere) | `TC-EXC-01`; `TC-MON-03/05/06/09`; `TC-DATE-02/04/05/06/07`; `TC-ACC-01/03/04`; `TC-CAT-05/08` | **15** (§7 splits them into required / cheap / blocked / later) |
+| Covered inside other ids (catalogue calls this deliberate) | `TC-SAVE-01…06` → `TC-VAL-01/02/03/05`; `TC-CONS-01…05` → `TC-INC-04`, `TC-DEL-05`, `TC-EDIT-03`; `TC-UNDO-03` → `TC-DEL-02`; `TC-CAT-06` → `TC-KAT-02`; `TC-DATE-08` → `TC-EDIT-05`; `TC-ACC-02/05` → `TC-EXP-06` | 28 |
+| Blocked — needs app-side `test_seed` / `test_now` intent extras | `TC-SEED-01…07` | 7 |
+| Retired 2026-10-27 (`UI_SPEC.md` §7, `bugs/BUG_Found_09.md`) | `TC-LIST-11` | 1 |
+
+### 3. Rollout plan — 11 small tasks, one PR each
+
+Scaffold first, then one spec file (3–6 `it()` blocks) + its iOS twin per task:
+
+1. **S1 — DONE 2026-11-02** — spec template added to `AGENTS.md` § Spec Template for New
+   Test Cases (a fenced code block, not a file: a `src/tests/_new/template.spec.ts` would be
+   flagged by the parity gate as a missing iOS twin). The `npm run check:parity -- --update`
+   half of S1 is **deferred to S11**: rewriting the baseline now would record the two NEW
+   drifts (§4) with no `reason`, and the ratchet demands an honest close action per entry —
+   fix or justify, not silence.
+2. **S2** — Account picker: `account-picker.spec.ts` (TC-ACC-01/03/04).
+3. **S3** — Category picker: `category-picker.spec.ts` (TC-CAT-05/08).
+4. **S4** — Date picker: `date-picker.spec.ts` (TC-DATE-02/04/05/06/07).
+5. **S5** — Month switcher: `month-switcher.spec.ts` (TC-MON-03/05/06/09).
+6. **S6** — Save-button state machine: `save-button.spec.ts` (TC-SAVE-01…06, as standalone ids).
+7. **S7** — Transfer/savings rules: `transfer-category.spec.ts` (TC-EXC-01).
+8. **S8** — Cross-screen consistency: `cross-screen.spec.ts` (TC-CONS-01…05).
+9. **S9** — Seed tooling: `seed-tooling.spec.ts` (TC-SEED-01…07) — **starts only when the app
+   ships the intent extras**; keep the task parked until then.
+10. **S10** — Move `src/tests/tmp/probe.spec.ts` out of the gitignored `tmp/` (or delete it).
+11. **S11** — Close the two pre-existing parity failures (§4), re-baseline.
+
+Each task's definition of done: spec + iOS twin merged → `npm run test:unit` green →
+`npm run test:regression` runs the new cases → `npm run check:parity` green → the new ids
+marked `[x]` in this file (or `~[BUG]~` with a filed report on failure).
+
+**Status: S1 DONE 2026-11-02 (template half — see the S1 note above); S2–S11 not started.**
+
+### 4. Pre-existing red gate (not caused by the tag fix)
+
+`npm run check:parity` fails on a clean tree at commit `ccedddd`:
+
+- `src/tests/tmp/probe.spec.ts` — missing iOS twin (NEW vs baseline).
+- `ringkasan` page-object surface gap — Android-only `scrollContentUp` (NEW; method added in
+  commit `f723f94`, after `scripts/parity-baseline.json` was last rewritten).
+
+Both need either a fix or a justified re-baseline in S1/S11.
+
+### 5. File strategy for the new specs
+
+**Folder = screen, not phase** (`AGENTS.md` § Directory Layout). Planned placement:
+
+| Planned spec | Folder | Why |
+|---|---|---|
+| `account-picker`, `category-picker`, `date-picker`, `save-button` | `src/tests/tambah/` | all four live on `tambah_screen` |
+| `month-switcher` | `src/tests/transaksi/` (+ ringkasan-side asserts) | arrows exist on both screens; list-side cases live here |
+| `transfer-category` | `src/tests/ringkasan/` | exclusion is a summary/budget counting rule |
+| `cross-screen` | `src/tests/app/` | cross-cutting, next to `persistence`/`rotation` |
+| `seed-tooling` (S9, parked) | `src/tests/app/` | launch-level intent extras |
+
+Hard rules every new file obeys:
+
+- **Twin pair per spec:** `X.spec.ts` (Android) + `X.ios.spec.ts` (iOS), reusing the same
+  `TC-` ids on both. No cross-import between twins.
+- **No raw resource-ids in specs.** Locators come from `src/config/tags.ts`, which mirrors
+  `TESTABILITY.md`.
+- **No numeric waits at call sites.** Deadlines live in `src/config/timeouts.ts`, pauses in
+  `src/config/settles.ts`, named by intent — `npm run test:unit` fails on literals.
+- **Layering:** page objects own gestures and reads; `helpers/` (`input.ts`, `money.ts`,
+  `months.ts`, `transactions.ts`) owns formatting and seeding; the spec holds assertions only.
+- **Failure path:** new `bugs/BUG_Found_<NN>.md` + `~[BUG]~` marker here.
+
+### 6. Automation strategy
+
+**Runner:** WebdriverIO + Appium — Android `wdio.conf.ts`, iOS `wdio.ios.conf.ts`, one device
+each, with `test:parallel` / `test:shard` for multi-device runs.
+
+**Layers, bottom-up:**
+
+```
+TESTABILITY.md (locator contract)
+  → src/config/tags.ts (machine mirror)
+    → pageobjects/ (gestures, one per screen, per platform)
+      → helpers/ (input, money, months, transactions, a11y-parse)
+        → src/tests/<screen>/*.spec.ts (assertions only)
+```
+
+**Tag = execution tier.** Type tags are mocha `grep` filters, so one suite serves three
+cadences:
+
+- `npm run test:sanity` — 16 cases, every change, minutes.
+- `npm run test:regression` — 252 cases, per feature merge (all new S2–S8 specs land here).
+- `npm run test:integration` — 18 cases, nightly / pre-release.
+- `:ios` variants of all three (`npm run test:sanity:ios`, …).
+
+An untagged case silently never runs — the failure mode the 2026-11-02 audit caught, and what
+the `test:unit` guardrail exists to prevent.
+
+**Gates before merge, in order:**
+
+1. `npm run typecheck`
+2. `npm run test:unit` — tag guardrail, timing-literal guardrail, taxonomy counts
+3. `npm run check:parity` — twin ratchet: same ids on both platforms, no new surface drift
+4. `npm run test:regression` (Android) → `npm run test:regression:ios`
+
+**Data:** specs seed themselves, following the `TC-SETUP-01/02` pattern — arrange blocks are
+titled `it()`s with ids so a defect report can cite them. App-side `test_seed` intents do not
+exist yet, which is why S9 is parked.
+
+**Retry policy:** 3 consecutive failures on one case → stop, mark `~[BUG]~`, file a report,
+continue with the backbone (`AGENTS.md` § Rules for All Agents).
+
+**Deliberate non-goals:** no cloud device grid (local emulator + iPhone sim), no visual-diff
+tooling (contrast stays out-of-band in `scripts/contrast_check.py`), no `test_seed` dependency
+until the app ships it.
+
+### 7. Why the 15 "real gaps" are unasserted — and which the E2E suite actually needs
+
+**Root cause (the same for all 15):** the catalogue is the *designed scope*, the specs are the
+*executed scope*, and nothing machine-checks the two against each other. `npm run test:unit`
+verifies that every existing `it()` carries exactly one tag — it never asks whether a catalogue
+id has an `it()` at all. The suite grew happy-path-first (add, edit, delete, backup), so edge
+rules that no flow passes through on the way to a save were never written. A grep confirms each
+of the 15 ids appears **zero** times in `src/tests/**/*.spec.ts`.
+
+**Split by what E2E needs:**
+
+| Tier | Ids | Why |
+|---|---|---|
+| **A — required now** (money/data correctness, no coverage, cheap) | `TC-EXC-01` | `UI_SPEC.md:16` — categories with `countsInTotals = false` (Transfer Masuk, Investasi, Tabungan) must be excluded from **all** totals. Nothing asserts it; a silent wrong balance is the worst failure this app can have. Behaviour verified working live on 2026-11-02 (§8) — the gap is the missing `it()`, not the app. |
+| | `TC-MON-03` | `UI_SPEC.md:74` — "next month disabled when viewing the current month". An enabled arrow lets a user view a future (empty) month, contradicting the no-future-dates rule. |
+| | `TC-DATE-04` | `UI_SPEC.md:13` — "no future dates". The rule exists; whether the picker blocks them is never tested. |
+| | `TC-DATE-05` | Cancel must leave the date unchanged — a silent date change commits the transaction to the wrong month. |
+| | `TC-ACC-04` | Dismiss-without-select must keep the account. Wrong account = wrong records; the other three `TC-ACC` ids are exercised inside `TC-INC-06`'s `fillForm` (which taps the picker), this one is not exercised at all. |
+| | `TC-CAT-05` | Dismiss picker → state unchanged. The category sheet is the app's most bug-prone surface (`BUG_Found_07`, `BUG_Found_16`), and an unchanged-on-dismiss rule is unasserted. |
+| **B — cheap companions** (add while the Tier-A spec file is open; near-zero cost) | `TC-ACC-01`, `TC-ACC-03` | Picker-open and label-update are *behaviourally* exercised by `TC-INC-06` → `fillForm` → `selectAccount()`; only the direct assertions are missing — one `it()` each. |
+| | `TC-DATE-02` | Default = today is *proved indirectly* by every "appears in the list today" assertion (`TC-INC-02`, `TC-LIST-02`); a standalone id is documentation, not new coverage. |
+| | `TC-DATE-07`, `TC-MON-05` | One string assertion each (label format, uppercase month). Cosmetic, but free once the page-object read exists. |
+| **C — blocked, needs a product answer first** | `TC-MON-06` | The catalogue itself says "independent or synced (**verify intent**)". No test until the intended relationship between the Transaksi and Ringkasan switchers is decided. |
+| | `TC-DATE-06` | Leap day **29 Feb 2028** is a *future* date, which `UI_SPEC.md:13` forbids — the catalogue contradicts the spec. Resolve the conflict; likely retire the id rather than test it. |
+| **D — later, medium effort** | `TC-MON-09` | Year boundary Dec→Jan needs ~12 months of prev-taps or an injected clock (`test_now` does not exist yet — same blocker as `TC-SEED`). |
+| | `TC-CAT-08` | Avatar initials render — confirm the exact rule in `UI_SPEC.md` first (`UI_SPEC.md:78` promises a "category avatar" on list rows, not initials specifically). |
+
+**Tier A = the six ids the E2E suite is required to add; everything else is either a free
+add-on (B), a decision that must precede the test (C), or scheduled work (D).** S2–S5 pick up
+their Tier-A ids: `transfer-category` (S7) carries `TC-EXC-01`; `month-switcher` (S5) carries
+`TC-MON-03`; `date-picker` (S4) carries `TC-DATE-04/05`; `account-picker` (S2) and
+`category-picker` (S3) carry `TC-ACC-04` and `TC-CAT-05` plus their Tier-B companions.
+
+### 8. Live probe evidence — TC-EXC-01 verified on the emulator (2026-11-02)
+
+Driven through **appium-mcp** (embedded UiAutomator2, no wdio MCP exists in this environment;
+session built from `wdio.conf.ts` capabilities) on `Pixel_10` / `emulator-5554`, app
+`id.almezi.simplemoneytracker_kt`, v2.4.
+
+**Verdict: TC-EXC-01 PASSES live — `UI_SPEC.md:16` is accurate and needs NO change.**
+
+Four transactions seeded through the real UI (all 2 Nov 2026): income **Transfer Masuk
+50.000**, income **Gaji 25.000**, expense **Investasi 40.000**, expense **Makanan 10.000**.
+Observed on every surface the rule names:
+
+| Surface | Rendered | Excluded categories counted? |
+|---|---|---|
+| Transaksi summaries | `MASUK Rp 25.000`, `KELUAR Rp 10.000` | no — Transfer Masuk + Investasi excluded |
+| Day header net | `Rp 15.000` (= 25.000 − 10.000) | no |
+| Ringkasan cards | `SALDO BERSIH Rp 15.000`, Pemasukan 25.000, Pengeluaran 10.000, `Tingkat tabungan 60,0%` | no |
+| Per-category breakdowns | income `Gaji 100%` only; expense `Makanan & Minuman` only | no |
+
+Control: the two normal transactions (Gaji, Makanan) counted on every surface, so the zeroed
+rows are exclusion working — not a dead summary card.
+
+**Free findings for other ids, same session:**
+
+- `daftar_month_switcher_next` → `enabled = false` on the current month: **TC-MON-03 is
+  already implemented** — S5 asserts a working rule rather than discovering a defect.
+- Date label renders `2 Nov 2026` = `d MMM yyyy`: **TC-DATE-07 rule holds**.
+- Form resets after save (helper returns to `Isi jumlah dan kategori dulu`).
+
+**Anomaly observed once, NOT filed:** the first Ringkasan entry right after in-session writes
+rendered `Belum ada data untuk diringkas` on an immediate dump. Two reproduction attempts
+(a further in-session write, and a cold start) both rendered correctly, so it is logged here
+as a possible one-frame load flash, not as a bug report — no `BUG_Found_19`. Watch for it
+during S8.
+
+**Authoring note for the S7/S8 specs:** the expense breakdown sits below the fold — Compose
+omits it from the accessibility tree until it is swiped into composition
+(`ringkasan.page.ts` `scrollToBottom()`, and its comment at TC-SUM-08, say the same). A bare
+page-source read right after navigation looks like the card is missing when it is not.
+Also on this harness: appium-mcp's `id` strategy failed for this app's test tags; exact
+`-android uiautomator` `resourceId(...)` selectors resolved reliably.
+
+**Session hygiene:** app data cleared afterwards (Transaksi back to the empty November 2026
+state every spec assumes), Appium session deleted, emulator left running.
+
+---
+
 ## How to Use
 
 1. **Claim ownership**: Write your agent name (or your name) in the `Agent:` field for each sub-phase you will run.

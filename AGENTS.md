@@ -191,6 +191,74 @@ parsed, not executed, so an `it()` inside a loop is one call site and `${id}`-bu
 (`transaction-list.spec.ts:220`) resolve to no id. Private/protected members and either base
 class's surface are excluded — the check compares what specs can CALL.
 
+## Spec Template for New Test Cases
+
+Copy from here when adding a spec (task **S1** of the rollout plan in `progress.md`). The
+template lives in this file deliberately — **never** as `src/tests/_new/template.spec.ts`,
+which the parity gate would report as a missing iOS twin.
+
+```ts
+/**
+ * TC-<AREA> — <what this spec proves> (Android). Catalogue cases live in
+ * test-cases-simple-money-tracker.md. iOS twin: <name>.ios.spec.ts.
+ */
+import { byTag } from "../../helpers/locators";
+import { tags } from "../../config/tags";
+import { categories } from "../../config/categories";
+import { createTransaction } from "../../helpers/transactions";
+import { TambahPage } from "../../pageobjects/tambah.page";
+import { DaftarPage } from "../../pageobjects/daftar.page";
+import { APP_COLD_START, ELEMENT_PRESENT } from "../../config/timeouts";
+
+const AMOUNT = 50_000;
+
+describe("TC-<AREA> — <what this spec proves> @regression", () => {
+  const tambah = new TambahPage();
+  const daftar = new DaftarPage();
+
+  before(async () => {
+    // Prove the app is up before the first case runs — a named budget, never
+    // a literal: { wait: APP_COLD_START }, not { wait: 15_000 }.
+    await expect(byTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START });
+  });
+
+  // Arrange block — required whenever a case seeds data. The id makes the
+  // block citable from a defect report; TC-SETUP- is NOT a catalogue prefix.
+  it("TC-SETUP-NN seeds <fixture description> @regression", async () => {
+    await createTransaction({
+      type: "pengeluaran",
+      amount: AMOUNT,
+      categoryId: categories.expense.dailyFood,
+    });
+    await daftar.open();
+    expect(await daftar.summaryExpense()).toBe(AMOUNT);
+  });
+
+  it("TC-<AREA>-NN <behaviour, one line> @regression", async () => {
+    await tambah.open();
+    await byTag(tags.tambah.categoryPager).click();
+    await expect(byTag(tags.tambah.categorySheetRoot)).toBeDisplayed({
+      wait: ELEMENT_PRESENT,
+    });
+    await driver.back();
+  });
+});
+```
+
+Rules the template encodes — each is a guardrail, not a style preference:
+
+- **One type tag per `it()` title**, and the `describe()` carries the same one; the whole file
+  shares one type (see **Test Types**).
+- **The iOS twin is written in the same change**: `X.spec.ts` + `X.ios.spec.ts`, same `TC-`
+  ids on both, no cross-imports (see **Android / iOS Twin Convention**).
+- **Locators only via `src/config/tags.ts`** — never a literal resource-id or text in a spec.
+- **No numeric waits** — every `{ wait: … }` / `driver.pause(…)` names a constant from
+  `src/config/timeouts.ts` or `src/config/settles.ts` (see **Wait budgets and settle pauses**).
+- **Assertions only** — gestures and reads belong to page objects; formatting and seeding to
+  `src/helpers/`.
+- Done = `npm run test:unit` + `npm run check:parity` + the type suite are green, and the new
+  ids are marked in `progress.md`.
+
 ## Wait budgets and settle pauses
 
 Numbers that bound time do not belong at a call site (the **M5**/**M6** finding): a bare
