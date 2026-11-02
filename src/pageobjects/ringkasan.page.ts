@@ -11,7 +11,7 @@ import { formatMonthYear, parseMonthLabel, shiftMonthYear } from "../helpers/mon
 import { tags } from "../config/tags";
 import { BasePage } from "./base.page";
 import { MONTH_LABEL_RECOMPOSE, STALE_RETRY, SWIPE_ANIM } from "../config/settles";
-import { ELEMENT_PRESENT } from "../config/timeouts";
+import { ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK } from "../config/timeouts";
 
 /** Non-empty text attributes of the subtree under the node with `resourceId`. */
 function childTextsFromSource(xml: string, resourceId: string): string[] {
@@ -59,8 +59,25 @@ export class RingkasanPage extends BasePage {
     return byTag(tags.ringkasan.savingsValue).getText();
   }
 
+  /**
+   * Rendered month label. The header lives inside the summary LazyColumn and
+   * uncomposes when the list is scrolled to the bottom (TC-SUM-13 leaves it
+   * there), so a bare getText surfaced as "element wasn't found" — scroll
+   * content-up and retry before reading.
+   */
   async monthLabel(): Promise<string> {
-    return byTag(tags.ringkasan.monthLabel).getText();
+    const label = byTag(tags.ringkasan.monthLabel);
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await label.waitForExist({ timeout: ELEMENT_PRESENT_QUICK });
+        return await label.getText();
+      } catch (e) {
+        lastError = e;
+        await this.scrollContentUp();
+      }
+    }
+    throw lastError;
   }
 
   // Click-wait audit (code review Step 10): openAnggaran() and
@@ -181,18 +198,33 @@ export class RingkasanPage extends BasePage {
    * actions instead.
    */
   async scrollContentDown(): Promise<void> {
+    await this.swipeContent("down");
+  }
+
+  /**
+   * One W3C touch swipe downward, returning toward the top of the summary
+   * list. Counterpart of scrollContentDown — used to recompose the month
+   * header after the list was left scrolled to the bottom.
+   */
+  async scrollContentUp(): Promise<void> {
+    await this.swipeContent("up");
+  }
+
+  private async swipeContent(direction: "up" | "down"): Promise<void> {
     const { width, height } = await driver.getWindowSize();
     const x = Math.floor(width / 2);
+    const yStart = direction === "down" ? Math.floor(height * 0.75) : Math.floor(height * 0.3);
+    const yEnd = direction === "down" ? Math.floor(height * 0.3) : Math.floor(height * 0.75);
     await driver.performActions([
       {
         type: "pointer",
         id: "finger1",
         parameters: { pointerType: "touch" },
         actions: [
-          { type: "pointerMove", duration: 0, x, y: Math.floor(height * 0.75) },
+          { type: "pointerMove", duration: 0, x, y: yStart },
           { type: "pointerDown", button: 0 },
           { type: "pause", duration: 150 },
-          { type: "pointerMove", duration: 500, x, y: Math.floor(height * 0.3) },
+          { type: "pointerMove", duration: 500, x, y: yEnd },
           { type: "pointerUp", button: 0 },
         ],
       },

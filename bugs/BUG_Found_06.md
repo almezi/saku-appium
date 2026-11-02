@@ -72,3 +72,14 @@ holds the test harness only — no harness fix applies.
   resolution failure.
 
 Conclusion: app-side text overflow handling. Automation harness not at fault.
+
+## Recheck — v2.4 (2026-11-02): STILL OPEN
+
+Verified on app `SimpleMoneyTrackerKT-v2.4.apk` (emulator-5554 / API 37, Appium 3.8.0):
+
+- `adb shell settings put system font_scale 2.0` → opened Tambah → read nav-label bounds:
+  - **2 of 3 nav labels overflow screen width** (`loc.x + size.width > 1080`; one measured 1595 px right edge on a 1080 px screen).
+  - Nav-label text is still readable in the accessibility tree (full text intact), but visually clipped mid-word at 200%.
+- `TC-ROT-06` still fails at 200% font scale on v2.4.
+
+Bug 06 is **NOT fixed** on v2.4. Suggested fix: `maxLines = 1` + `TextOverflow.Ellipsis`, or auto-shrink text on bottom-nav items.

@@ -174,6 +174,13 @@ describe("TC-BACKUP — backup & export (Phase 2) @regression", () => {
       categoryId: categories.income.salary,
       note: seedNote,
     });
+    // TRIPWIRE (bugs/BUG_Found_03.md — WAL loss): the seeded row must survive
+    // the save itself. Assert it at the seed step so a silent discard of
+    // committed data surfaces here instead of two tests later (the
+    // TC-BACKUP-06 empty-state check). createTransaction returns to Tambah, so
+    // re-open Daftar to read the income summary.
+    await daftar.open();
+    await expect(await daftar.summaryIncome()).toBe(SEED_AMOUNT);
   });
 
   it("TC-BACKUP-01 tapping the daftar backup button opens the Cadangan screen @regression", async () => {

@@ -9,8 +9,8 @@ file; the numbering is continuous and files are never deleted or renumbered.
 
 | State | Count | Bugs |
 |---|---|---|
-| **Open** | 11 | 01, 03, 04, 05, 06, 10, 12, 15, 16, 17, 18 |
-| **Fixed** | 6 | 02, 07, 08, 11, 13, 14 |
+| **Open** | 7 | 01, 04, 06, 10, 12, 16, 18 |
+| **Fixed** | 10 | 02, 03, 05, 07, 08, 11, 13, 14, 15, 17 |
 | **Closed** | 1 | 09 |
 | **Total** | **18** | |
 
@@ -20,10 +20,10 @@ file; the numbering is continuous and files are never deleted or renumbered.
 |---|---|---|---|---|---|
 | 01 | [BUG_Found_01.md](BUG_Found_01.md) | Android | Major / P2 | Open | TECNO real-device deadlock under uiautomator2; no confirmed fix path — emulator-only workaround |
 | 02 | [BUG_Found_02.md](BUG_Found_02.md) | Android | Major / P2 | Fixed | SAF picker drive blocks TC-BACKUP-04; app itself is fine (verified via MCP) → drawer race closed by verify-retry drive |
-| 03 | [BUG_Found_03.md](BUG_Found_03.md) | Android | Critical / P1 | Open | A committed transaction silently vanishes from the DB on the next clean reopen (WAL loss) |
+| 03 | [BUG_Found_03.md](BUG_Found_03.md) | Android | Critical / P1 | Fixed | A committed transaction silently vanishes from the DB on the next clean reopen (WAL loss) — fixed on v2.4 |
 | 04 | [BUG_Found_04.md](BUG_Found_04.md) | Android | Major / P2 | Open | "Ubah kategori" dialog self-dismisses under WDIO between open and typing |
-| 05 | [BUG_Found_05.md](BUG_Found_05.md) | Android | Minor / P3 | Open | Tambah form unsavable in landscape — note field and save button are not composed |
-| 06 | [BUG_Found_06.md](BUG_Found_06.md) | Android | Minor / P3 | Open | Bottom-nav labels clip mid-word at 200 % font scale |
+| 05 | [BUG_Found_05.md](BUG_Found_05.md) | Android | Minor / P3 | Fixed | Tambah form unsavable in landscape — note field and save button are not composed — fixed on v2.4 |
+| 06 | [BUG_Found_06.md](BUG_Found_06.md) | Android | Minor / P3 | Open | Bottom-nav labels clip mid-word at 200 % font scale — still open on v2.4 |
 | 07 | [BUG_Found_07.md](BUG_Found_07.md) | Android | Major / P1 | Fixed | Category sheet rows carry no test tags in v2.2 → fixed via text-label lookup |
 | 08 | [BUG_Found_08.md](BUG_Found_08.md) | iOS | Major / P2 | Fixed | `xcodebuild` SIGTRAP on a malformed `Saku.xcscheme` → every iOS build failed |
 | 09 | [BUG_Found_09.md](BUG_Found_09.md) | Android | Minor / P3 | Closed | Pull-to-refresh is not implemented; TC-LIST-11 retired from the catalogue |
@@ -32,7 +32,7 @@ file; the numbering is continuous and files are never deleted or renumbered.
 | 12 | [BUG_Found_12.md](BUG_Found_12.md) | iOS | Trivial / P3 | Open | TC-PERF-05 cannot run on the simulator — `dumpsys meminfo` has no counterpart (decided 2026-10-31: guard lives out-of-band; iOS host-`ps` RSS script still wanted) |
 | 13 | [BUG_Found_13.md](BUG_Found_13.md) | iOS | Critical / P1 | Fixed | Compose renders a tagged container's strings as siblings → tree-only child reads returned nothing |
 | 14 | [BUG_Found_14.md](BUG_Found_14.md) | iOS | Critical / P1 | Fixed | Numeric keypad Delete key is a silent no-op after the category sheet closes |
-| 15 | [BUG_Found_15.md](BUG_Found_15.md) | Android + iOS | Major / P2 | Open | v2.3 redesign drops six Cadangan test tags on both platforms; import outcome has no UI surface — worked around via documented text lookups |
+| 15 | [BUG_Found_15.md](BUG_Found_15.md) | Android + iOS | Major / P2 | Fixed | v2.3 redesign drops six Cadangan test tags on both platforms — fixed on v2.4 (7/9 tags restored; import_result/import_error absent by design) |
 | 16 | [BUG_Found_16.md](BUG_Found_16.md) | Android | Major / P1 | Open | `UiScrollable.scrollIntoView` cannot scroll the Tambah category sheet — rows below the initial 9-row window are unreachable; TC-SUM-12 fails 2/2 (swipe-and-check or the sheet's search box both work) |
 | 17 | [BUG_Found_17.md](BUG_Found_17.md) | Android | Minor / P2 | Fixed | Sheet renders "Obat-obatan", TESTABILITY.md:302 + `category-labels.ts:43` said "Obat-obat" — a locator string, so `exp_health_medicine` was a latent failure (contract corrected to "Obat-obatan" 2026-10-31; full-label v2.3 re-verification pending) |
 | 18 | [BUG_Found_18.md](BUG_Found_18.md) | Android | Major / P2 | Open | TC-VAL-17 fails 3/3: no `tambah_helper` node after saving with the keyboard up — app-vs-harness split not yet determined; case marked `~[BUG]~`, skip not committed |

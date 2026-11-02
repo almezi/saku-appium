@@ -1,8 +1,8 @@
 # BUG_Found_05.md — Bug Report 05
 
 ## Status
-- **State:** Open
-- **Summary:** The Tambah form is unsavable in landscape — the note field and save button are not composed. App-side defect; workaround is to rotate back to portrait before saving.
+- **State:** Fixed
+- **Summary:** The Tambah form is unsavable in landscape — the note field and save button are not composed. App-side defect; workaround is to rotate back to portrait before saving. Fixed on app v2.4.
 
 ## Identity
 
@@ -75,3 +75,12 @@ Repro on a fresh session via `set_orientation`:
 Conclusion: app-side compose defect on landscape recomposition. Automation
 harness not at fault. App-side fix area: full Tambah column (note + save) must
 compose under landscape, not only portrait.
+
+## Resolution — v2.4 (2026-11-02)
+
+Verified Fixed on app `SimpleMoneyTrackerKT-v2.4.apk` (emulator-5554 / API 37, Appium 3.8.0):
+
+- `TC-ROT-01` (rotating on a filled Tambah form retains amount, category and note) **PASSES** on v2.4 — `tambah_input_note` and `tambah_button_save` ARE composed in landscape; the note value survives rotation round-trip.
+- `RECHECK-05` (temp spec): note field and save button exist in landscape; save completes and transaction persists.
+
+App v2.4 Compose Tambah landscape layout now composes the full form (note + save). No workaround needed.

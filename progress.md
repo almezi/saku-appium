@@ -21,14 +21,17 @@ defect (cite the bug number). See `AGENTS.md` § Bug Reporting Protocol.
 > The 8 remaining, all on Android: TC-LIST-08 (rewritten to UiScrollable flings 2026-10-30,
 > unexecuted — the host's emulator graphics stack kept dying mid-run, see 1.D), TC-EXP-08 and
 > TC-SUM-10/11/12 (`~[BUG]~`, root cause `bugs/BUG_Found_16.md`), TC-VAL-17 (`~[BUG]~`,
-> `bugs/BUG_Found_18.md`), TC-ROT-06 (`~[BUG]~`, `bugs/BUG_Found_06.md` — an app defect) and
+> `bugs/BUG_Found_18.md`), TC-ROT-06 (`~[BUG]~`, `bugs/BUG_Found_06.md` — an app defect,
+> **still Open on v2.4**: 2 nav labels overflow screen width at 200% font scale) and
 > TC-PERF-05 (skip'ed, exceeds the mocha budget; `test_seed` does not exist — see
 > `bugs/BUG_Found_07.md`). Their iOS twins all pass. TC-KAT-08/10 are skip'ed on Android
 > (`bugs/BUG_Found_04.md`) but run and pass on iOS, so they stay counted as completed with a
 > per-platform caveat. TC-BACKUP-04/06 were unblocked and went green on 2026-10-28 (v2.3
 > update). App v2.4 (2026-10-29, app commit `acfc059`) removed the pencil from default kategori
 > rows, so a future TC-KAT-08/10 unskip must run the rename against a custom category (the
-> createCategory path TC-LIST-07 now uses).
+> createCategory path TC-LIST-07 now uses). Bugs fixed on v2.4 (2026-11-02 recheck): BUG_Found_03
+> (WAL loss), BUG_Found_05 (landscape form), BUG_Found_15 (Cadangan tags). BUG_Found_06 remains
+> Open on v2.4.
 >
 > Platform status (2026-10-29): Android — complete (137/146 passing, 9 skipped per retry policy);
 > iOS — **every Android sub-phase now has a twin**: TC-NAV 8/8, TC-INC 9/9, TC-EXP 8/8,
@@ -464,7 +467,8 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-BACKUP-03: Exported file contains current transactions
 - [x] TC-BACKUP-04: Import backup restores data (if exists) — **UNBLOCKED 2026-10-28** (v2.3 update): the scripted SAF drive now passes under WDIO — the roots-drawer race that flaked 3× on 2026-10-25 is closed by a verify-retry that waits for the pushed file row itself (`openDownloadsRoot`, see backup.spec.ts). 2 consecutive green runs on the Pixel_10 / API 37 / app v2.3 (48.5 s, 60.3 s). Original skip context: `bugs/BUG_Found_02.md` (now marked Fixed — the blocker was harness-side drive flakiness, not the app; the app's import was always fine)
 - [x] TC-BACKUP-05: Cancel export → no side effects
-- [x] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked — **GREEN 2026-10-28** (v2.3 update): passes on the Pixel_10 / API 37 (2 consecutive runs) with the v2.3 empty-list entry (`daftar_empty_state_secondary`) and the new empty-CSV assertion. The v2.2-era skip was the WAL data-loss defect in `bugs/BUG_Found_03.md` — that app-side bug stays **Open** (it is a general data-integrity risk, not specific to this flow); this case no longer depends on it
+- [x] TC-BACKUP-06: Export with zero transactions → valid empty file or blocked — **GREEN 2026-10-28** (v2.3 update) and **GREEN 2026-11-02 on v2.4** (6/6 green, `SAKU_APK=resources/SimpleMoneyTrackerKT-v2.4.apk`). The v2.2-era skip was the WAL data-loss defect in `bugs/BUG_Found_03.md`.
+    - `bugs/BUG_Found_03.md` now **Fixed** on v2.4 (2026-11-02): `PRAGMA journal_mode` = `delete` (no WAL), `-wal` is 0 bytes, data lives in main `.db`; clean reopen (terminate+activate) preserves the seeded transaction; `backup.spec.ts` 6/6 green including the WAL tripwire asserting `daftar.summaryIncome() === SEED_AMOUNT` right after `createTransaction`.
 
 **Spec:** `src/tests/transaksi/backup.spec.ts` (executed 2026-10-25: 4/6 passing, 2 blocked per retry policy) | **Agent:** ZCode (GLM-5.3) — live MCP verification + scripted wdio execution
 **Spec (iOS):** `src/tests/transaksi/backup.ios.spec.ts` (executed 2026-10-27: 5/5 running cases passing, TC-BACKUP-04 skipped per the retry policy) | `npm run test:backup:ios` | **Agent:** Qoder
@@ -582,7 +586,7 @@ same page-object method names; page object `src/pageobjects/kategori.ios.page.ts
 - [x] TC-ROT-05: App backgrounded → resumed, no data loss
 - [~[BUG]~] TC-ROT-06: Font scale 200% → no clipped text
 
-**Spec:** `src/tests/app/rotation.spec.ts` | **Agent:** ZCode agent (Appium MCP run, Phase 3.D, 2026-10-26) — 5/6 passing, TC-ROT-06 blocked by `bugs/BUG_Found_06.md`
+**Spec:** `src/tests/app/rotation.spec.ts` | **Agent:** ZCode agent (Appium MCP run, Phase 3.D, 2026-10-26) — 5/6 passing on v2.4; TC-ROT-01 (landscape form) **PASSES** on v2.4 → `bugs/BUG_Found_05.md` Fixed; TC-ROT-06 **still blocked** by `bugs/BUG_Found_06.md` (2 nav labels overflow at 200% on v2.4).
 
 > **iOS run 2026-10-27:** ported as `src/tests/app/rotation.ios.spec.ts` — **6/6 passing**
 > (iPhone 18 Pro sim / iOS 27.0, `npm run test:rot:ios`, 2m 54.2s). iOS adaptations measured live

@@ -2,8 +2,8 @@
 
 ## Status
 
-- **State:** Open
-- **Summary:** App v2.3 drops six Cadangan test tags on both platforms (screen root, status card, import button, import result/error, warning strip), breaking the TESTABILITY.md contract for the whole screen; the harness now works around it with documented text-based lookups.
+- **State:** Fixed
+- **Summary:** App v2.3 drops six Cadangan test tags on both platforms (screen root, status card, import button, import result/error, warning strip), breaking the TESTABILITY.md contract for the whole screen; the harness now works around it with documented text-based lookups. Fixed on app v2.4 (7/9 tags restored; import_result/import_error intentionally absent by design).
 
 ## Identity
 
@@ -92,3 +92,13 @@ This bug stays Open until the app re-applies the tags.
   `backup.spec.ts` / `backup.ios.spec.ts` beyond the locator swap.
 - Deleting this bug requires the app to re-apply the six tags; the text-based lookups in the
   two page objects carry their removal condition in their JSDoc, like `category-labels.ts`.
+
+## Resolution — v2.4 (2026-11-02)
+
+Verified Fixed (mostly) on app `SimpleMoneyTrackerKT-v2.4.apk` (emulator-5554 / API 37, Appium 3.8.0):
+
+Cadangan page resource-IDs on v2.4:
+- **FOUND (7/9):** `cadangan_screen`, `cadangan_status_card`, `cadangan_import_button`, `cadangan_export_csv`, `cadangan_export_json`, `cadangan_warning`, `component_button_back`
+- **Absent by design (2/9):** `cadangan_import_result`, `cadangan_import_error` — v2.3+ reports import outcome via the status line's transaction count, not a result node. These two are intentionally not rendered; no UI surface exists for them.
+
+The six tags that broke TESTABILITY.md on v2.3 are restored on v2.4. The harness text-lookup workarounds (in `cadangan.page.ts` / `cadangan.ios.page.ts`) can now be reverted to tag-based locators. Bug marked Fixed; the two absent tags are by design, not a regression.

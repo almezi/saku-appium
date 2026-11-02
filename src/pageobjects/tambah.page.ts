@@ -74,12 +74,16 @@ export class TambahPage extends BasePage {
    * Opens the category sheet and taps the category; the sheet closes itself
    * on select.
    *
-   * The sheet rows carry NO resource-ids in the release APK (BUG_Found-07), so
-   * the row is matched by its Indonesian display-label text. UiScrollable
-   * cannot scroll this sheet (BUG_Found_16: rows below the initial 9-row
-   * window are unreachable, and its fling can DISMISS the modal), so the row
-   * is reached through the sheet's own search box — the same path TC-LIST-07
-   * drives manually — with a bounded W3C swipe-and-check as the fallback.
+   * The sheet is a LazyColumn: rows below the initial viewport are not
+   * composed at all, and UiScrollable cannot scroll it (BUG_Found_16 — its
+   * fling DISMISSED the modal). Rows carry per-id tags (verified live on
+   * v2.2 and v2.4), so the row is reached by tag with a bounded raw-touch
+   * swipe-and-check — the kategori.scrollToRow pattern — never by text:
+   * the sheet's own search box holds the same label once typed, so
+   * `UiSelector().text(label)` resolved to the search EditText first and the
+   * tap re-focused the field, leaving the sheet open (measured live, v2.4).
+   * Typing into that box is unreliable too ("Lainnya" landed as "Lainya" on
+   * 3/3 attempts), so the search path is gone.
    *
    * On screen transitions (Daftar → Tambah) the `tambah_screen` tag can
    * display before child Compose nodes compose — wait for the pager to exist
@@ -95,41 +99,18 @@ export class TambahPage extends BasePage {
     await pager.waitForExist({ timeout: COMPOSITION_WAIT });
     await pager.click();
 
-    // UiScrollable cannot scroll this sheet (BUG_Found_16: rows below the
-    // initial 9-row window are unreachable, and its fling can DISMISS the
-    // modal), so reach the row through the sheet's own search box — the same
-    // path TC-LIST-07 drives manually. Exact-match the single filtered row;
-    // when the label carries punctuation the search treats it literally, so
-    // the one hit is the row. Search-box miss → bounded swipe-and-check with
-    // raw W3C actions (the kategori.scrollToRow pattern) before giving up.
-    // NOTE: the label text ALSO renders inside the form's closed pager as a
-    // child TextView (verified live on v2.4), so the row's text selector must
-    // resolve BEFORE the sheet closes — after selection it would match the
-    // pager's TextView too. Hence the display wait lives inside the try.
-    const searchBox = byTag(tags.tambah.categorySearch);
-    const item = $(`android=new UiSelector().text("${label}")`);
-    try {
-      await searchBox.waitForExist({ timeout: ELEMENT_PRESENT_QUICK });
-      // typeIntoTaggedField dismisses the keyboard after typing (its own
-      // hideKeyboard) — do NOT send ESC here: with the IME already down,
-      // keycode 111 pops the whole back stack and the next row click lands
-      // on Daftar (verified live). With the keyboard gone the row click
-      // reaches the node.
-      await typeIntoTaggedField(searchBox, label, tags.tambah.categorySearch);
-      await item.waitForDisplayed({ timeout: ELEMENT_PRESENT_QUICK });
-      await item.click();
-    } catch {
-      // Search miss: clear the filter and sweep the sheet manually. The item
-      // may genuinely be absent (search mismatch), so the sweep re-checks it
-      // after every swipe — up to 4 content-up swipes.
-      await searchBox.setValue("");
-      for (let sweep = 0; sweep < 4; sweep++) {
-        if (await item.isDisplayed().catch(() => false)) break;
-        await this.swipeSheetContentUp();
+    // Sweep content-up first; the return content-down sweep catches a row
+    // stepped over by the ~40%-screen swipe (kategori.scrollToRow order).
+    const row = byTag(tags.tambah.categoryItem(categoryId));
+    let visible = false;
+    for (const direction of ["up", "down"] as const) {
+      for (let sweep = 0; sweep < 12 && !visible; sweep++) {
+        visible = await this.rowFullyVisible(row);
+        if (!visible) await this.swipeSheet(direction);
       }
-      await item.waitForDisplayed({ timeout: ELEMENT_PRESENT });
-      await item.click();
     }
+    await row.waitForDisplayed({ timeout: ELEMENT_PRESENT });
+    await row.click();
 
     // The sheet closes on selection, and the selected label keeps rendering
     // inside the form's pager — so the selection is verified by the sheet
@@ -140,6 +121,20 @@ export class TambahPage extends BasePage {
     // A short settle pause lets the dismiss animation finish before the
     // caller re-reads the form.
     await driver.pause(SHEET_CLOSE_SETTLE);
+  }
+
+  /**
+   * Composed but clipped at the viewport edge is not tappable — the row must
+   * be fully inside the window before the click (same rule as
+   * kategori.addButtonInView).
+   */
+  private async rowFullyVisible(row: ChainablePromiseElement): Promise<boolean> {
+    if (!(await row.isDisplayed().catch(() => false))) return false;
+    const top = await row.getLocation().catch(() => null);
+    const size = await row.getSize().catch(() => null);
+    if (!top || !size) return false;
+    const { height } = await driver.getWindowSize();
+    return top.y >= 0 && top.y + size.height <= height;
   }
 
   async selectAccount(accountId: string): Promise<void> {
@@ -193,25 +188,27 @@ export class TambahPage extends BasePage {
   }
 
   /**
-   * One raw-touch content-up swipe of the open category sheet (~40% of the
-   * screen). Raw W3C actions, not `mobile: scrollGesture` (a silent no-op on
-   * Compose LazyColumns here) and not UiScrollable (its fling dismissed the
-   * sheet — BUG_Found_16). Private: the surface the twins share is
-   * selectCategory; the fallback mechanism is Android-only.
+   * One raw-touch swipe of the open category sheet (~40% of the screen). Raw
+   * W3C actions, not `mobile: scrollGesture` (a silent no-op on Compose
+   * LazyColumns here) and not UiScrollable (its fling dismissed the sheet —
+   * BUG_Found_16). Private: the surface the twins share is selectCategory;
+   * the fallback mechanism is Android-only.
    */
-  private async swipeSheetContentUp(): Promise<void> {
+  private async swipeSheet(direction: "up" | "down"): Promise<void> {
     const { width, height } = await driver.getWindowSize();
     const x = Math.floor(width / 2);
+    const yStart = direction === "up" ? Math.floor(height * 0.7) : Math.floor(height * 0.3);
+    const yEnd = direction === "up" ? Math.floor(height * 0.3) : Math.floor(height * 0.7);
     await driver.performActions([
       {
         type: "pointer",
         id: "finger1",
         parameters: { pointerType: "touch" },
         actions: [
-          { type: "pointerMove", duration: 0, x, y: Math.floor(height * 0.7) },
+          { type: "pointerMove", duration: 0, x, y: yStart },
           { type: "pointerDown", button: 0 },
           { type: "pause", duration: 150 },
-          { type: "pointerMove", duration: 500, x, y: Math.floor(height * 0.3) },
+          { type: "pointerMove", duration: 500, x, y: yEnd },
           { type: "pointerUp", button: 0 },
         ],
       },
