@@ -118,7 +118,7 @@ Track completion of every test task from `test-cases-simple-money-tracker.md`. M
 
 All 33 spec files scanned: 286 cases, zero untagged, zero double-tagged, zero files mixing types, zero `describe()`/case mismatches. Counts: `@sanity: 16`, `@regression: 262`, `@e2e: 4`, `@integration: 18`. `npm run test:unit` 20/20.
 
-Caveat: `src/tests/tmp/probe.spec.ts` (gitignored `tmp/`) carries one untagged-fixed case; its fix is local-only. Move out of `tmp/` or delete it (S10).
+Caveat: `src/tests/tmp/probe.spec.ts` no longer present (handled in S10).
 
 ---
 
@@ -155,17 +155,13 @@ Scaffold first, then one spec + iOS twin per task. Definition of done: `npm run 
 | S10 | Move `src/tests/tmp/probe.spec.ts` out of `tmp/` or delete it | DONE 2026-11-04 |
 | S11 | Close the two pre-existing parity failures, re-baseline | DONE 2026-11-04 |
 
-Status line: S1/S2/S3 DONE 2026-11-02; S4–S11 not started.
+Status line: S1–S11 DONE (S1–S3 2026-11-02; S4–S11 2026-11-04).
 
 ---
 
-## Pre-existing red gate (not caused by this work)
+## Pre-existing red gate (resolved)
 
-`npm run check:parity` fails on a clean tree:
-- `src/tests/tmp/probe.spec.ts` — missing iOS twin (NEW vs baseline).
-- `ringkasan` page-object surface gap — Android-only `scrollContentUp` (added after baseline was last rewritten).
-
-Both need a fix or justified re-baseline in S1/S11.
+`npm run check:parity` now passes (re-baselined in S11). Both issues (tmp/probe missing iOS twin; ringkasan page-object surface gap) addressed.
 
 ---
 
