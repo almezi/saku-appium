@@ -9,7 +9,7 @@ The executable suite lives in `src/`. It drives the Android app (UiAutomator2) t
 ### Prerequisites
 
 - Node.js ≥ 22 (`.nvmrc` pins `24`; `package.json` requires `>=22`) and Android emulator(s)/device(s) connected via `adb` (default udid `emulator-5554`; select devices with `SAKU_DEVICES` or the legacy `ANDROID_UDID`/`REAL_DEVICE_UDID`)
-- The app APK at `resources/SimpleMoneyTrackerKT-v2.2.apk` (override with `SAKU_APK`, e.g. to point at a debug build)
+- The app APK at `resources/SimpleMoneyTrackerKT-v2.4.apk` (override with `SAKU_APK`, e.g. to point at a debug build)
 - Appium is installed automatically with `npm install` — no global install needed
 
 ### Run
@@ -124,7 +124,7 @@ re-aim at your machine are `appium:app`, and `appium:udid` if your simulator or 
   "appium:automationName": "UiAutomator2",
   "appium:deviceName": "emulator-5554",
   "appium:udid": "emulator-5554",
-  "appium:app": "/Users/yourusername/Documents/github/saku-appium/resources/SimpleMoneyTrackerKT-v2.2.apk",
+  "appium:app": "/Users/yourusername/Documents/github/saku-appium/resources/SimpleMoneyTrackerKT-v2.4.apk",
   "appium:appPackage": "id.almezi.simplemoneytracker_kt",
   "appium:appActivity": ".MainActivity",
   "appium:systemPort": 8200,
@@ -143,7 +143,7 @@ re-aim at your machine are `appium:app`, and `appium:udid` if your simulator or 
 - **`appium:udid`** — the device serial. Required as soon as more than one device or emulator is
   attached, otherwise the driver cannot pick one.
 - **`appium:app`** — absolute path to the `.apk`. The tracked build is
-  `resources/SimpleMoneyTrackerKT-v2.2.apk` (`SAKU_APK` overrides). **Appium never downgrades an
+  `resources/SimpleMoneyTrackerKT-v2.4.apk` (`SAKU_APK` overrides). **Appium never downgrades an
   installed package**, so if the emulator already carries a newer app this path is ignored and the
   newer build is exercised — the `code_review.md` verification-gate trap, worth checking with
   `adb shell dumpsys package id.almezi.simplemoneytracker_kt | grep versionName`.

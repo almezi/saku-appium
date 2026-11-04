@@ -146,7 +146,7 @@ Scaffold first, then one spec + iOS twin per task. Definition of done: `npm run 
 | S1 | Spec template added to AGENTS.md | DONE 2026-11-02 |
 | S2 | Account picker: `account-picker.spec.ts` (TC-ACC-01/03/04) | DONE 2026-11-02 |
 | S3 | Category picker: `category-picker.spec.ts` (TC-CAT-05/08) | DONE 2026-11-02 |
-| S4 | Date picker: `date-picker.spec.ts` (TC-DATE-02/04/05/06/07) | not started |
+| S4 | Date picker: `date-picker.spec.ts` (TC-DATE-02/04/05/06/07) | DONE 2026-11-04 |
 | S5 | Month switcher: `month-switcher.spec.ts` (TC-MON-03/05/06/09) | not started |
 | S6 | Save-button state machine: `save-button.spec.ts` (TC-SAVE-01…06) | not started |
 | S7 | Transfer/savings rules: `transfer-category.spec.ts` (TC-EXC-01) | not started |

@@ -750,11 +750,9 @@ hardware before the harness is considered green:
    directly, not by argument. What the runs *did* surface is filed as `BUG_Found_16`/`17`/`18`.
    **Still owed:** an iOS run (no simulator is booted), and `kategori`/`backup`/`transaksi` on
    Android.
-7. **Environment trap, needs a decision:** the emulator carries app **v2.3 (versionCode 5)**
-   while `resources/` ships only **v2.2 (versionCode 4)** — Appium never downgrades an installed
-   package, so every "v2.2" run banner on this machine has actually been exercising v2.3. Either
-   commit the v2.3 APK or have the runner assert that the installed `versionName` matches the
-   configured APK; `BUG_Found_16.md` is only visible because of this drift.
+7. **Environment trap — resolved 2026-11-03:** the emulator was carrying a newer app than `resources/` shipped (v2.3 installed vs v2.2 shipped); Appium never downgrades an installed
+   package, so every "v2.2" run banner on this machine has actually been exercising v2.3. `resources/` now ships v2.4, the runner defaults to it, and `persistence.spec.ts` honours
+   `SAKU_APK` with the same v2.4 default. `BUG_Found_16.md` is only visible because of this drift.
 
 ---
 
@@ -826,7 +824,7 @@ is the harness root, `~/Documents/github/simplemoneytracker` is the app repo.
 - `npm run test:shard` — spec files partitioned round-robin across devices
 - `npm run test:parallel` — every spec on every device (cross-device coverage)
 - Device selection: `SAKU_DEVICES="udid1,udid2"` · external servers: `SAKU_APPIUM_PORTS="4723,4725"`
-- APK: `resources/SimpleMoneyTrackerKT-v2.2.apk` (override `SAKU_APK`)
+- APK: `resources/SimpleMoneyTrackerKT-v2.4.apk` (override `SAKU_APK`)
 
 ---
 
@@ -992,3 +990,25 @@ annotations live in this file's committed predecessor (git history).
 - **Dependency deferrals:** `shell-quote` (via appium) and `sharp` (via uiautomator2-driver) accepted as low-reachability in this localhost harness. Re-audit on every appium/driver upgrade; next scheduled review **2027-01-25**. **Never** run `npm audit fix --force` — the "fix" downgrades appium 3.x → 2.19.
 - **Bar-view guard fallback:** if TC-SUM-09 fails with "has no measurable bar views", the row renders extra Views — relax `viewList.length !== 2` to `length < 2` in `ringkasan.breakdownBarRatio` (one-character change).
 - **Dependency changes** (e.g. O2's junit reporter) require explicit approval; the supply-chain posture of this review is the reason.
+
+---
+
+# Review — 2026-11-03: Android v2.4 default refresh
+
+## Findings
+
+### README.MD
+README.MD:L146: 🟡 warn: `The tracked build` is false — `*.apk` files are gitignored and no APK is in git; call it the local default and document how to build/copy it.
+
+### HANDOVER.MD
+HANDOVER.MD:L40: 🟢 nit: `Expected at` omits APK provenance and its gitignored status; say it is local-only and must be built/copied before install.
+
+### CODE_REVIEW.MD
+CODE_REVIEW.MD:L753: 🟡 warn: `Environment trap — resolved` overstates the fix — APKs are gitignored/local, no installed `versionName` assertion was added, and `TC-PERS-05` was not device-run; mark it a default bump or add the check and device evidence.
+
+### src/tests/app/persistence.spec.ts
+src/tests/app/persistence.spec.ts:L18: 🟡 warn: the v2.4 default duplicates `wdio.conf.ts` and can drift again; extract one shared APK-default constant/helper.
+src/tests/app/persistence.spec.ts:L82: 🟡 warn: `SAKU_APK` is interpolated unquoted into a shell command; use `execFileSync("adb", ["install", APK], …)` or quote/escape the path.
+src/tests/app/persistence.spec.ts:L81: 🟡 warn: bare `adb` has no device selector, so parallel workers fail or target no device; derive the UDID from the session capability and pass `-s <udid>`.
+
+**Verdict:** Request changes — fix APK provenance/wording and make `persistence.spec.ts` device-safe and single-source before calling the v2.4 refresh done.

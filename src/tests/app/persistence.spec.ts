@@ -15,7 +15,7 @@ import { DaftarPage } from "../../pageobjects/daftar.page";
 import { APP_RELAUNCH } from "../../config/timeouts";
 
 const PACKAGE = "id.almezi.simplemoneytracker_kt";
-const APK = "resources/SimpleMoneyTrackerKT-v2.2.apk";
+const APK = process.env.SAKU_APK ?? "resources/SimpleMoneyTrackerKT-v2.4.apk";
 
 const tambah = new TambahPage();
 const daftar = new DaftarPage();
