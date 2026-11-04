@@ -43,9 +43,9 @@ describe("TC-CONS — Cross-screen consistency @regression", () => {
 
   it("TC-CONS-03 Delete → all three screens consistent @regression", async () => {
     await daftar.open();
-    expect(await daftar.summaryExpense() >= 0).toBe(true);
+    expect((await daftar.summaryExpense()) >= 0).toBe(true);
     await ringkasan.open();
-    expect(await ringkasan.expenseTotal() >= 0).toBe(true);
+    expect((await ringkasan.expenseTotal()) >= 0).toBe(true);
   });
 
   it("TC-CONS-04 Month switch on one screen vs other (verify intent) @regression", async () => {

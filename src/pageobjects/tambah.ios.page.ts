@@ -161,8 +161,10 @@ export class TambahIosPage extends BaseIosPage {
       },
     ]);
     await driver.pause(SHEET_CLOSE_SETTLE_QUICK);
-    await iosByTag(tags.tambah.sheetAccount)
-      .waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
+    await iosByTag(tags.tambah.sheetAccount).waitForExist({
+      timeout: SURFACE_DISMISS,
+      reverse: true,
+    });
   }
 
   /**
@@ -186,8 +188,10 @@ export class TambahIosPage extends BaseIosPage {
       },
     ]);
     await driver.pause(SHEET_CLOSE_SETTLE_QUICK);
-    await iosByTag(tags.tambah.categorySheetRoot)
-      .waitForExist({ timeout: SURFACE_DISMISS, reverse: true });
+    await iosByTag(tags.tambah.categorySheetRoot).waitForExist({
+      timeout: SURFACE_DISMISS,
+      reverse: true,
+    });
   }
 
   /** The category row's avatar (CategoryAvatar, e.g. avatar_inc_salary). */

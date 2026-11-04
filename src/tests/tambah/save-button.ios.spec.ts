@@ -15,7 +15,7 @@ describe("TC-SAVE — Save button state machine @regression", () => {
     await expect(iosByTag(tags.tambah.screen)).toBeDisplayed({ wait: APP_COLD_START });
   });
 
-  it("TC-SAVE-01 Initial state disabled (verified `enabled=\"false\"`) @regression", async () => {
+  it('TC-SAVE-01 Initial state disabled (verified `enabled="false"`) @regression', async () => {
     await tambah.open();
     expect(await tambah.isSaveEnabled()).toBe(false);
   });

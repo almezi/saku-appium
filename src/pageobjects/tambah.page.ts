@@ -13,7 +13,12 @@ import { categoryLabels } from "../config/category-labels";
 import { BasePage } from "./base.page";
 import type { ChainablePromiseElement } from "../types";
 import { SHEET_CLOSE_SETTLE, SWIPE_ANIM } from "../config/settles";
-import { COMPOSITION_WAIT, ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK, SURFACE_DISMISS } from "../config/timeouts";
+import {
+  COMPOSITION_WAIT,
+  ELEMENT_PRESENT,
+  ELEMENT_PRESENT_QUICK,
+  SURFACE_DISMISS,
+} from "../config/timeouts";
 
 export interface TransactionFormInput {
   type?: TransactionType;
@@ -151,8 +156,10 @@ export class TambahPage extends BasePage {
    */
   async dismissAccountSheet(): Promise<void> {
     await this.systemBack();
-    await byTag(tags.tambah.sheetAccount)
-      .waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS });
+    await byTag(tags.tambah.sheetAccount).waitForDisplayed({
+      reverse: true,
+      timeout: SURFACE_DISMISS,
+    });
   }
 
   /**
@@ -162,8 +169,10 @@ export class TambahPage extends BasePage {
    */
   async dismissCategorySheet(): Promise<void> {
     await this.systemBack();
-    await byTag(tags.tambah.categorySheetRoot)
-      .waitForDisplayed({ reverse: true, timeout: SURFACE_DISMISS });
+    await byTag(tags.tambah.categorySheetRoot).waitForDisplayed({
+      reverse: true,
+      timeout: SURFACE_DISMISS,
+    });
   }
 
   /** The category row's avatar (CategoryAvatar, e.g. avatar_inc_salary). */
