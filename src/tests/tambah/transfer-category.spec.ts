@@ -28,7 +28,7 @@ describe("TC-EXC — Transfer/savings rules @regression", () => {
       await tambah.save();
       await daftar.open();
       expect(await daftar.summaryExpense() >= 0).toBe(true);
-    } catch (e) {
+    } catch {
       await expect(byTag(tags.tambah.screen)).toBeDisplayed();
     }
   });

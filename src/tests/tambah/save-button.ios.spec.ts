@@ -59,7 +59,7 @@ describe("TC-SAVE — Save button state machine @regression", () => {
     expect(await tambah.isSaveEnabled()).toBe(false);
     try {
       await tambah.saveButton.click();
-    } catch (e) {
+    } catch {
       // ignore
     }
     await expect(iosByTag(tags.tambah.screen)).toBeDisplayed();
