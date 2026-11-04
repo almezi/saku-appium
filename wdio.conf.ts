@@ -20,7 +20,7 @@ if (!process.env.ANDROID_HOME && !process.env.ANDROID_SDK_ROOT) {
 
 // APK used by the suite. Override with SAKU_APK to point at another build
 // (for example the debug APK with seeded debug tooling).
-const DEFAULT_APK = path.resolve(__dirname, "resources", "SimpleMoneyTrackerKT-v2.2.apk");
+const DEFAULT_APK = path.resolve(__dirname, "resources", "SimpleMoneyTrackerKT-v2.4.apk");
 const APK_PATH = process.env.SAKU_APK ?? DEFAULT_APK;
 
 /**

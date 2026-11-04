@@ -30,6 +30,12 @@ export const TEST_TYPES = {
    */
   regression: "@regression",
   /**
+   * End-to-end flows that span several screens at once (Tambah → Daftar →
+   * Ringkasan). Slower than @regression single-screen cases, run as their own
+   * group via `TEST_GREP=@e2e`.
+   */
+  e2e: "@e2e",
+  /**
    * Cases that span several screens or flows at once — a delete that must
    * move the list, the summary AND the breakdown, an undo that has to
    * restore all three. They are slower and depend on the state the

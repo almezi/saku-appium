@@ -37,7 +37,7 @@ You need a working Android test environment before any test will run.
 | **Node.js ≥ 22** | Runs the suite (TS + WDIO) | `node -v` to check. `.nvmrc` pins `24` |
 | **Android SDK / emulator** | Appium drives a real Android | Default udid `emulator-5554`. Set `ANDROID_HOME` or it auto-detects `~/Library/Android/sdk` (macOS). |
 | **An emulator or device, booted** | The app must be installed & running | Pixel 10-ish, API 34+. Must be visible to `adb devices`. |
-| **The app APK** | The thing we test | Expected at `resources/SimpleMoneyTrackerKT-v2.2.apk`. |
+| **The app APK** | The thing we test | Expected at `resources/SimpleMoneyTrackerKT-v2.4.apk`. |
 | **macOS + Xcode** | Only for the iOS half | Booted simulator (`xcrun simctl list devices`) + the XCUITest driver. |
 
 Steps:
@@ -51,7 +51,7 @@ npm install
 
 # 3. Make sure an emulator is up and the app is installed:
 adb devices                 # should list emulator-5554
-adb install resources/SimpleMoneyTrackerKT-v2.2.apk   # if not already installed
+adb install resources/SimpleMoneyTrackerKT-v2.4.apk   # if not already installed
 
 # 4. Smoke test — run the navigation suite (fastest, ~1 min)
 npm run test:navigasi
@@ -86,7 +86,7 @@ way.
 | `REAL_DEVICE_UDID` | unset | Second device for parallel runs (legacy two-slot selection). |
 | `SAKU_SHARD` | unset | `1` = shard mode: split spec files across devices instead of running the full suite on each. |
 | `SAKU_APPIUM_PORTS` | unset | e.g. `"4723,4725"` — connect to self-started Appium servers (one per device, `npm run appium:server1` / `appium:server2`) instead of the runner-spawned shared server on 4725. |
-| `SAKU_APK` | `resources/...v2.2.apk` | Use a different build (e.g. a debug APK). |
+| `SAKU_APK` | `resources/...v2.4.apk` | Use a different build (e.g. a debug APK). |
 | `ANDROID_HOME` | auto | Override the SDK location. |
 
 ---

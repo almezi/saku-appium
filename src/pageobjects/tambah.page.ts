@@ -13,7 +13,12 @@ import { categoryLabels } from "../config/category-labels";
 import { BasePage } from "./base.page";
 import type { ChainablePromiseElement } from "../types";
 import { SHEET_CLOSE_SETTLE, SWIPE_ANIM } from "../config/settles";
-import { COMPOSITION_WAIT, ELEMENT_PRESENT, ELEMENT_PRESENT_QUICK } from "../config/timeouts";
+import {
+  COMPOSITION_WAIT,
+  ELEMENT_PRESENT,
+  ELEMENT_PRESENT_QUICK,
+  SURFACE_DISMISS,
+} from "../config/timeouts";
 
 export interface TransactionFormInput {
   type?: TransactionType;
@@ -142,6 +147,37 @@ export class TambahPage extends BasePage {
     await byTag(tags.tambah.sheetAccount).waitForDisplayed();
     await byTag(tags.tambah.accountItem(accountId)).click();
     await byTag(tags.tambah.sheetAccount).waitForDisplayed({ reverse: true });
+  }
+
+  /**
+   * Dismisses the account picker sheet without selecting an account. System
+   * BACK dismisses a modal bottom sheet on Android; the reverse wait proves
+   * the sheet root left the tree before the caller re-reads the form.
+   */
+  async dismissAccountSheet(): Promise<void> {
+    await this.systemBack();
+    await byTag(tags.tambah.sheetAccount).waitForDisplayed({
+      reverse: true,
+      timeout: SURFACE_DISMISS,
+    });
+  }
+
+  /**
+   * Dismisses the category picker sheet without selecting a category. System
+   * BACK dismisses a modal bottom sheet on Android; the reverse wait proves
+   * the sheet root left the tree before the caller re-reads the form.
+   */
+  async dismissCategorySheet(): Promise<void> {
+    await this.systemBack();
+    await byTag(tags.tambah.categorySheetRoot).waitForDisplayed({
+      reverse: true,
+      timeout: SURFACE_DISMISS,
+    });
+  }
+
+  /** The category row's avatar (CategoryAvatar, e.g. avatar_inc_salary). */
+  avatar(categoryId: string): ChainablePromiseElement {
+    return byTag(tags.tambah.categoryAvatar(categoryId));
   }
 
   /**

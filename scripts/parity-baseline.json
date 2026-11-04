@@ -61,6 +61,11 @@
         "waitForDialogClosed"
       ],
       "reason": "Residual of code_review.md M13: iOS still exposes more step-level API than Android's composites (renameInDialog, toggleHidden). The add-form trio is now CONVERGED (openAddForm/createCategory/findCustomCategoryId exist on both twins; createCategory gained a type param on both when app v2.4 removed the pencil from default kategori rows and transaction-list.spec.ts TC-LIST-07 switched to creating a custom expense category). The remaining iOS-only methods are the rename-dialog step API (rowEdit/typeRename/saveRename/cancelRename/renameFieldText/waitForDialogClosed), the hidden-state API (rowHide/setHidden/isHidden/dismissSheet) and the addButton/addFormScreen getters, which Android folds into its composites; Android's composites back TC-KAT-08/10, which are it.skip there (BUG_Found_04) yet run on iOS through the step API. Close: converge Android onto the iOS granularity when TC-KAT-08/10 are unskipped; do not collapse iOS into composites."
+    },
+    "ringkasan": {
+      "androidOnly": ["scrollContentUp"],
+      "iosOnly": [],
+      "reason": "TODO: explain why this twin diverges."
     }
   },
   "reason": "Baseline recorded 2026-10-28, rebaselined 2026-10-29 when S17 closed: missingTwins is empty now that summary.ios.spec.ts and delete-undo.ios.spec.ts exist (code_review.md S17), and both twins reuse their Android TC- id sets exactly, so neither pair appears in specIdDiffs. Both new specs are device-green on iPhone 18 Pro (2026-10-29): summary 13/13, delete-undo 9/9. The undo path the earlier note said was missing does exist on iOS: the delete confirmation raises component_toast with a reachable component_toast_action — it is only the SAVE toast that iOS renders untagged. Remaining entries are the accepted drift listed above, each with its own close action. Gate note: check_parity.mjs deliberately does not trust indentation when it reads a class member (the 3-space selectCategory block that used to trip an indent-strict parser is now Prettier-normal, but the narrower rule stays). Re-run with `npm run check:parity -- --update` only after a deliberate tree change: reasons carry over per group, and a group whose drift has vanished still FAILS until its entry is removed."
