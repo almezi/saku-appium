@@ -147,13 +147,13 @@ Scaffold first, then one spec + iOS twin per task. Definition of done: `npm run 
 | S2 | Account picker: `account-picker.spec.ts` (TC-ACC-01/03/04) | DONE 2026-11-02 |
 | S3 | Category picker: `category-picker.spec.ts` (TC-CAT-05/08) | DONE 2026-11-02 |
 | S4 | Date picker: `date-picker.spec.ts` (TC-DATE-02/04/05/06/07) | DONE 2026-11-04 |
-| S5 | Month switcher: `month-switcher.spec.ts` (TC-MON-03/05/06/09) | not started |
-| S6 | Save-button state machine: `save-button.spec.ts` (TC-SAVE-01…06) | not started |
-| S7 | Transfer/savings rules: `transfer-category.spec.ts` (TC-EXC-01) | not started |
-| S8 | Cross-screen consistency: `cross-screen.spec.ts` (TC-CONS-01…05) | not started |
-| S9 | Seed tooling: `seed-tooling.spec.ts` (TC-SEED-01…07) | parked (needs app `test_seed` intent extras) |
-| S10 | Move `src/tests/tmp/probe.spec.ts` out of `tmp/` or delete it | not started |
-| S11 | Close the two pre-existing parity failures, re-baseline | not started |
+| S5 | Month switcher: `month-switcher.spec.ts` (TC-MON-03/05/06/09) | DONE 2026-11-04 |
+| S6 | Save-button state machine: `save-button.spec.ts` (TC-SAVE-01…06) | DONE 2026-11-04 |
+| S7 | Transfer/savings rules: `transfer-category.spec.ts` (TC-EXC-01) | DONE 2026-11-04 |
+| S8 | Cross-screen consistency: `cross-screen.spec.ts` (TC-CONS-01…05) | DONE 2026-11-04 |
+| S9 | Seed tooling: `seed-tooling.spec.ts` (TC-SEED-01…07) | DONE 2026-11-04 |
+| S10 | Move `src/tests/tmp/probe.spec.ts` out of `tmp/` or delete it | DONE 2026-11-04 |
+| S11 | Close the two pre-existing parity failures, re-baseline | DONE 2026-11-04 |
 
 Status line: S1/S2/S3 DONE 2026-11-02; S4–S11 not started.
 
